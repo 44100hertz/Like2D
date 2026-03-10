@@ -1,38 +1,22 @@
 export class Timer {
-  private lastFrameTime = 0;
   private currentDelta = 0;
+  private totalTime = 0;
   private frameCount = 0;
   private fps = 0;
-  private lastFpsUpdate = 0;
-  private fpsUpdateInterval = 1; // Update FPS every second
+  private fpsAccumulator = 0;
   private sleepUntil: number | null = null;
 
-  update(currentTime: number): void {
-    // Skip updates while sleeping
-    if (this.sleepUntil !== null) {
-      if (currentTime < this.sleepUntil) {
-        return;
-      }
-      // Sleep period is over
-      this.sleepUntil = null;
-    }
-
-    if (this.lastFrameTime === 0) {
-      this.lastFrameTime = currentTime;
-      this.lastFpsUpdate = currentTime;
-      return;
-    }
-
-    this.currentDelta = (currentTime - this.lastFrameTime) / 1000;
-    this.lastFrameTime = currentTime;
+  update(dt: number): void {
+    this.currentDelta = dt;
+    this.totalTime += dt;
     this.frameCount++;
+    this.fpsAccumulator += dt;
 
-    // Update FPS calculation every second
-    const timeSinceLastUpdate = (currentTime - this.lastFpsUpdate) / 1000;
-    if (timeSinceLastUpdate >= this.fpsUpdateInterval) {
-      this.fps = Math.round(this.frameCount / timeSinceLastUpdate);
+    // Update FPS calculation every second of game time
+    if (this.fpsAccumulator >= 1) {
+      this.fps = Math.round(this.frameCount / this.fpsAccumulator);
       this.frameCount = 0;
-      this.lastFpsUpdate = currentTime;
+      this.fpsAccumulator = 0;
     }
   }
 
@@ -45,7 +29,7 @@ export class Timer {
   }
 
   getTime(): number {
-    return performance.now() / 1000;
+    return this.totalTime;
   }
 
   isSleeping(): boolean {

@@ -150,17 +150,15 @@ class Like {
     if (!this.isRunning || !this.currentScene) return;
 
     const currentTime = performance.now();
-
-    timer.update(currentTime);
+    const dt = (currentTime - this.lastTime) / 1000;
+    this.lastTime = currentTime;
 
     if (timer.isSleeping()) {
       requestAnimationFrame(() => this.loop());
       return;
     }
 
-    const dt = (currentTime - this.lastTime) / 1000;
-    this.lastTime = currentTime;
-
+    timer.update(dt);
     this.currentScene.update(dt);
 
     if (this.ctx) {
