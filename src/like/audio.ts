@@ -161,7 +161,7 @@ export class Audio {
   private sources: Set<Source> = new Set();
   private globalVolume: number = 1;
 
-  async newSource(path: string, type: 'static' | 'stream' = 'static'): Promise<Source> {
+  async newSource(path: string, _type: 'static' | 'stream' = 'static'): Promise<Source> {
     const source = new Source(path);
     this.sources.add(source);
     await source.ready();
@@ -216,7 +216,7 @@ export class Audio {
     return this.globalVolume;
   }
 
-  setPosition(x: number, y: number, z: number): void {
+  setPosition(_x: number, _y: number, _z: number): void {
     // Web Audio API spatial audio not implemented in this basic version
     // Would require AudioContext and PannerNode
   }

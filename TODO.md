@@ -37,20 +37,20 @@
 - [x] Add mouse state queries (love.mouse.getPosition)
 
 ## Phase 6: User Interface
-- [ ] Create src/index.html with canvas element
-- [ ] Add fullscreen button to HTML
-- [ ] Style the page (center canvas, basic styling)
-- [ ] Create src/main.ts as user entry point
+- [x] Create src/index.html with canvas element
+- [x] Add fullscreen button to HTML
+- [x] Style the page (center canvas, basic styling)
+- [x] Create src/main.ts as user entry point
 
 ## Phase 7: Additional Love2D API
-- [ ] Implement love.load() callback
-- [ ] Implement love.quit() callback
-- [ ] Add love.timer.getDelta() / getFPS()
-- [ ] Add window title management
-- [ ] Add love.filesystem for asset loading
+- [x] Implement love.load() callback
+- [x] ~~Implement love.quit() callback~~ (skipped - not applicable to web)
+- [x] Add love.timer.getDelta() / getFPS()
+- [ ] Add window title management (document.title)
+- [x] Add love.filesystem for save/load game state (localStorage/IndexedDB)
 
 ## Phase 8: Testing & Polish
-- [ ] Create example game to test all features
-- [ ] Verify hot reload works correctly
-- [ ] Test fullscreen functionality across browsers
+- [x] Create example game to test all features (src/main.ts demo)
+- [x] Verify hot reload works correctly (Vite dev server)
+- [x] Test fullscreen functionality across browsers
 - [ ] Add error handling and user-friendly messages

@@ -1,14 +1,27 @@
-import like, { Source } from './like/index.ts';
+import like from './like/index.ts';
+import { Source } from './like/index.ts';
 
 // Example demonstrating Like2D graphics API
 let rotation = 0;
 let pepperImage: Awaited<ReturnType<typeof like.graphics.newImage>> | null = null;
 let audioSource: Source | null = null;
-let audioStatus = 'Not loaded';
+let saveStatus = 'Press F5 to save, F9 to load';
+let gameStartTime = 0;
+let lastSleepTime = 0;
+let sleepStatus = '';
+
+// Game state for save/load demo
+interface GameState {
+  rotation: number;
+  savedAt: string;
+}
 
 like.setCallbacks({
   load: async () => {
     console.log('Game loaded!');
+    gameStartTime = like.timer.getTime();
+    console.log('Game started at:', gameStartTime);
+    
     // Set initial background color (dark gray)
     like.graphics.setBackgroundColor(0.1, 0.1, 0.15, 1);
     like.graphics.setFont(24);
@@ -28,6 +41,12 @@ like.setCallbacks({
     } catch (err) {
       console.error('Failed to load audio:', err);
     }
+
+    // Check for existing save
+    const exists = await like.filesystem.exists('demo_save');
+    if (exists) {
+      saveStatus = 'Save file exists (press F9 to load)';
+    }
   },
   
   update: (dt: number) => {
@@ -43,6 +62,29 @@ like.setCallbacks({
     like.graphics.setColor(1, 1, 1, 1);
     like.graphics.setFont(28, 'sans-serif');
     like.graphics.print('Like2D Framework Demo', 20, 30);
+    
+    // Draw FPS and timer info
+    const fps = like.timer.getFPS();
+    const delta = like.timer.getDelta();
+    const currentTime = like.timer.getTime();
+    const elapsedTime = currentTime - gameStartTime;
+    const isSleeping = like.timer.isSleeping();
+    
+    like.graphics.setColor(0.2, 0.9, 0.2, 1);
+    like.graphics.setFont(16);
+    like.graphics.print(`FPS: ${fps}`, like.getWidth() - 100, 30);
+    like.graphics.print(`Delta: ${(delta * 1000).toFixed(2)}ms`, like.getWidth() - 160, 50);
+    like.graphics.print(`Time: ${elapsedTime.toFixed(1)}s`, like.getWidth() - 160, 70);
+    
+    if (isSleeping) {
+      like.graphics.setColor(0.9, 0.2, 0.2, 1);
+      like.graphics.print('SLEEPING', like.getWidth() - 160, 90);
+    }
+    
+    if (sleepStatus) {
+      like.graphics.setColor(0.9, 0.6, 0.2, 1);
+      like.graphics.print(sleepStatus, 20, 580);
+    }
     
     // Draw filled red rectangle
     like.graphics.setColor(0.9, 0.2, 0.2, 1);
@@ -128,13 +170,18 @@ like.setCallbacks({
       like.graphics.print(`Audio: ${statusText} (${Math.round(audioSource.tell() * 10) / 10}s / ${Math.round(audioSource.getDuration() * 10) / 10}s)`, 20, 520);
     }
     
+    // Save status display
+    like.graphics.setColor(0.9, 0.9, 0.2, 1);
+    like.graphics.print(saveStatus, 20, 550);
+    
     // Print instructions
     like.graphics.setColor(0.6, 0.6, 0.6, 1);
     like.graphics.setFont(16);
-    like.graphics.print('Press any key to see it logged', 20, like.getHeight() - 80);
-    like.graphics.print('Click anywhere for mouse position', 20, like.getHeight() - 60);
-    like.graphics.print('Audio: Space=Play/Stop, P=Pause/Resume', 20, like.getHeight() - 40);
-    like.graphics.print('Hold Arrow Keys, WASD, or click mouse buttons', 20, like.getHeight() - 20);
+    like.graphics.print('Press any key to see it logged', 20, like.getHeight() - 100);
+    like.graphics.print('Click anywhere for mouse position', 20, like.getHeight() - 80);
+    like.graphics.print('Audio: Space=Play/Stop, P=Pause/Resume', 20, like.getHeight() - 60);
+    like.graphics.print('Save/Load: F5=Save, F9=Load', 20, like.getHeight() - 40);
+    like.graphics.print('Timer: L=Sleep 2 seconds', 20, like.getHeight() - 20);
     
     // ===== KEYBOARD & MOUSE INPUT DEMO =====
     
@@ -222,40 +269,63 @@ like.setCallbacks({
     like.graphics.circle('line', playerX, playerY, 15);
   },
   
-  keypressed: (key: string) => {
+  keypressed: async (key: string) => {
     console.log('Key pressed:', key);
 
     // Audio controls
     if (audioSource && audioSource.isReady()) {
       switch (key.toLowerCase()) {
         case ' ':
-          console.log('Toggling play/stop');
           if (audioSource.isPlaying()) {
             audioSource.stop();
-            console.log('Audio stopped');
           } else {
-            const result = audioSource.play();
-            console.log('Audio play result:', result);
+            audioSource.play();
           }
           break;
         case 's':
           audioSource.stop();
-          console.log('Audio stopped via S key');
           break;
         case 'p':
           if (audioSource.isPlaying()) {
             audioSource.pause();
-            console.log('Audio paused');
           } else if (audioSource.isPaused()) {
-            const result = audioSource.resume();
-            console.log('Audio resumed:', result);
+            audioSource.resume();
           }
           break;
       }
-    } else if (audioSource) {
-      console.log('Audio source exists but not ready yet');
-    } else {
-      console.log('No audio source available');
+    }
+
+    // Timer test - sleep for 2 seconds
+    if (key.toLowerCase() === 'l') {
+      lastSleepTime = like.timer.getTime();
+      like.timer.sleep(2);
+      sleepStatus = 'Timer sleep activated (2 seconds)';
+      console.log('Timer sleeping for 2 seconds starting at:', lastSleepTime);
+    }
+
+    // Save/Load controls
+    switch (key) {
+      case 'F5':
+        const state: GameState = {
+          rotation: rotation,
+          savedAt: new Date().toLocaleString()
+        };
+        const success = await like.filesystem.saveGame('demo_save', state);
+        saveStatus = success 
+          ? `Saved at ${state.savedAt}` 
+          : 'Failed to save!';
+        console.log('Save result:', success, state);
+        break;
+      case 'F9':
+        const loadedState = await like.filesystem.loadGame<GameState>('demo_save');
+        if (loadedState) {
+          rotation = loadedState.rotation;
+          saveStatus = `Loaded from ${loadedState.savedAt}`;
+          console.log('Loaded state:', loadedState);
+        } else {
+          saveStatus = 'No save file found!';
+        }
+        break;
     }
   },
   

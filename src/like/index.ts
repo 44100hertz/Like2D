@@ -2,6 +2,8 @@ import graphics from './graphics.ts';
 import audio from './audio.ts';
 import keyboard from './keyboard.ts';
 import mouse from './mouse.ts';
+import timer from './timer.ts';
+import filesystem from './filesystem.ts';
 
 export interface LikeCallbacks {
   load?: () => void;
@@ -26,6 +28,8 @@ class Like {
   audio = audio;
   keyboard = keyboard;
   mouse = mouse;
+  timer = timer;
+  filesystem = filesystem;
 
   constructor() {}
 
@@ -137,6 +141,16 @@ class Like {
     if (!this.isRunning) return;
 
     const currentTime = performance.now();
+
+    // Update timer module (handles sleep internally)
+    timer.update(currentTime);
+
+    // Skip updates and draws while sleeping
+    if (timer.isSleeping()) {
+      requestAnimationFrame(() => this.loop());
+      return;
+    }
+
     const dt = (currentTime - this.lastTime) / 1000;
     this.lastTime = currentTime;
 
@@ -173,3 +187,5 @@ const like = new Like();
 export default like;
 export const love = like;
 export { Source } from './audio.ts';
+export { timer } from './timer.ts';
+export { filesystem } from './filesystem.ts';
