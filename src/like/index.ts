@@ -1,3 +1,5 @@
+import graphics from './graphics.ts';
+
 export interface LikeCallbacks {
   load?: () => void;
   update?: (dt: number) => void;
@@ -17,6 +19,8 @@ class Like {
   private currentWidth = 800;
   private currentHeight = 600;
 
+  graphics = graphics;
+
   constructor() {}
 
   init(width: number = 800, height: number = 600): void {
@@ -32,6 +36,8 @@ class Like {
     if (!this.ctx) {
       throw new Error('Failed to get 2D context');
     }
+    
+    graphics.setContext(this.ctx);
 
     const container = document.getElementById('game-container');
     if (container) {
@@ -132,7 +138,7 @@ class Like {
     }
 
     if (this.ctx && this.callbacks.draw) {
-      this.ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
+      graphics.clear();
       this.callbacks.draw();
     }
 

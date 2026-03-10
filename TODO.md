@@ -15,14 +15,14 @@
 - [x] Create fullscreen toggle functionality
 
 ## Phase 3: Graphics Module (High Priority)
-- [ ] Implement love.graphics.clear()
-- [ ] Implement love.graphics.rectangle() - draw/fill modes
-- [ ] Implement love.graphics.circle() - draw/fill modes
-- [ ] Implement love.graphics.line()
-- [ ] Implement love.graphics.setColor()
-- [ ] Implement love.graphics.print() - text rendering
-- [ ] Implement love.graphics.newImage() and love.graphics.draw() for images
-- [ ] Add coordinate transformation (push/pop/translate/rotate/scale)
+- [x] Implement love.graphics.clear()
+- [x] Implement love.graphics.rectangle() - draw/fill modes
+- [x] Implement love.graphics.circle() - draw/fill modes
+- [x] Implement love.graphics.line()
+- [x] Implement love.graphics.setColor()
+- [x] Implement love.graphics.print() - text rendering
+- [x] Implement love.graphics.newImage() and love.graphics.draw() for images
+- [x] Add coordinate transformation (push/pop/translate/rotate/scale)
 
 ## Phase 4: Audio Module (High Priority)
 - [ ] Implement love.audio.newSource()
