@@ -23,7 +23,7 @@ like.setCallbacks({
     
     // Load audio
     try {
-      audioSource = like.audio.newSource('test.ogg');
+      audioSource = like.audio.newSource('./test.ogg');
       audioStatus = 'Ready (Space=Play, S=Stop, P=Pause)';
       console.log('Audio loaded: test.ogg');
     } catch (err) {
@@ -143,28 +143,38 @@ like.setCallbacks({
     
     // Audio controls
     if (audioSource) {
+      console.log('Audio source exists, processing key:', key);
       switch (key.toLowerCase()) {
         case ' ':
+          console.log('Toggling play/stop');
           if (audioSource.isPlaying()) {
             audioSource.stop();
+            console.log('Audio stopped');
           } else {
-            audioSource.play();
+            const result = audioSource.play();
+            console.log('Audio play result:', result);
           }
           break;
         case 's':
           audioSource.stop();
+          console.log('Audio stopped via S key');
           break;
         case 'p':
           if (audioSource.isPlaying()) {
             audioSource.pause();
+            console.log('Audio paused');
           } else if (audioSource.isPaused()) {
-            audioSource.resume();
+            const result = audioSource.resume();
+            console.log('Audio resumed:', result);
           }
           break;
         case 'r':
           audioSource.rewind();
+          console.log('Audio rewound');
           break;
       }
+    } else {
+      console.log('No audio source available');
     }
   },
   
