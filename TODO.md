@@ -31,10 +31,10 @@
 - [x] Support common formats (ogg, mp3, wav)
 
 ## Phase 5: Input Handling
-- [ ] Implement keyboard event handling (keypressed, keyreleased)
-- [ ] Implement mouse event handling (mousepressed, mousereleased)
-- [ ] Add key state queries (love.keyboard.isDown)
-- [ ] Add mouse state queries (love.mouse.getPosition)
+- [x] Implement keyboard event handling (keypressed, keyreleased)
+- [x] Implement mouse event handling (mousepressed, mousereleased)
+- [x] Add key state queries (love.keyboard.isDown)
+- [x] Add mouse state queries (love.mouse.getPosition)
 
 ## Phase 6: User Interface
 - [ ] Create src/index.html with canvas element

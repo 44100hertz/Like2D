@@ -1,5 +1,7 @@
 import graphics from './graphics.ts';
 import audio from './audio.ts';
+import keyboard from './keyboard.ts';
+import mouse from './mouse.ts';
 
 export interface LikeCallbacks {
   load?: () => void;
@@ -22,6 +24,8 @@ class Like {
 
   graphics = graphics;
   audio = audio;
+  keyboard = keyboard;
+  mouse = mouse;
 
   constructor() {}
 
@@ -40,6 +44,7 @@ class Like {
     }
     
     graphics.setContext(this.ctx);
+    mouse.setCanvas(this.canvas);
 
     const container = document.getElementById('game-container');
     if (container) {
