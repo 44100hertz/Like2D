@@ -15,39 +15,31 @@ export class Source {
 
   constructor(path: string, options: SourceOptions = {}) {
     this.path = path;
-    this.audio = new Audio(path);
+    this.audio = document.createElement('audio');
+    this.audio.src = path;
     this._volume = options.volume ?? 1;
     this._pitch = options.pitch ?? 1;
     this._looping = options.looping ?? false;
-    
+
     this.audio.volume = this._volume;
     this.audio.loop = this._looping;
     this.updatePlaybackRate();
-    
+
     // Wait for audio to be ready
     this.loadPromise = new Promise((resolve, reject) => {
-      const onCanPlay = () => {
+      this.audio.oncanplaythrough = () => {
         this.isLoaded = true;
-        cleanup();
         resolve();
       };
-      
-      const onError = () => {
-        cleanup();
+
+      this.audio.onerror = () => {
         reject(new Error(`Failed to load audio: ${path}`));
       };
-      
-      const cleanup = () => {
-        this.audio.removeEventListener('canplaythrough', onCanPlay);
-        this.audio.removeEventListener('error', onError);
-      };
-      
-      this.audio.addEventListener('canplaythrough', onCanPlay);
-      this.audio.addEventListener('error', onError);
-      
+
       // If already cached, it might already be ready
       if (this.audio.readyState >= 4) {
-        onCanPlay();
+        this.isLoaded = true;
+        resolve();
       }
     });
   }
