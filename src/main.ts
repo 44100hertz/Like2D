@@ -1,9 +1,9 @@
 import like from './like/index.ts';
-import { Source, Scene } from './like/index.ts';
+import { Source, Scene, ImageHandle } from './like/index.ts';
 
 // Example demonstrating Like2D graphics API with Scene-based architecture
 let rotation = 0;
-let pepperImage: Awaited<ReturnType<typeof like.graphics.newImage>> | null = null;
+let pepperImage: ImageHandle | null = null;
 let audioSource: Source | null = null;
 let gameStartTime = 0;
 let lastSleepTime = 0;
@@ -20,30 +20,13 @@ const demoScene: Scene = {
   width: 800,
   height: 600,
 
-  preload: async () => {
-    console.log('Preloading assets...');
-    
-    // Load the pepper image
-    try {
-      pepperImage = await like.graphics.newImage('pepper.png');
-      console.log('Image loaded:', pepperImage.width, 'x', pepperImage.height);
-    } catch (err) {
-      console.error('Failed to load image:', err);
-    }
-    
-    // Load audio
-    try {
-      audioSource = await like.audio.newSource('./test.ogg');
-      console.log('Audio loaded: test.ogg, ready:', audioSource.isReady());
-    } catch (err) {
-      console.error('Failed to load audio:', err);
-    }
-  },
-
   load: () => {
-    console.log('Game loaded!');
+    // Start loading assets - they return immediately
+    pepperImage = like.graphics.newImage('pepper.png');
+    audioSource = like.audio.newSource('./test.ogg');
+    
+    console.log('Game loaded! Assets loading in background...');
     gameStartTime = like.timer.getTime();
-    console.log('Game started at:', gameStartTime);
     
     // Set initial background color (dark gray)
     like.graphics.setBackgroundColor(0.1, 0.1, 0.15, 1);
@@ -124,20 +107,20 @@ const demoScene: Scene = {
     like.graphics.rectangle('fill', -40, -40, 80, 80);
     like.graphics.pop();
     
-    // Draw images if loaded
-    if (pepperImage) {
-      // Draw image at normal size
-      like.graphics.setColor(1, 1, 1, 1);
-      like.graphics.draw('pepper.png', 650, 350);
-      
-      // Draw scaled down image
-      like.graphics.draw('pepper.png', 650, 350, 0, 0.5, 0.5);
-      
-      // Draw rotated image
+    // Draw images if loaded (draw() skips silently if not ready)
+    // Using path directly - looks up handle in cache
+    like.graphics.setColor(1, 1, 1, 1);
+    like.graphics.draw('pepper.png', 650, 350);
+    
+    // Draw scaled down image
+    like.graphics.draw('pepper.png', 650, 350, 0, 0.5, 0.5);
+    
+    // Draw rotated image (using handle if available)
+    if (pepperImage && pepperImage.isReady()) {
       like.graphics.push();
       like.graphics.translate(200, 400);
       like.graphics.rotate(rotation * 0.5);
-      like.graphics.draw('pepper.png', 0, 0, 0, 0.4, 0.4, pepperImage.width / 2, pepperImage.height / 2);
+      like.graphics.draw(pepperImage, 0, 0, 0, 0.4, 0.4, pepperImage.width / 2, pepperImage.height / 2);
       like.graphics.pop();
       
       // Draw image quad (sub-region) - just the center portion
@@ -145,7 +128,7 @@ const demoScene: Scene = {
       like.graphics.translate(400, 400);
       like.graphics.rotate(-rotation * 0.3);
       like.graphics.drawq(
-        'pepper.png',
+        pepperImage,
         { 
           x: pepperImage.width * 0.25, 
           y: pepperImage.height * 0.25, 

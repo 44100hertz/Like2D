@@ -22,8 +22,7 @@ Scenes are the primary organizational unit. A Scene is an object implementing th
 interface Scene {
   width: number;        // Canvas resolution width
   height: number;       // Canvas resolution height
-  preload?: () => Promise<void>;  // Asset preloading (optional)
-  load?: () => void;              // Initialization after preload
+  load?: () => void;              // Initialization when scene loads
   update: (dt: number) => void;   // Called every frame
   draw: () => void;               // Called every frame after update
   keypressed?: (key: string) => void;
@@ -39,20 +38,29 @@ interface Scene {
 - Switch scenes via `like.setScene(scene)`
 - Scene stacks will be added later by giving scenes access to their parent scene
 
-### Asset Preloader
+### Asset Loading
 
-Simple preloading system to avoid runtime stutters:
+Fire-and-forget asset loading system:
 
 ```typescript
-like.assets.preload([
-  like.assets.image('player.png'),
-  like.assets.audio('jump.ogg'),
-  like.assets.json('level1.json'),
-  like.assets.text('dialogue.txt'),
-]);
+// Load assets in load() - returns immediately, loads in background
+const playerImage = like.graphics.newImage('player.png');
+const jumpSound = like.audio.newSource('jump.ogg');
 ```
 
-The `preload()` callback blocks `load()` until all assets are ready. No progress UI - simple and effective.
+Handles returned from loading functions provide methods to check loading status:
+
+```typescript
+// Check if image is ready
+if (playerImage.isReady()) {
+  like.graphics.draw(playerImage, x, y);
+}
+
+// Wait for asset explicitly if needed
+await playerImage.ready();
+```
+
+Drawing or playing assets that aren't ready yet will silently skip - no errors or warnings. This allows assets to be used immediately after requesting them, with rendering beginning automatically once loading completes.
 
 ### Input Mapping
 
@@ -74,7 +82,7 @@ Maps actions to multiple keys, mouse buttons, and gamepad inputs. Low-level keyb
 ### Graphics (`like.graphics`)
 2D rendering with HTML5 Canvas:
 - Primitives: rectangles, circles, lines, polygons
-- Images: loading, drawing, sub-regions (quads), transforms
+- Images: fire-and-forget loading with ImageHandle, drawing, sub-regions (quads), transforms
 - Text: font loading, rendering
 - Coordinate transforms: push/pop, translate, rotate, scale
 - Color management with 0-1 float range
@@ -156,7 +164,7 @@ These will be revisited after establishing a game object model:
 
 - Functions over classes where possible
 - 0-1 color range (not 0-255)
-- Async asset loading
+- Fire-and-forget asset loading (no async/await in game code)
 - Global singleton access: `like.graphics`, `like.audio`, etc.
 - Canvas coordinates: (0,0) at top-left
 
@@ -174,5 +182,5 @@ These will be revisited after establishing a game object model:
 While inspired by Love2D, Like2D is not API-compatible:
 - Scenes replace love.load callbacks
 - Input mapping replaces direct key checks
-- Preloading replaces on-demand loading
-- Modern async patterns throughout
+- Fire-and-forget asset loading (no preloading phase)
+- Modern async patterns where needed

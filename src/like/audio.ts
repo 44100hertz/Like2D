@@ -54,7 +54,7 @@ export class Source {
 
   play(): boolean {
     if (!this.isLoaded) {
-      console.warn(`Audio not yet loaded: ${this.path}`);
+      // Silently return false - asset not loaded yet
       return false;
     }
     
@@ -161,10 +161,9 @@ export class Audio {
   private sources: Set<Source> = new Set();
   private globalVolume: number = 1;
 
-  async newSource(path: string, _type: 'static' | 'stream' = 'static'): Promise<Source> {
+  newSource(path: string, _type: 'static' | 'stream' = 'static'): Source {
     const source = new Source(path);
     this.sources.add(source);
-    await source.ready();
     return source;
   }
 

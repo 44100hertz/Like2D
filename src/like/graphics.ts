@@ -1,16 +1,68 @@
 type DrawMode = 'fill' | 'line';
 
-interface ImageData {
-  element: HTMLImageElement;
-  width: number;
-  height: number;
+export interface ImageHandle {
+  readonly path: string;
+  isReady(): boolean;
+  ready(): Promise<void>;
+  readonly width: number;
+  readonly height: number;
 }
+
+class ImageHandleImpl implements ImageHandle {
+  readonly path: string;
+  private _width = 0;
+  private _height = 0;
+  private element: HTMLImageElement | null = null;
+  private loadPromise: Promise<void>;
+  private isLoaded = false;
+
+  constructor(path: string) {
+    this.path = path;
+    
+    this.loadPromise = new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        this.element = img;
+        this._width = img.width;
+        this._height = img.height;
+        this.isLoaded = true;
+        resolve();
+      };
+      img.onerror = () => {
+        reject(new Error(`Failed to load image: ${path}`));
+      };
+      img.src = path;
+    });
+  }
+
+  isReady(): boolean {
+    return this.isLoaded;
+  }
+
+  ready(): Promise<void> {
+    return this.loadPromise;
+  }
+
+  get width(): number {
+    return this._width;
+  }
+
+  get height(): number {
+    return this._height;
+  }
+
+  getElement(): HTMLImageElement | null {
+    return this.element;
+  }
+}
+
+
 
 export class Graphics {
   private ctx: CanvasRenderingContext2D | null = null;
   private currentColor = { r: 1, g: 1, b: 1, a: 1 };
   private backgroundColor = { r: 0, g: 0, b: 0, a: 1 };
-  private images = new Map<string, ImageData>();
+  private images = new Map<string, ImageHandleImpl>();
 
   setContext(ctx: CanvasRenderingContext2D | null): void {
     this.ctx = ctx;
@@ -143,25 +195,18 @@ export class Graphics {
     return this.ctx.font;
   }
 
-  newImage(path: string): Promise<ImageData> {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        const imageData: ImageData = {
-          element: img,
-          width: img.width,
-          height: img.height
-        };
-        this.images.set(path, imageData);
-        resolve(imageData);
-      };
-      img.onerror = () => reject(new Error(`Failed to load image: ${path}`));
-      img.src = path;
-    });
+  newImage(path: string): ImageHandle {
+    // Return cached handle if it exists
+    let handle = this.images.get(path);
+    if (!handle) {
+      handle = new ImageHandleImpl(path);
+      this.images.set(path, handle);
+    }
+    return handle;
   }
 
   draw(
-    drawable: ImageData | string,
+    handle: ImageHandle | string,
     x: number,
     y: number,
     r: number = 0,
@@ -172,28 +217,36 @@ export class Graphics {
   ): void {
     if (!this.ctx) return;
     
-    let imageData: ImageData | undefined;
+    let imageHandle: ImageHandleImpl | undefined;
     
-    if (typeof drawable === 'string') {
-      imageData = this.images.get(drawable);
-      if (!imageData) {
-        console.warn(`Image not found: ${drawable}`);
+    if (typeof handle === 'string') {
+      imageHandle = this.images.get(handle);
+      if (!imageHandle) {
+        // Silently skip - asset not loaded yet
         return;
       }
     } else {
-      imageData = drawable;
+      imageHandle = this.images.get(handle.path);
     }
+    
+    if (!imageHandle || !imageHandle.isReady()) {
+      // Silently skip if not ready
+      return;
+    }
+    
+    const element = imageHandle.getElement();
+    if (!element) return;
     
     this.ctx.save();
     this.ctx.translate(x, y);
     this.ctx.rotate(r);
     this.ctx.scale(sx, sy);
-    this.ctx.drawImage(imageData.element, -ox, -oy);
+    this.ctx.drawImage(element, -ox, -oy);
     this.ctx.restore();
   }
 
   drawq(
-    image: ImageData | string,
+    handle: ImageHandle | string,
     quad: { x: number; y: number; width: number; height: number },
     x: number,
     y: number,
@@ -205,24 +258,32 @@ export class Graphics {
   ): void {
     if (!this.ctx) return;
     
-    let imageData: ImageData | undefined;
+    let imageHandle: ImageHandleImpl | undefined;
     
-    if (typeof image === 'string') {
-      imageData = this.images.get(image);
-      if (!imageData) {
-        console.warn(`Image not found: ${image}`);
+    if (typeof handle === 'string') {
+      imageHandle = this.images.get(handle);
+      if (!imageHandle) {
+        // Silently skip - asset not loaded yet
         return;
       }
     } else {
-      imageData = image;
+      imageHandle = this.images.get(handle.path);
     }
+    
+    if (!imageHandle || !imageHandle.isReady()) {
+      // Silently skip if not ready
+      return;
+    }
+    
+    const element = imageHandle.getElement();
+    if (!element) return;
     
     this.ctx.save();
     this.ctx.translate(x, y);
     this.ctx.rotate(r);
     this.ctx.scale(sx, sy);
     this.ctx.drawImage(
-      imageData.element,
+      element,
       quad.x,
       quad.y,
       quad.width,

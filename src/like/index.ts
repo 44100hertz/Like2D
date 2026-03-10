@@ -128,18 +128,13 @@ class Like {
     }
   }
 
-  async start(): Promise<void> {
+  start(): void {
     if (this.isRunning) return;
     
     this.isRunning = true;
     
-    if (this.currentScene) {
-      if (this.currentScene.preload) {
-        await this.currentScene.preload();
-      }
-      if (this.currentScene.load) {
-        this.currentScene.load();
-      }
+    if (this.currentScene?.load) {
+      this.currentScene.load();
     }
 
     this.lastTime = performance.now();
@@ -193,3 +188,4 @@ export { Source } from './audio.ts';
 export { timer } from './timer.ts';
 export { localstorage } from './localstorage.ts';
 export type { Scene } from './scene.ts';
+export type { ImageHandle } from './graphics.ts';

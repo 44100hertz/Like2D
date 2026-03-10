@@ -1,7 +1,6 @@
 export interface Scene {
   width: number;
   height: number;
-  preload?: () => Promise<void>;
   load?: () => void;
   update: (dt: number) => void;
   draw: () => void;

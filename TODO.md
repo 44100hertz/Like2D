@@ -9,16 +9,20 @@
 - [x] Update entry point to instantiate and run scenes
 - [x] Ensure canvas resizes when switching to scene with different resolution
 
-## Phase 2: Asset Preloader
+## Phase 2: Asset Loading Refactor ✓
 
-- [ ] Create `like.assets` module
-- [ ] Implement `like.assets.preload([...])` returning Promise
-- [ ] Support image preloading (`like.assets.image(path)`)
-- [ ] Support audio preloading (`like.assets.audio(path)`)
-- [ ] Support JSON preloading (`like.assets.json(path)`)
-- [ ] Support text preloading (`like.assets.text(path)`)
-- [ ] Block scene.load() until preload completes
-- [ ] Cache loaded assets for reuse
+- [x] Convert to fire-and-forget loading model
+- [x] Create `ImageHandle` class with `isReady()` and `ready()` methods
+- [x] Modify `newImage()` to return `ImageHandle` synchronously
+- [x] Cache `ImageHandle` instances by path
+- [x] Update `draw()`/`drawq()` to skip silently if not ready
+- [x] Make `newSource()` synchronous (no await)
+- [x] Update `play()` to return false silently if not loaded
+- [x] Remove `preload` from Scene interface
+- [x] Remove preload call from `Like.start()`
+- [x] Update demo to use new loading pattern
+- [x] Update SPEC.md documentation
+- [x] Export `ImageHandle` type from index.ts
 
 ## Phase 3: Input Mapping System
 
