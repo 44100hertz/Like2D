@@ -10,6 +10,8 @@ export class Source {
   private _pitch: number = 1;
   private _looping: boolean = false;
   private path: string;
+  private isLoaded = false;
+  private loadPromise: Promise<void>;
 
   constructor(path: string, options: SourceOptions = {}) {
     this.path = path;
@@ -21,6 +23,37 @@ export class Source {
     this.audio.volume = this._volume;
     this.audio.loop = this._looping;
     this.updatePlaybackRate();
+    
+    // Wait for audio to be ready
+    this.loadPromise = new Promise((resolve, reject) => {
+      const onCanPlay = () => {
+        this.isLoaded = true;
+        cleanup();
+        resolve();
+      };
+      
+      const onError = () => {
+        cleanup();
+        reject(new Error(`Failed to load audio: ${path}`));
+      };
+      
+      const cleanup = () => {
+        this.audio.removeEventListener('canplaythrough', onCanPlay);
+        this.audio.removeEventListener('error', onError);
+      };
+      
+      this.audio.addEventListener('canplaythrough', onCanPlay);
+      this.audio.addEventListener('error', onError);
+      
+      // If already cached, it might already be ready
+      if (this.audio.readyState >= 4) {
+        onCanPlay();
+      }
+    });
+  }
+
+  ready(): Promise<void> {
+    return this.loadPromise;
   }
 
   private updatePlaybackRate(): void {
@@ -28,13 +61,19 @@ export class Source {
   }
 
   play(): boolean {
+    if (!this.isLoaded) {
+      console.warn(`Audio not yet loaded: ${this.path}`);
+      return false;
+    }
+    
     if (this.audio.paused || this.audio.ended) {
       this.audio.currentTime = 0;
     }
+    
     const playPromise = this.audio.play();
     if (playPromise) {
       playPromise.catch(err => {
-        console.warn(`Failed to play audio "${this.path}":`, err);
+        console.warn(`Failed to play audio "${this.path}":`, err.message);
       });
     }
     return true;
@@ -84,6 +123,10 @@ export class Source {
     return this.audio.paused && this.audio.currentTime === 0;
   }
 
+  isReady(): boolean {
+    return this.isLoaded;
+  }
+
   setVolume(volume: number): void {
     this._volume = Math.max(0, Math.min(1, volume));
     this.audio.volume = this._volume;
@@ -129,9 +172,10 @@ export class Audio {
   private sources: Set<Source> = new Set();
   private globalVolume: number = 1;
 
-  newSource(path: string, type: 'static' | 'stream' = 'static'): Source {
+  async newSource(path: string, type: 'static' | 'stream' = 'static'): Promise<Source> {
     const source = new Source(path);
     this.sources.add(source);
+    await source.ready();
     return source;
   }
 

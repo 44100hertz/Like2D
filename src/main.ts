@@ -23,12 +23,10 @@ like.setCallbacks({
     
     // Load audio
     try {
-      audioSource = like.audio.newSource('./test.ogg');
-      audioStatus = 'Ready (Space=Play, S=Stop, P=Pause)';
-      console.log('Audio loaded: test.ogg');
+      audioSource = await like.audio.newSource('./test.ogg');
+      console.log('Audio loaded: test.ogg, ready:', audioSource.isReady());
     } catch (err) {
       console.error('Failed to load audio:', err);
-      audioStatus = 'Failed to load';
     }
   },
   
@@ -122,7 +120,7 @@ like.setCallbacks({
     }
     
     // Audio status display
-    if (audioSource) {
+    if (audioSource && audioSource.isReady()) {
       like.graphics.setColor(0.9, 0.6, 0.2, 1);
       like.graphics.setFont(18);
       const isPlaying = audioSource.isPlaying();
@@ -140,10 +138,9 @@ like.setCallbacks({
   
   keypressed: (key: string) => {
     console.log('Key pressed:', key);
-    
+
     // Audio controls
-    if (audioSource) {
-      console.log('Audio source exists, processing key:', key);
+    if (audioSource && audioSource.isReady()) {
       switch (key.toLowerCase()) {
         case ' ':
           console.log('Toggling play/stop');
@@ -173,6 +170,8 @@ like.setCallbacks({
           console.log('Audio rewound');
           break;
       }
+    } else if (audioSource) {
+      console.log('Audio source exists but not ready yet');
     } else {
       console.log('No audio source available');
     }
