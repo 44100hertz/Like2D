@@ -10,15 +10,21 @@ Raw HTML 2D Canvas is arguably much less ergonomic than Love2D, especially for g
 
 So, this is a framework (runtime and template) which recreates the parts of Love2D which are simple or efficient enough for a 2D browser canvas.
 
-src/index.html and src/like/index.ts contain a minimal system to load the library and display a canvas.
+It WILL NOT reinvent the wheel. The goal is less than 10,000 lines of code for the final product.
 
-At first, the web page will just have a canvas at a specified resolution, with a button to make it full screen.
+Thin wrappers around browser APIs are fine as long as a game developer wouldn't reasonably prefer the raw API over the wrapper.
+
+src/index.html just has a canvas at a specified resolution, with a button to make it full screen. The developer can edit this file, of course.
+
+Meanwhile, src/like/index.ts is the entrypoint for the library.
 
 src/main.ts optionally contains callbacks loaded by like.ts, which are just like the love2d callbacks:
  - love.draw
  - love.update
  - love.keypressed
  - etc.
+
+For now, src/main.ts also contains demos of every single feature.
 
 The "Like" library should act a bit like a singleton where it can be called from any file, rather than being an object passed around. 
 
