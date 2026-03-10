@@ -54,3 +54,50 @@
 - [x] Verify hot reload works correctly (Vite dev server)
 - [x] Test fullscreen functionality across browsers
 - [ ] Add error handling and user-friendly messages
+
+## Phase 9: Touch Module (love.touch)
+- [ ] Implement touch event handling via Touch Events API
+- [ ] Implement love.touch.getTouches() - get active touch IDs
+- [ ] Implement love.touch.getPosition(id) - get touch position by ID
+- [ ] Add love.touchpressed callback to LikeCallbacks
+- [ ] Add love.touchreleased callback to LikeCallbacks
+- [ ] Add love.touchmoved callback to LikeCallbacks
+- [ ] Support multi-touch tracking (simultaneous touches)
+- [ ] Create src/like/touch.ts module
+
+## Phase 10: Joystick/Gamepad Module (love.joystick)
+- [ ] Implement gamepad detection via Gamepad API
+- [ ] Implement love.joystickadded callback
+- [ ] Implement love.joystickremoved callback
+- [ ] Implement love.joystickpressed callback
+- [ ] Implement love.joystickreleased callback
+- [ ] Implement love.joystickaxis callback
+- [ ] Implement love.joystickhat callback
+- [ ] Implement Joystick class with isDown(), getAxis(), getHat() methods
+- [ ] Implement love.joystick.getJoysticks()
+- [ ] Create src/like/joystick.ts module
+
+## Phase 11: Sound Module (love.sound - Web Audio API)
+- [ ] Implement SoundData class for raw audio data
+- [ ] Implement love.sound.newSoundData() constructor
+- [ ] Implement Decoder for audio format decoding
+- [ ] Implement getDuration(), getSampleRate(), getBitDepth() on SoundData
+- [ ] Implement getSample() / setSample() for raw audio manipulation
+- [ ] Create src/like/sound.ts module
+
+## Phase 12: Math Module - Random (love.math)
+- [ ] Implement love.math.random() with optional min/max args
+- [ ] Implement love.math.randomSeed() for seeding RNG
+- [ ] Implement RandomGenerator class for stateful random generation
+- [ ] Ensure random matches LOVE API exactly
+- [ ] Create src/like/math.ts module
+
+## Phase 13: Image Data Module (love.image)
+- [ ] Implement ImageData class for pixel manipulation
+- [ ] Implement love.image.newImageData(width, height) - create blank
+- [ ] Implement love.image.newImageData(filename) - load from file
+- [ ] Implement getWidth() / getHeight() on ImageData
+- [ ] Implement getPixel() / setPixel() for individual pixel access
+- [ ] Implement mapPixel() for batch pixel operations
+- [ ] Implement encode() to save ImageData to file
+- [ ] Create src/like/image.ts module
