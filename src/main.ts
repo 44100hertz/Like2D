@@ -1,7 +1,7 @@
 import like from './like/index.ts';
-import { Source } from './like/index.ts';
+import { Source, Scene } from './like/index.ts';
 
-// Example demonstrating Like2D graphics API
+// Example demonstrating Like2D graphics API with Scene-based architecture
 let rotation = 0;
 let pepperImage: Awaited<ReturnType<typeof like.graphics.newImage>> | null = null;
 let audioSource: Source | null = null;
@@ -16,15 +16,12 @@ interface GameState {
   savedAt: string;
 }
 
-like.setCallbacks({
-  load: async () => {
-    console.log('Game loaded!');
-    gameStartTime = like.timer.getTime();
-    console.log('Game started at:', gameStartTime);
-    
-    // Set initial background color (dark gray)
-    like.graphics.setBackgroundColor(0.1, 0.1, 0.15, 1);
-    like.graphics.setFont(24);
+const demoScene: Scene = {
+  width: 800,
+  height: 600,
+
+  preload: async () => {
+    console.log('Preloading assets...');
     
     // Load the pepper image
     try {
@@ -42,12 +39,22 @@ like.setCallbacks({
       console.error('Failed to load audio:', err);
     }
   },
-  
+
+  load: () => {
+    console.log('Game loaded!');
+    gameStartTime = like.timer.getTime();
+    console.log('Game started at:', gameStartTime);
+    
+    // Set initial background color (dark gray)
+    like.graphics.setBackgroundColor(0.1, 0.1, 0.15, 1);
+    like.graphics.setFont(24);
+  },
+
   update: (dt: number) => {
     // Update rotation
     rotation += dt;
   },
-  
+
   draw: () => {
     const centerX = like.getWidth() / 2;
     const centerY = like.getHeight() / 2;
@@ -263,7 +270,7 @@ like.setCallbacks({
     like.graphics.setColor(0, 1, 0, 1);
     like.graphics.circle('line', playerX, playerY, 15);
   },
-  
+
   keypressed: async (key: string) => {
     console.log('Key pressed:', key);
 
@@ -325,13 +332,13 @@ like.setCallbacks({
         break;
     }
   },
-  
+
   mousepressed: (x: number, y: number, button: number) => {
     console.log('Mouse pressed at', x, y, 'button:', button);
   }
-});
+};
 
-// Initialize and start
-like.init(800, 600);
+// Initialize with scene
+like.init();
+like.setScene(demoScene);
 like.start();
-

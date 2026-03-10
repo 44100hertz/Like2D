@@ -4,21 +4,12 @@ import keyboard from './keyboard.ts';
 import mouse from './mouse.ts';
 import timer from './timer.ts';
 import localstorage from './localstorage.ts';
-
-export interface LikeCallbacks {
-  load?: () => void;
-  update?: (dt: number) => void;
-  draw?: () => void;
-  keypressed?: (key: string) => void;
-  keyreleased?: (key: string) => void;
-  mousepressed?: (x: number, y: number, button: number) => void;
-  mousereleased?: (x: number, y: number, button: number) => void;
-}
+import { Scene } from './scene.ts';
 
 class Like {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
-  private callbacks: LikeCallbacks = {};
+  private currentScene: Scene | null = null;
   private isRunning = false;
   private lastTime = 0;
   private currentWidth = 800;
@@ -84,22 +75,22 @@ class Like {
 
   private setupInputHandlers(): void {
     window.addEventListener('keydown', (e) => {
-      if (this.callbacks.keypressed) {
-        this.callbacks.keypressed(e.key);
+      if (this.currentScene?.keypressed) {
+        this.currentScene.keypressed(e.key);
       }
     });
 
     window.addEventListener('keyup', (e) => {
-      if (this.callbacks.keyreleased) {
-        this.callbacks.keyreleased(e.key);
+      if (this.currentScene?.keyreleased) {
+        this.currentScene.keyreleased(e.key);
       }
     });
 
     if (this.canvas) {
       this.canvas.addEventListener('mousedown', (e) => {
-        if (this.callbacks.mousepressed) {
+        if (this.currentScene?.mousepressed) {
           const rect = this.canvas!.getBoundingClientRect();
-          this.callbacks.mousepressed(
+          this.currentScene.mousepressed(
             e.clientX - rect.left,
             e.clientY - rect.top,
             e.button + 1
@@ -108,9 +99,9 @@ class Like {
       });
 
       this.canvas.addEventListener('mouseup', (e) => {
-        if (this.callbacks.mousereleased) {
+        if (this.currentScene?.mousereleased) {
           const rect = this.canvas!.getBoundingClientRect();
-          this.callbacks.mousereleased(
+          this.currentScene.mousereleased(
             e.clientX - rect.left,
             e.clientY - rect.top,
             e.button + 1
@@ -120,17 +111,35 @@ class Like {
     }
   }
 
-  setCallbacks(callbacks: LikeCallbacks): void {
-    this.callbacks = callbacks;
+  setScene(scene: Scene): void {
+    this.currentScene = scene;
+
+    if (this.canvas) {
+      if (scene.width !== this.currentWidth || scene.height !== this.currentHeight) {
+        this.currentWidth = scene.width;
+        this.currentHeight = scene.height;
+        this.canvas.width = scene.width;
+        this.canvas.height = scene.height;
+      }
+    }
+
+    if (this.isRunning && scene.load) {
+      scene.load();
+    }
   }
 
-  start(): void {
+  async start(): Promise<void> {
     if (this.isRunning) return;
     
     this.isRunning = true;
     
-    if (this.callbacks.load) {
-      this.callbacks.load();
+    if (this.currentScene) {
+      if (this.currentScene.preload) {
+        await this.currentScene.preload();
+      }
+      if (this.currentScene.load) {
+        this.currentScene.load();
+      }
     }
 
     this.lastTime = performance.now();
@@ -138,14 +147,12 @@ class Like {
   }
 
   private loop(): void {
-    if (!this.isRunning) return;
+    if (!this.isRunning || !this.currentScene) return;
 
     const currentTime = performance.now();
 
-    // Update timer module (handles sleep internally)
     timer.update(currentTime);
 
-    // Skip updates and draws while sleeping
     if (timer.isSleeping()) {
       requestAnimationFrame(() => this.loop());
       return;
@@ -154,13 +161,11 @@ class Like {
     const dt = (currentTime - this.lastTime) / 1000;
     this.lastTime = currentTime;
 
-    if (this.callbacks.update) {
-      this.callbacks.update(dt);
-    }
+    this.currentScene.update(dt);
 
-    if (this.ctx && this.callbacks.draw) {
+    if (this.ctx) {
       graphics.clear();
-      this.callbacks.draw();
+      this.currentScene.draw();
     }
 
     requestAnimationFrame(() => this.loop());
@@ -189,3 +194,4 @@ export const love = like;
 export { Source } from './audio.ts';
 export { timer } from './timer.ts';
 export { localstorage } from './localstorage.ts';
+export type { Scene } from './scene.ts';

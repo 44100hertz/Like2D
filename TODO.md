@@ -1,13 +1,13 @@
 # Like2D Implementation TODO
 
-## Phase 1: Core Refactor - Scene System
+## Phase 1: Core Refactor - Scene System ✓
 
-- [ ] Redesign Like class to support Scene-based architecture
-- [ ] Implement Scene interface with width/height resolution setting
-- [ ] Create `like.setScene(scene)` for scene switching
-- [ ] Remove old callback-based system
-- [ ] Update entry point to instantiate and run scenes
-- [ ] Ensure canvas resizes when switching to scene with different resolution
+- [x] Redesign Like class to support Scene-based architecture
+- [x] Implement Scene interface with width/height resolution setting
+- [x] Create `like.setScene(scene)` for scene switching
+- [x] Remove old callback-based system
+- [x] Update entry point to instantiate and run scenes
+- [x] Ensure canvas resizes when switching to scene with different resolution
 
 ## Phase 2: Asset Preloader
 
