@@ -131,9 +131,95 @@ like.setCallbacks({
     // Print instructions
     like.graphics.setColor(0.6, 0.6, 0.6, 1);
     like.graphics.setFont(16);
-    like.graphics.print('Press any key to see it logged', 20, like.getHeight() - 60);
-    like.graphics.print('Click anywhere for mouse position', 20, like.getHeight() - 40);
-    like.graphics.print('Audio: Space=Play/Stop, P=Pause/Resume', 20, like.getHeight() - 20);
+    like.graphics.print('Press any key to see it logged', 20, like.getHeight() - 80);
+    like.graphics.print('Click anywhere for mouse position', 20, like.getHeight() - 60);
+    like.graphics.print('Audio: Space=Play/Stop, P=Pause/Resume', 20, like.getHeight() - 40);
+    like.graphics.print('Hold Arrow Keys, WASD, or click mouse buttons', 20, like.getHeight() - 20);
+    
+    // ===== KEYBOARD & MOUSE INPUT DEMO =====
+    
+    // Display mouse position
+    const mousePos = like.mouse.getPosition();
+    like.graphics.setColor(0.2, 0.9, 0.9, 1);
+    like.graphics.setFont(16);
+    like.graphics.print(`Mouse: (${Math.round(mousePos.x)}, ${Math.round(mousePos.y)})`, 20, 180);
+    
+    // Draw mouse position indicator on canvas
+    like.graphics.setColor(0.2, 0.9, 0.9, 0.5);
+    like.graphics.circle('line', mousePos.x, mousePos.y, 10);
+    like.graphics.line(mousePos.x - 15, mousePos.y, mousePos.x + 15, mousePos.y);
+    like.graphics.line(mousePos.x, mousePos.y - 15, mousePos.x, mousePos.y + 15);
+    
+    // Display mouse button states
+    const lmb = like.mouse.isDown(1) ? 'L' : '_';
+    const mmb = like.mouse.isDown(2) ? 'M' : '_';
+    const rmb = like.mouse.isDown(3) ? 'R' : '_';
+    like.graphics.setColor(0.9, 0.9, 0.2, 1);
+    like.graphics.print(`Mouse Buttons: [${lmb}] [${mmb}] [${rmb}]`, 20, 200);
+    
+    // Keyboard input demo - show arrow keys and WASD state
+    like.graphics.setFont(18);
+    let keyY = 230;
+    
+    // Arrow keys display
+    like.graphics.setColor(0.7, 0.7, 0.7, 1);
+    like.graphics.print('Keyboard (hold to see):', 20, keyY);
+    keyY += 25;
+    
+    // Draw arrow key states
+    const up = like.keyboard.isDown('ArrowUp') || like.keyboard.isDown('w') || like.keyboard.isDown('W');
+    const down = like.keyboard.isDown('ArrowDown') || like.keyboard.isDown('s') || like.keyboard.isDown('S');
+    const left = like.keyboard.isDown('ArrowLeft') || like.keyboard.isDown('a') || like.keyboard.isDown('A');
+    const right = like.keyboard.isDown('ArrowRight') || like.keyboard.isDown('d') || like.keyboard.isDown('D');
+    
+    like.graphics.setColor(up ? 0.2 : 0.5, up ? 0.9 : 0.5, 0.2, 1);
+    like.graphics.rectangle(up ? 'fill' : 'line', 170, keyY - 5, 25, 25);
+    like.graphics.setColor(up ? 0 : 0.5, 1, up ? 0 : 0.5, 1);
+    like.graphics.print('↑', 175, keyY);
+    
+    like.graphics.setColor(left ? 0.2 : 0.5, left ? 0.9 : 0.5, 0.2, 1);
+    like.graphics.rectangle(left ? 'fill' : 'line', 135, keyY + 20, 25, 25);
+    like.graphics.setColor(left ? 0 : 0.5, 1, left ? 0 : 0.5, 1);
+    like.graphics.print('←', 140, keyY + 25);
+    
+    like.graphics.setColor(down ? 0.2 : 0.5, down ? 0.9 : 0.5, 0.2, 1);
+    like.graphics.rectangle(down ? 'fill' : 'line', 170, keyY + 20, 25, 25);
+    like.graphics.setColor(down ? 0 : 0.5, 1, down ? 0 : 0.5, 1);
+    like.graphics.print('↓', 175, keyY + 25);
+    
+    like.graphics.setColor(right ? 0.2 : 0.5, right ? 0.9 : 0.5, 0.2, 1);
+    like.graphics.rectangle(right ? 'fill' : 'line', 205, keyY + 20, 25, 25);
+    like.graphics.setColor(right ? 0 : 0.5, 1, right ? 0 : 0.5, 1);
+    like.graphics.print('→', 210, keyY + 25);
+    
+    // Show active keys list
+    keyY += 70;
+    const activeKeys: string[] = [];
+    if (like.keyboard.isDown(' ')) activeKeys.push('Space');
+    if (like.keyboard.isDown('Enter')) activeKeys.push('Enter');
+    if (like.keyboard.isDown('Shift')) activeKeys.push('Shift');
+    if (like.keyboard.isDown('Control')) activeKeys.push('Ctrl');
+    if (like.keyboard.isDown('Alt')) activeKeys.push('Alt');
+    if (like.keyboard.isDown('Escape')) activeKeys.push('Esc');
+    
+    if (activeKeys.length > 0) {
+      like.graphics.setColor(0.9, 0.5, 0.2, 1);
+      like.graphics.print(`Active: ${activeKeys.join(', ')}`, 20, keyY);
+    }
+    
+    // Interactive element - move a circle with WASD/Arrows
+    keyY += 40;
+    like.graphics.setColor(0.5, 0.5, 0.5, 1);
+    like.graphics.print('Move this with WASD or Arrow keys:', 20, keyY);
+    
+    // Calculate player position based on keyboard input
+    const playerX = 250 + (right ? 30 : left ? -30 : 0);
+    const playerY = keyY + 50 + (down ? 30 : up ? -30 : 0);
+    
+    like.graphics.setColor(0.2, 0.9, 0.4, 1);
+    like.graphics.circle('fill', playerX, playerY, 15);
+    like.graphics.setColor(0, 1, 0, 1);
+    like.graphics.circle('line', playerX, playerY, 15);
   },
   
   keypressed: (key: string) => {
