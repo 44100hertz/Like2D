@@ -100,19 +100,14 @@ Time management:
 - Delta time (`getDelta()`)
 - FPS counter (`getFPS()`)
 - Game time (`getTime()`)
+- Scene time (`getSceneTime()`)
 - Sleep functionality (`sleep(seconds)`)
-- Scheduled callbacks (future)
 
 ### Input
 - **Keyboard** (`like.keyboard`): Key state queries
 - **Mouse** (`like.mouse`): Position and button states
 - **Input Mapping** (`like.input`): Action abstraction layer
-
-### Storage (`like.storage`)
-Save/load game state:
-- localStorage-based persistence
-- Type-safe save/load with generics
-- Save versioning support
+- **Gamepad** (`like.gamepad`): Controller support with SDL mapping DB, analog stick input
 
 ## File Structure
 
@@ -128,8 +123,7 @@ src/
 │   ├── mouse.ts           # Mouse input
 │   ├── input.ts           # Input mapping system
 │   ├── timer.ts           # Time management
-│   ├── storage.ts         # Save/load (localStorage)
-│   ├── assets.ts          # Asset preloading
+│   ├── gamepad.ts         # Gamepad input
 │   └── scene.ts           # Scene interface and management
 ```
 

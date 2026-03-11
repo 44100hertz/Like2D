@@ -5,7 +5,6 @@ import mouse from './mouse.ts';
 import input from './input.ts';
 import gamepad from './gamepad.ts';
 import timer from './timer.ts';
-import localstorage from './localstorage.ts';
 import { Scene } from './scene.ts';
 
 class Like {
@@ -24,7 +23,6 @@ class Like {
   input = input;
   gamepad = gamepad;
   timer = timer;
-  localstorage = localstorage;
 
   constructor() {}
 
@@ -120,6 +118,7 @@ class Like {
 
   setScene(scene: Scene): void {
     this.currentScene = scene;
+    timer.resetSceneTime();
 
     if (this.canvas) {
       if (scene.width !== this.currentWidth || scene.height !== this.currentHeight) {
@@ -219,8 +218,8 @@ export default like;
 export const love = like;
 export { Source } from './audio.ts';
 export { timer } from './timer.ts';
-export { localstorage } from './localstorage.ts';
 export type { Scene } from './scene.ts';
 export type { ImageHandle } from './graphics.ts';
 export { input } from './input.ts';
 export { gamepad, getButtonName } from './gamepad.ts';
+export type { StickPosition } from './gamepad.ts';

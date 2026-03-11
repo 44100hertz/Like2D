@@ -12,6 +12,7 @@ export class Source {
   private path: string;
   private isLoaded = false;
   private loadPromise: Promise<void>;
+  private globalVolume: number = 1;
 
   constructor(path: string, options: SourceOptions = {}) {
     this.path = path;
@@ -25,7 +26,6 @@ export class Source {
     this.audio.loop = this._looping;
     this.updatePlaybackRate();
 
-    // Wait for audio to be ready
     this.loadPromise = new Promise((resolve, reject) => {
       this.audio.oncanplaythrough = () => {
         this.isLoaded = true;
@@ -36,12 +36,16 @@ export class Source {
         reject(new Error(`Failed to load audio: ${path}`));
       };
 
-      // If already cached, it might already be ready
       if (this.audio.readyState >= 4) {
         this.isLoaded = true;
         resolve();
       }
     });
+  }
+
+  _setGlobalVolume(vol: number): void {
+    this.globalVolume = vol;
+    this.audio.volume = this._volume * this.globalVolume;
   }
 
   ready(): Promise<void> {
@@ -118,7 +122,7 @@ export class Source {
 
   setVolume(volume: number): void {
     this._volume = Math.max(0, Math.min(1, volume));
-    this.audio.volume = this._volume;
+    this.audio.volume = this._volume * this.globalVolume;
   }
 
   getVolume(): number {
@@ -149,11 +153,8 @@ export class Source {
       pitch: this._pitch,
       looping: this._looping
     });
+    clone._setGlobalVolume(this.globalVolume);
     return clone;
-  }
-
-  getType(): 'static' | 'stream' {
-    return 'static';
   }
 }
 
@@ -161,8 +162,9 @@ export class Audio {
   private sources: Set<Source> = new Set();
   private globalVolume: number = 1;
 
-  newSource(path: string, _type: 'static' | 'stream' = 'static'): Source {
+  newSource(path: string): Source {
     const source = new Source(path);
+    source._setGlobalVolume(this.globalVolume);
     this.sources.add(source);
     return source;
   }
@@ -206,18 +208,12 @@ export class Audio {
   setVolume(volume: number): void {
     this.globalVolume = Math.max(0, Math.min(1, volume));
     this.sources.forEach(source => {
-      const sourceVolume = source.getVolume();
-      source.setVolume(sourceVolume * this.globalVolume);
+      source._setGlobalVolume(this.globalVolume);
     });
   }
 
   getVolume(): number {
     return this.globalVolume;
-  }
-
-  setPosition(_x: number, _y: number, _z: number): void {
-    // Web Audio API spatial audio not implemented in this basic version
-    // Would require AudioContext and PannerNode
   }
 
   getActiveSourceCount(): number {

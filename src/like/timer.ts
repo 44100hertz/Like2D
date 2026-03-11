@@ -5,6 +5,7 @@ export class Timer {
   private fps = 0;
   private fpsAccumulator = 0;
   private sleepUntil: number | null = null;
+  private sceneStartTime = 0;
 
   update(dt: number): void {
     this.currentDelta = dt;
@@ -12,12 +13,15 @@ export class Timer {
     this.frameCount++;
     this.fpsAccumulator += dt;
 
-    // Update FPS calculation every second of game time
     if (this.fpsAccumulator >= 1) {
       this.fps = Math.round(this.frameCount / this.fpsAccumulator);
       this.frameCount = 0;
       this.fpsAccumulator = 0;
     }
+  }
+
+  resetSceneTime(): void {
+    this.sceneStartTime = this.totalTime;
   }
 
   getDelta(): number {
@@ -32,13 +36,16 @@ export class Timer {
     return this.totalTime;
   }
 
+  getSceneTime(): number {
+    return this.totalTime - this.sceneStartTime;
+  }
+
   isSleeping(): boolean {
     if (this.sleepUntil === null) return false;
     const currentTime = performance.now();
     if (currentTime < this.sleepUntil) {
       return true;
     }
-    // Sleep period is over
     this.sleepUntil = null;
     return false;
   }

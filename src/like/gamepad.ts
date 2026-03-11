@@ -11,6 +11,27 @@ export interface GamepadButtonEvent {
   rawButtonIndex: number;
 }
 
+export interface StickPosition {
+  x: number;
+  y: number;
+}
+
+const AXIS_DEADZONE = 0.15;
+
+function applyDeadzone(value: number, deadzone: number = AXIS_DEADZONE): number {
+  if (Math.abs(value) < deadzone) return 0;
+  const sign = value < 0 ? -1 : 1;
+  const magnitude = Math.abs(value);
+  return sign * (magnitude - deadzone) / (1 - deadzone);
+}
+
+function applyRadialDeadzone(x: number, y: number, deadzone: number = AXIS_DEADZONE): StickPosition {
+  const magnitude = Math.sqrt(x * x + y * y);
+  if (magnitude < deadzone) return { x: 0, y: 0 };
+  const scale = (magnitude - deadzone) / (magnitude * (1 - deadzone));
+  return { x: x * scale, y: y * scale };
+}
+
 export class Gamepad {
   private buttonTrackers = new Map<number, InputStateTracker<number>>();
   private connectedGamepads = new Map<number, globalThis.Gamepad>();
@@ -168,6 +189,24 @@ export class Gamepad {
   getControllerName(gamepadIndex: number): string | undefined {
     const mapping = this.buttonMappings.get(gamepadIndex);
     return mapping?.controllerName;
+  }
+
+  getAxis(gamepadIndex: number, axisIndex: number): number {
+    const gamepad = this.connectedGamepads.get(gamepadIndex);
+    if (!gamepad || axisIndex < 0 || axisIndex >= gamepad.axes.length) return 0;
+    return applyDeadzone(gamepad.axes[axisIndex]);
+  }
+
+  getLeftStick(gamepadIndex: number): StickPosition {
+    const gamepad = this.connectedGamepads.get(gamepadIndex);
+    if (!gamepad || gamepad.axes.length < 2) return { x: 0, y: 0 };
+    return applyRadialDeadzone(gamepad.axes[0], gamepad.axes[1]);
+  }
+
+  getRightStick(gamepadIndex: number): StickPosition {
+    const gamepad = this.connectedGamepads.get(gamepadIndex);
+    if (!gamepad || gamepad.axes.length < 4) return { x: 0, y: 0 };
+    return applyRadialDeadzone(gamepad.axes[2], gamepad.axes[3]);
   }
 }
 

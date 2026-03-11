@@ -8,7 +8,6 @@ let audioSource: Source | null = null;
 let gameStartTime = 0;
 let lastSleepTime = 0;
 let sleepStatus = '';
-let currentSaveStatus: string | undefined = undefined;
 
 // Player state for movement demo
 const player = {
@@ -16,14 +15,6 @@ const player = {
   y: 350,
   speed: 200, // pixels per second
 };
-
-// Game state for save/load demo
-interface GameState {
-  rotation: number;
-  playerX: number;
-  playerY: number;
-  savedAt: string;
-}
 
 const demoScene: Scene = {
   width: 800,
@@ -53,8 +44,6 @@ const demoScene: Scene = {
     like.input.map('audio_play_pause', ['Space']);
     like.input.map('audio_stop', ['KeyS']);
     like.input.map('audio_pause_resume', ['KeyP']);
-    like.input.map('save_game', ['F5']);
-    like.input.map('load_game', ['F9']);
     like.input.map('sleep_timer', ['KeyL']);
   },
 
@@ -120,35 +109,6 @@ const demoScene: Scene = {
         sleepStatus = 'Timer sleep activated (2 seconds)';
         console.log('Timer sleeping for 2 seconds starting at:', lastSleepTime);
         break;
-      case 'save_game': {
-        const state: GameState = {
-          rotation: rotation,
-          playerX: player.x,
-          playerY: player.y,
-          savedAt: new Date().toLocaleString()
-        };
-        const writeSuccess = await like.localstorage.write('demo_save', state);
-        if (writeSuccess) {
-          currentSaveStatus = `Saved at ${state.savedAt}`;
-        } else {
-          currentSaveStatus = 'Failed to save!';
-        }
-        console.log('Save result:', writeSuccess, state);
-        break;
-      }
-      case 'load_game': {
-        const loadedState = await like.localstorage.read<GameState>('demo_save');
-        if (loadedState) {
-          rotation = loadedState.rotation;
-          player.x = loadedState.playerX;
-          player.y = loadedState.playerY;
-          currentSaveStatus = `Loaded from ${loadedState.savedAt}`;
-          console.log('Loaded state:', loadedState);
-        } else {
-          currentSaveStatus = 'No save file found!';
-        }
-        break;
-      }
     }
   },
 
@@ -280,11 +240,6 @@ const demoScene: Scene = {
       like.graphics.print(`Audio: ${statusText} (${Math.round(audioSource.tell() * 10) / 10}s / ${Math.round(audioSource.getDuration() * 10) / 10}s)`, 20, 520);
     }
     
-    if (currentSaveStatus) {
-      like.graphics.setColor(0.9, 0.9, 0.2, 1);
-      like.graphics.print(currentSaveStatus, 20, 550);
-    }
-    
     // Input action system demo
     like.graphics.setColor(0.9, 0.7, 0.2, 1);
     like.graphics.setFont(16);
@@ -305,8 +260,7 @@ const demoScene: Scene = {
     like.graphics.print('Press any key to see it logged', 20, like.getHeight() - 120);
     like.graphics.print('Click anywhere for mouse position', 20, like.getHeight() - 100);
     like.graphics.print('Audio: Space=Play/Stop, S=Stop, P=Pause/Resume', 20, like.getHeight() - 80);
-    like.graphics.print('Save/Load: F5=Save, F9=Load', 20, like.getHeight() - 60);
-    like.graphics.print('Timer: L=Sleep 2 seconds', 20, like.getHeight() - 40);
+    like.graphics.print('Timer: L=Sleep 2 seconds', 20, like.getHeight() - 60);
     like.graphics.print('Input: WASD/Arrows to move, Space/W/Up to jump', 20, like.getHeight() - 20);
     
     // ===== KEYBOARD & MOUSE INPUT DEMO =====
@@ -395,6 +349,43 @@ const demoScene: Scene = {
           const buttonNames = Array.from(pressedButtons).map(idx => getButtonName(idx));
           like.graphics.print(`  GP${gpIndex}: ${buttonNames.join(', ')}`, 20, keyY);
         }
+      }
+      
+      // Analog stick visualization
+      for (const gpIndex of connectedGamepads) {
+        const leftStick = like.gamepad.getLeftStick(gpIndex);
+        const rightStick = like.gamepad.getRightStick(gpIndex);
+        
+        keyY += 25;
+        like.graphics.setColor(0.7, 0.7, 0.9, 1);
+        like.graphics.print(`GP${gpIndex} Sticks:`, 20, keyY);
+        
+        // Left stick visual
+        const leftStickCenterX = 150;
+        const leftStickCenterY = keyY + 40;
+        const stickRadius = 25;
+        
+        like.graphics.setColor(0.3, 0.3, 0.3, 1);
+        like.graphics.circle('line', leftStickCenterX, leftStickCenterY, stickRadius);
+        like.graphics.setColor(0.2, 0.6, 0.9, 1);
+        like.graphics.circle('fill', leftStickCenterX + leftStick.x * stickRadius, leftStickCenterY + leftStick.y * stickRadius, 5);
+        like.graphics.setColor(0.6, 0.6, 0.6, 1);
+        like.graphics.setFont(12);
+        like.graphics.print('L', leftStickCenterX - 4, leftStickCenterY + stickRadius + 5);
+        
+        // Right stick visual
+        const rightStickCenterX = leftStickCenterX + 70;
+        const rightStickCenterY = leftStickCenterY;
+        
+        like.graphics.setColor(0.3, 0.3, 0.3, 1);
+        like.graphics.circle('line', rightStickCenterX, rightStickCenterY, stickRadius);
+        like.graphics.setColor(0.9, 0.6, 0.2, 1);
+        like.graphics.circle('fill', rightStickCenterX + rightStick.x * stickRadius, rightStickCenterY + rightStick.y * stickRadius, 5);
+        like.graphics.setColor(0.6, 0.6, 0.6, 1);
+        like.graphics.print('R', rightStickCenterX - 4, rightStickCenterY + stickRadius + 5);
+        
+        like.graphics.setFont(16);
+        keyY += stickRadius * 2 + 15;
       }
     } else {
       like.graphics.setColor(0.5, 0.5, 0.5, 1);

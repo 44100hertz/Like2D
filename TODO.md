@@ -55,12 +55,63 @@ Plan:
 
 ## Phase 4: Modernize Existing Modules
 
-- [ ] Refactor Graphics module to use 0-1 color range consistently
-- [ ] Update Audio module API for consistency
-- [ ] Ensure Timer module works with Scene lifecycle
-- [ ] Rename `localstorage.ts` to `storage.ts` with cleaner API
-- [ ] Update all module imports/exports
+- [x] Refactor Graphics module to use 0-1 color range consistently
+- [x] Update Audio module API for consistency
+- [x] Ensure Timer module works with Scene lifecycle
+- [x] Remove `localstorage.ts` (file didn't exist)
+- [x] Add analog stick support to gamepad module:
+  - `getAxis(gamepadIndex, axisIndex)` - raw axis value with deadzone
+  - `getLeftStick(gamepadIndex)` - returns `{x, y}` with radial deadzone
+  - `getRightStick(gamepadIndex)` - returns `{x, y}` with radial deadzone
+  - Use browser standard mapping (axes[0-3] = leftX, leftY, rightX, rightY)
+  - Apply ~0.15 radial deadzone to handle stick drift
 
+## Phase 5: Restructuring
+
+### No default exports
+Yes, that simple. Remove every default export, replace with explicit import/export, and put this in the spec.
+Consider any other code style choices as well.
+
+### Nailing down the spec
+What parts of the codebase are implict, and should be in the spec?
+What good parts of the code do we notice, philosophically, and what bad parts?
+What parts of the spec are outdated? Let's review the spec and fix these problems.
+
+Then, after updating the spec, let's compare the codebase against it.
+
+### Objects vs Args
+Love2D was designed for Lua, so it uses arguments for everything, which can vary.
+This is kind of antiquated. We should transition our API to:
+1. Take in all required values as args
+2. Take in all optional values as a props table
+
+We need to write out a plan in TODO for completing this task, and add it to the spec.
+
+### Consideration: Geometric Data Types
+It's much easier to manipulate coordinates if they're stored as a two-item array, which can be typed as Vector2.
+Vector2 should not be an object, just a two-item array. `Type Vector2 = [number, number]`
+There should be a set of common (pure) functions on the Vector2 inside of a library, and x,y / w,h coordinate pairs passed around should be put inside of them.
+A common pattern would be `import { V2 } from Vector2`, then for example `V2.mul(a, b)`.
+Further, maybe x,y,w,h coord sets should be stored as four-item arrays, typed as Rect and again with a library.
+Maybe circles as well.
+
+We need to consider whether this would simplify our library and increase ergonomics, and if so write a plan in TODO and put it in the Spec.
+
+### Consideration: Color handling
+Canvases take in CSS colors. Let's have a `Type Color = [number, number, number, number?]`.
+When drawing functions encounter a string, they will use a CSS color. If they encounter an array like this, they can use an RGBA color like love2d.
+Let's also consider whether a small Color library would be needed.
+Based on this, write a plan in TODO and put it in the spec.
+
+### Consideration: reducing state, preferring objects over args.
+It is rare that we benefit from setting color, then line width, then calling draw afterwards. 
+Instead, let's require that a color be passed into any draw call which requires a color. Line width can be optional.
+For example, line drawing take a color argument. However, if images could take an optional tint argument, put that in a props table.
+Or, for the best ergonomics, maybe colors should be optional as an argument and override the currently set color.
+
+Are there other parts of the codebase that suffer from too much statefulness? Would they be cleaner if state was handled by the user?
+
+Let's think about this, then write a plan in TODO if needed and put it in the spec.
 
 ## Future Considerations (Post-Game Object Model)
 
