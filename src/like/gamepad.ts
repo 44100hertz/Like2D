@@ -119,40 +119,20 @@ export class Gamepad {
    * Check if a button is currently pressed on a specific gamepad
    * Uses mapped button indices (standard layout)
    */
-  isButtonDown(gamepadIndex: number, buttonIndex: number): boolean {
+  isButtonDown(gamepadIndex: number, button: number | string): boolean {
+    const buttonIndex = typeof button === 'string' ? getButtonIndex(button) : button;
+    if (buttonIndex === undefined) return false;
     const tracker = this.buttonTrackers.get(gamepadIndex);
     return tracker ? tracker.isDown(buttonIndex) : false;
   }
 
-  /**
-   * Check if a button is currently pressed on any connected gamepad
-   * Uses mapped button indices (standard layout)
-   */
-  isButtonDownOnAny(buttonIndex: number): boolean {
+  isButtonDownOnAny(button: number | string): boolean {
+    const buttonIndex = typeof button === 'string' ? getButtonIndex(button) : button;
+    if (buttonIndex === undefined) return false;
     for (const tracker of this.buttonTrackers.values()) {
-      if (tracker.isDown(buttonIndex)) {
-        return true;
-      }
+      if (tracker.isDown(buttonIndex)) return true;
     }
     return false;
-  }
-
-  /**
-   * Check if a button is currently pressed on a specific gamepad by button name
-   */
-  isButtonDownByName(gamepadIndex: number, buttonName: string): boolean {
-    const buttonIndex = getButtonIndex(buttonName);
-    if (buttonIndex === undefined) return false;
-    return this.isButtonDown(gamepadIndex, buttonIndex);
-  }
-
-  /**
-   * Check if a button is currently pressed on any gamepad by button name
-   */
-  isButtonDownByNameOnAny(buttonName: string): boolean {
-    const buttonIndex = getButtonIndex(buttonName);
-    if (buttonIndex === undefined) return false;
-    return this.isButtonDownOnAny(buttonIndex);
   }
 
   getPressedButtons(gamepadIndex: number): Set<number> {
