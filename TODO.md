@@ -26,6 +26,8 @@
 
 ## Phase 3: Input Mapping System
 
+Use scancodes for actions, but pass both keycodes and scancodes into callbacks.
+
 - [ ] Create `like.input` module
 - [ ] Implement `like.input.map(action, inputs[])`
 - [ ] Implement `like.input.isDown(action)` - checks if any mapped input is held
@@ -34,7 +36,7 @@
 - [ ] Support keyboard keys in mapping
 - [ ] Support mouse buttons in mapping
 - [ ] Support gamepad buttons, axes, and D-pad in mapping
-- [ ] Maintain low-level `like.keyboard`, `like.mouse`, and `like.gamepad` access
+- [ ] Maintain low-level `like.keyboard`, `like.mouse`, and `like.gamepad` access, but only through callbacks
 
 ## Phase 4: Modernize Existing Modules
 
