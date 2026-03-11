@@ -1,25 +1,49 @@
 import { getButtonName, getButtonIndex } from './gamepad-button-map.ts';
 import { InputStateTracker } from './input-state.ts';
+import { gamepadMapping, ButtonMapping } from './gamepad-mapping.ts';
 
 export { getButtonName, getButtonIndex };
 
+export interface GamepadButtonEvent {
+  gamepadIndex: number;
+  buttonIndex: number;
+  buttonName: string;
+  rawButtonIndex: number;
+}
+
 export class Gamepad {
   private buttonTrackers = new Map<number, InputStateTracker<number>>();
-  private connectedGamepads = new Set<number>();
+  private connectedGamepads = new Map<number, globalThis.Gamepad>();
+  private buttonMappings = new Map<number, ButtonMapping>();
 
   constructor() {
     this.setupEventListeners();
   }
 
+  /**
+   * Initialize the gamepad system and load the mapping database
+   */
+  async init(): Promise<void> {
+    await gamepadMapping.loadDatabase();
+  }
+
   private setupEventListeners(): void {
     window.addEventListener('gamepadconnected', (e: GamepadEvent) => {
-      this.connectedGamepads.add(e.gamepad.index);
+      console.log('[Gamepad] Connected:', e.gamepad.id, 'Index:', e.gamepad.index);
+      this.connectedGamepads.set(e.gamepad.index, e.gamepad);
       this.buttonTrackers.set(e.gamepad.index, new InputStateTracker<number>());
+      // Create/get the button mapping for this gamepad
+      const mapping = gamepadMapping.getMapping(e.gamepad);
+      this.buttonMappings.set(e.gamepad.index, mapping);
+      console.log('[Gamepad] Mapping created - hasMapping:', mapping.hasMapping, 'controllerName:', mapping.controllerName);
+      console.log('[Gamepad] toStandard mappings:', Array.from(mapping.toStandard.entries()));
+      console.log('[Gamepad] fromStandard mappings:', Array.from(mapping.fromStandard.entries()));
     });
 
     window.addEventListener('gamepaddisconnected', (e: GamepadEvent) => {
       this.connectedGamepads.delete(e.gamepad.index);
       this.buttonTrackers.delete(e.gamepad.index);
+      this.buttonMappings.delete(e.gamepad.index);
     });
 
     window.addEventListener('blur', () => {
@@ -29,36 +53,57 @@ export class Gamepad {
     });
   }
 
-  update(): { pressed: Array<{ gamepadIndex: number; buttonIndex: number; buttonName: string }>; released: Array<{ gamepadIndex: number; buttonIndex: number; buttonName: string }> } {
+  update(): { pressed: GamepadButtonEvent[]; released: GamepadButtonEvent[] } {
     const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-    const pressed: Array<{ gamepadIndex: number; buttonIndex: number; buttonName: string }> = [];
-    const released: Array<{ gamepadIndex: number; buttonIndex: number; buttonName: string }> = [];
+    const pressed: GamepadButtonEvent[] = [];
+    const released: GamepadButtonEvent[] = [];
 
     for (let i = 0; i < gamepads.length; i++) {
       const gamepad = gamepads[i];
       if (gamepad) {
-        this.connectedGamepads.add(i);
+        this.connectedGamepads.set(i, gamepad);
         
         let tracker = this.buttonTrackers.get(i);
         if (!tracker) {
           tracker = new InputStateTracker<number>();
           this.buttonTrackers.set(i, tracker);
         }
+
+        // Get or update the button mapping for this gamepad
+        let mapping = this.buttonMappings.get(i);
+        if (!mapping) {
+          mapping = gamepadMapping.getMapping(gamepad);
+          this.buttonMappings.set(i, mapping);
+        }
         
         const pressedButtons = new Set<number>();
         for (let j = 0; j < gamepad.buttons.length; j++) {
           if (gamepad.buttons[j].pressed) {
-            pressedButtons.add(j);
+            // Map the raw button index to standard button index
+            const standardIndex = mapping.toStandard.get(j);
+            if (standardIndex !== undefined) {
+              pressedButtons.add(standardIndex);
+            }
           }
         }
         
         const changes = tracker.update(pressedButtons);
         
         for (const buttonIndex of changes.justPressed) {
-          pressed.push({ gamepadIndex: i, buttonIndex, buttonName: getButtonName(buttonIndex) });
+          pressed.push({ 
+            gamepadIndex: i, 
+            buttonIndex, 
+            buttonName: getButtonName(buttonIndex),
+            rawButtonIndex: mapping.fromStandard.get(buttonIndex) ?? buttonIndex,
+          });
         }
         for (const buttonIndex of changes.justReleased) {
-          released.push({ gamepadIndex: i, buttonIndex, buttonName: getButtonName(buttonIndex) });
+          released.push({ 
+            gamepadIndex: i, 
+            buttonIndex, 
+            buttonName: getButtonName(buttonIndex),
+            rawButtonIndex: mapping.fromStandard.get(buttonIndex) ?? buttonIndex,
+          });
         }
       }
     }
@@ -70,11 +115,19 @@ export class Gamepad {
     return this.connectedGamepads.has(gamepadIndex);
   }
 
+  /**
+   * Check if a button is currently pressed on a specific gamepad
+   * Uses mapped button indices (standard layout)
+   */
   isButtonDown(gamepadIndex: number, buttonIndex: number): boolean {
     const tracker = this.buttonTrackers.get(gamepadIndex);
     return tracker ? tracker.isDown(buttonIndex) : false;
   }
 
+  /**
+   * Check if a button is currently pressed on any connected gamepad
+   * Uses mapped button indices (standard layout)
+   */
   isButtonDownOnAny(buttonIndex: number): boolean {
     for (const tracker of this.buttonTrackers.values()) {
       if (tracker.isDown(buttonIndex)) {
@@ -84,13 +137,61 @@ export class Gamepad {
     return false;
   }
 
+  /**
+   * Check if a button is currently pressed on a specific gamepad by button name
+   */
+  isButtonDownByName(gamepadIndex: number, buttonName: string): boolean {
+    const buttonIndex = getButtonIndex(buttonName);
+    if (buttonIndex === undefined) return false;
+    return this.isButtonDown(gamepadIndex, buttonIndex);
+  }
+
+  /**
+   * Check if a button is currently pressed on any gamepad by button name
+   */
+  isButtonDownByNameOnAny(buttonName: string): boolean {
+    const buttonIndex = getButtonIndex(buttonName);
+    if (buttonIndex === undefined) return false;
+    return this.isButtonDownOnAny(buttonIndex);
+  }
+
   getPressedButtons(gamepadIndex: number): Set<number> {
     const tracker = this.buttonTrackers.get(gamepadIndex);
     return tracker ? tracker.getCurrentState() : new Set();
   }
 
   getConnectedGamepads(): number[] {
-    return Array.from(this.connectedGamepads);
+    return Array.from(this.connectedGamepads.keys());
+  }
+
+  /**
+   * Get the raw Gamepad object for a specific index
+   */
+  getGamepad(gamepadIndex: number): globalThis.Gamepad | undefined {
+    return this.connectedGamepads.get(gamepadIndex);
+  }
+
+  /**
+   * Get the button mapping for a specific gamepad
+   */
+  getButtonMapping(gamepadIndex: number): ButtonMapping | undefined {
+    return this.buttonMappings.get(gamepadIndex);
+  }
+
+  /**
+   * Check if a gamepad has a known mapping from the database
+   */
+  hasMapping(gamepadIndex: number): boolean {
+    const mapping = this.buttonMappings.get(gamepadIndex);
+    return mapping?.hasMapping ?? false;
+  }
+
+  /**
+   * Get the controller name for a specific gamepad
+   */
+  getControllerName(gamepadIndex: number): string | undefined {
+    const mapping = this.buttonMappings.get(gamepadIndex);
+    return mapping?.controllerName;
   }
 }
 

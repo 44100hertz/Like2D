@@ -28,7 +28,7 @@ class Like {
 
   constructor() {}
 
-  init(width: number = 800, height: number = 600): void {
+  async init(width: number = 800, height: number = 600): Promise<void> {
     this.currentWidth = width;
     this.currentHeight = height;
 
@@ -54,6 +54,9 @@ class Like {
 
     this.setupFullscreenButton();
     this.setupInputHandlers();
+
+    // Initialize gamepad mapping database
+    await gamepad.init();
   }
 
   private setupFullscreenButton(): void {

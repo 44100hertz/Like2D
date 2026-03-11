@@ -137,7 +137,7 @@ src/
 
 - **Vite** for development server with hot reload
 - **TypeScript** for type safety
-- No runtime dependencies (build tools only)
+- Minimal runtime dependencies
 - Run with `pnpm run dev`
 
 ## Development Workflow

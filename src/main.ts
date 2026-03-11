@@ -422,6 +422,6 @@ const demoScene: Scene = {
 };
 
 // Initialize with scene
-like.init();
+await like.init();
 like.setScene(demoScene);
 like.start();

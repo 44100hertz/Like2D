@@ -37,8 +37,21 @@ Use scancodes for actions, but pass both keycodes and scancodes into callbacks.
 - [x] Support mouse buttons in mapping
 - [x] Maintain low-level `like.keyboard`, `like.mouse` access
 - [x] Update demo to use input mapping system
-- [ ] Use SDL's game controller DB to unify controller mappings
+- [x] Use SDL's game controller DB to unify controller mappings
 - [x] Make sure that gamepad.ts is using our unified input mapping library in input-state.ts.
+- [x] Fix bugs with the game controller DB GUID (below)
+- [x] Circumvent the GUID limitation somehow (below)
+
+- **GUID Limitation**: The last 8 bytes of the GUID are always zeros because browsers only expose vendor and product IDs (16-bit each), not the full 16 bytes of data that SDL typically includes (version, driver info, etc.). This may cause incorrect mappings if two controllers have the same vendor/product but different capabilities.
+  - **Solution**: Match controllers by vendor/product ID only, ignoring the rest of the GUID. The `vendorProductIndex` in gamepad-db.ts allows lookups by just these 4 bytes.
+
+Common mistakes:
+ - GUIDs do NOT all end in all zeroes. The first few ones end in zeros, but later on in the db file that's not the case.
+ - Name matching is NOT reliable and WILL NOT be used.
+
+Plan:
+ - We will match entirely based on vendor and product ID alone.
+ - In some edge cases, this may cause problems. We will gather that data from our users in the long run.
 
 ## Phase 4: Modernize Existing Modules
 
@@ -47,6 +60,7 @@ Use scancodes for actions, but pass both keycodes and scancodes into callbacks.
 - [ ] Ensure Timer module works with Scene lifecycle
 - [ ] Rename `localstorage.ts` to `storage.ts` with cleaner API
 - [ ] Update all module imports/exports
+
 
 ## Future Considerations (Post-Game Object Model)
 

@@ -9,6 +9,7 @@ export type InputType = 'keyboard' | 'mouse' | 'gamepad';
 export interface InputBinding {
   type: InputType;
   code: string;
+  gamepadIndex?: number; // For gamepad inputs, undefined means any gamepad
 }
 
 const buttonMap: Record<string, number> = {
@@ -51,7 +52,12 @@ export class Input {
     return this.actionStateTracker.justReleased(action);
   }
 
-  update(): { pressed: string[]; released: string[]; gamepadPressed: Array<{ gamepadIndex: number; buttonIndex: number; buttonName: string }>; gamepadReleased: Array<{ gamepadIndex: number; buttonIndex: number; buttonName: string }> } {
+  update(): { 
+    pressed: string[]; 
+    released: string[]; 
+    gamepadPressed: Array<{ gamepadIndex: number; buttonIndex: number; buttonName: string; rawButtonIndex: number }>; 
+    gamepadReleased: Array<{ gamepadIndex: number; buttonIndex: number; buttonName: string; rawButtonIndex: number }>;
+  } {
     const { pressed: gamepadPressed, released: gamepadReleased } = gamepad.update();
 
     const activeActions = new Set<string>();
@@ -81,9 +87,22 @@ export class Input {
     }
 
     if (normalized.startsWith('GP')) {
-      // Format: GP ButtonBottom, GP LB, GP RT, etc.
-      const buttonName = normalized.replace('GP', '').trim();
-      return { type: 'gamepad', code: buttonName };
+      // Format: GP ButtonBottom, GP LB, GP RT, etc. - any gamepad
+      // Format: GP0 ButtonBottom, GP1 LB, etc. - specific gamepad
+      const rest = normalized.slice(2); // Remove "GP" prefix
+      
+      // Check if there's a gamepad index
+      const match = rest.match(/^(\d+)\s+(.+)$/);
+      if (match) {
+        // Specific gamepad: GP0 ButtonBottom
+        const gamepadIndex = parseInt(match[1], 10);
+        const buttonName = match[2].trim();
+        return { type: 'gamepad', code: buttonName, gamepadIndex };
+      } else {
+        // Any gamepad: GP ButtonBottom
+        const buttonName = rest.trim();
+        return { type: 'gamepad', code: buttonName };
+      }
     }
 
     return { type: 'keyboard', code: normalized };
@@ -103,8 +122,13 @@ export class Input {
       case 'gamepad': {
         const buttonIndex = getButtonIndex(binding.code);
         if (buttonIndex !== undefined) {
-          // GP references all gamepads
-          return gamepad.isButtonDownOnAny(buttonIndex);
+          if (binding.gamepadIndex !== undefined) {
+            // Check specific gamepad
+            return gamepad.isButtonDown(binding.gamepadIndex, buttonIndex);
+          } else {
+            // Check any gamepad
+            return gamepad.isButtonDownOnAny(buttonIndex);
+          }
         }
         return false;
       }
