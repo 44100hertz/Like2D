@@ -1,11 +1,11 @@
-import { getButtonName, getButtonIndex, GAMEPAD_BUTTON_NAMES } from './gamepad-button-map.ts';
+import { getButtonName, getButtonIndex } from './gamepad-button-map.ts';
+import { InputStateTracker } from './input-state.ts';
 
-export { getButtonName, getButtonIndex, GAMEPAD_BUTTON_NAMES };
+export { getButtonName, getButtonIndex };
 
 export class Gamepad {
-  private gamepadStates = new Map<number, Set<number>>();
+  private buttonTrackers = new Map<number, InputStateTracker<number>>();
   private connectedGamepads = new Set<number>();
-  private prevStates = new Map<number, Set<number>>();
 
   constructor() {
     this.setupEventListeners();
@@ -14,19 +14,17 @@ export class Gamepad {
   private setupEventListeners(): void {
     window.addEventListener('gamepadconnected', (e: GamepadEvent) => {
       this.connectedGamepads.add(e.gamepad.index);
-      this.gamepadStates.set(e.gamepad.index, new Set());
-      this.prevStates.set(e.gamepad.index, new Set());
+      this.buttonTrackers.set(e.gamepad.index, new InputStateTracker<number>());
     });
 
     window.addEventListener('gamepaddisconnected', (e: GamepadEvent) => {
       this.connectedGamepads.delete(e.gamepad.index);
-      this.gamepadStates.delete(e.gamepad.index);
-      this.prevStates.delete(e.gamepad.index);
+      this.buttonTrackers.delete(e.gamepad.index);
     });
 
     window.addEventListener('blur', () => {
-      for (const state of this.gamepadStates.values()) {
-        state.clear();
+      for (const tracker of this.buttonTrackers.values()) {
+        tracker.clear();
       }
     });
   }
@@ -41,29 +39,26 @@ export class Gamepad {
       if (gamepad) {
         this.connectedGamepads.add(i);
         
-        // Store previous state
-        const prevState = this.gamepadStates.get(i) ?? new Set();
-        this.prevStates.set(i, new Set(prevState));
+        let tracker = this.buttonTrackers.get(i);
+        if (!tracker) {
+          tracker = new InputStateTracker<number>();
+          this.buttonTrackers.set(i, tracker);
+        }
         
-        // Build new state
         const pressedButtons = new Set<number>();
         for (let j = 0; j < gamepad.buttons.length; j++) {
           if (gamepad.buttons[j].pressed) {
             pressedButtons.add(j);
           }
         }
-        this.gamepadStates.set(i, pressedButtons);
-
-        // Check for state changes
-        for (const button of pressedButtons) {
-          if (!prevState.has(button)) {
-            pressed.push({ gamepadIndex: i, buttonIndex: button, buttonName: getButtonName(button) });
-          }
+        
+        const changes = tracker.update(pressedButtons);
+        
+        for (const buttonIndex of changes.justPressed) {
+          pressed.push({ gamepadIndex: i, buttonIndex, buttonName: getButtonName(buttonIndex) });
         }
-        for (const button of prevState) {
-          if (!pressedButtons.has(button)) {
-            released.push({ gamepadIndex: i, buttonIndex: button, buttonName: getButtonName(button) });
-          }
+        for (const buttonIndex of changes.justReleased) {
+          released.push({ gamepadIndex: i, buttonIndex, buttonName: getButtonName(buttonIndex) });
         }
       }
     }
@@ -76,13 +71,13 @@ export class Gamepad {
   }
 
   isButtonDown(gamepadIndex: number, buttonIndex: number): boolean {
-    const state = this.gamepadStates.get(gamepadIndex);
-    return state ? state.has(buttonIndex) : false;
+    const tracker = this.buttonTrackers.get(gamepadIndex);
+    return tracker ? tracker.isDown(buttonIndex) : false;
   }
 
   isButtonDownOnAny(buttonIndex: number): boolean {
-    for (const state of this.gamepadStates.values()) {
-      if (state.has(buttonIndex)) {
+    for (const tracker of this.buttonTrackers.values()) {
+      if (tracker.isDown(buttonIndex)) {
         return true;
       }
     }
@@ -90,8 +85,8 @@ export class Gamepad {
   }
 
   getPressedButtons(gamepadIndex: number): Set<number> {
-    const state = this.gamepadStates.get(gamepadIndex);
-    return state ? new Set(state) : new Set();
+    const tracker = this.buttonTrackers.get(gamepadIndex);
+    return tracker ? tracker.getCurrentState() : new Set();
   }
 
   getConnectedGamepads(): number[] {

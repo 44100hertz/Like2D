@@ -24,7 +24,7 @@ const buttonMap: Record<string, number> = {
 
 export class Input {
   private actionMap = new Map<string, InputBinding[]>();
-  private actionStateTracker = new InputStateTracker();
+  private actionStateTracker = new InputStateTracker<string>();
 
   map(action: string, inputs: string[]): void {
     const bindings: InputBinding[] = inputs.map(input => this.parseInput(input));

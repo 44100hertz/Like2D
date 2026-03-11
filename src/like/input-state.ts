@@ -1,10 +1,10 @@
-export class InputStateTracker {
-  private prevState = new Set<string>();
-  private currState = new Set<string>();
+export class InputStateTracker<T> {
+  private prevState = new Set<T>();
+  private currState = new Set<T>();
 
-  update(pressedKeys: Set<string>): { justPressed: string[]; justReleased: string[] } {
-    const justPressed: string[] = [];
-    const justReleased: string[] = [];
+  update(pressedKeys: Set<T>): { justPressed: T[]; justReleased: T[] } {
+    const justPressed: T[] = [];
+    const justReleased: T[] = [];
     const nextState = new Set(pressedKeys);
 
     for (const key of nextState) {
@@ -25,16 +25,20 @@ export class InputStateTracker {
     return { justPressed, justReleased };
   }
 
-  isDown(key: string): boolean {
+  isDown(key: T): boolean {
     return this.currState.has(key);
   }
 
-  justPressed(key: string): boolean {
+  justPressed(key: T): boolean {
     return !this.prevState.has(key) && this.currState.has(key);
   }
 
-  justReleased(key: string): boolean {
+  justReleased(key: T): boolean {
     return this.prevState.has(key) && !this.currState.has(key);
+  }
+
+  getCurrentState(): Set<T> {
+    return new Set(this.currState);
   }
 
   clear(): void {

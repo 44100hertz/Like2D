@@ -35,9 +35,10 @@ Use scancodes for actions, but pass both keycodes and scancodes into callbacks.
 - [x] Implement `like.input.justReleased(action)` - true on first frame of release
 - [x] Support keyboard keys in mapping (scancodes)
 - [x] Support mouse buttons in mapping
-- [ ] Support gamepad buttons, axes, and D-pad in mapping
 - [x] Maintain low-level `like.keyboard`, `like.mouse` access
 - [x] Update demo to use input mapping system
+- [ ] Use SDL's game controller DB to unify controller mappings
+- [x] Make sure that gamepad.ts is using our unified input mapping library in input-state.ts.
 
 ## Phase 4: Modernize Existing Modules
 
