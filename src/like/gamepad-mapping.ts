@@ -126,11 +126,24 @@ export class GamepadMapping {
     const toStandard = new Map<number, number>();
     const fromStandard = new Map<number, number>();
 
+    // If browser provides "standard" mapping, trust it - don't override with DB
+    if (gamepad.mapping === 'standard') {
+      for (let i = 0; i < gamepad.buttons.length; i++) {
+        toStandard.set(i, i);
+        fromStandard.set(i, i);
+      }
+      return {
+        toStandard,
+        fromStandard,
+        controllerName: gamepad.id,
+        hasMapping: true,
+      };
+    }
+
     // Try to find a mapping in the database
     const dbMapping = this.findDatabaseMapping(gamepad);
 
     if (dbMapping) {
-      // Use the database mapping
       for (const [sdlButton, controllerButtonIndex] of dbMapping.buttons) {
         const internalName = SDL_TO_INTERNAL_BUTTON[sdlButton];
         if (internalName) {
@@ -150,8 +163,7 @@ export class GamepadMapping {
       };
     }
 
-    // No database mapping found - use default Xbox-style layout
-    // This assumes the browser already normalized the layout
+    // No database mapping found - use default layout
     for (let i = 0; i < gamepad.buttons.length; i++) {
       toStandard.set(i, i);
       fromStandard.set(i, i);

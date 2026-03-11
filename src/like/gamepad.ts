@@ -41,11 +41,32 @@ export class Gamepad {
     this.setupEventListeners();
   }
 
-  /**
-   * Initialize the gamepad system and load the mapping database
-   */
   async init(): Promise<void> {
     await gamepadMapping.loadDatabase();
+  }
+
+  private extractVendorProduct(gamepad: globalThis.Gamepad): { vendor: number; product: number } | null {
+    const id = gamepad.id;
+
+    const vendorProductMatch = id.match(/Vendor:\s*([0-9a-fA-F]+)\s+Product:\s*([0-9a-fA-F]+)/i);
+    if (vendorProductMatch) {
+      const vendor = parseInt(vendorProductMatch[1], 16);
+      const product = parseInt(vendorProductMatch[2], 16);
+      if (!isNaN(vendor) && !isNaN(product)) {
+        return { vendor, product };
+      }
+    }
+
+    const hexMatch = id.match(/^([0-9a-fA-F]{4})[\s-]+([0-9a-fA-F]{4})/);
+    if (hexMatch) {
+      const vendor = parseInt(hexMatch[1], 16);
+      const product = parseInt(hexMatch[2], 16);
+      if (!isNaN(vendor) && !isNaN(product)) {
+        return { vendor, product };
+      }
+    }
+
+    return null;
   }
 
   private setupEventListeners(): void {
@@ -54,7 +75,14 @@ export class Gamepad {
       this.buttonTrackers.set(e.gamepad.index, new InputStateTracker<number>());
       const mapping = gamepadMapping.getMapping(e.gamepad);
       this.buttonMappings.set(e.gamepad.index, mapping);
-      console.log(`[Gamepad] Connected: ${mapping.controllerName}${mapping.hasMapping ? '' : ' (unmapped)'}`);
+      
+      console.log(`[Gamepad] Connected: "${e.gamepad.id}"`);
+      const vp = this.extractVendorProduct(e.gamepad);
+      if (vp) {
+        console.log(`[Gamepad] Vendor: 0x${vp.vendor.toString(16).padStart(4, '0')}, Product: 0x${vp.product.toString(16).padStart(4, '0')}`);
+      }
+      const mappingType = e.gamepad.mapping === 'standard' ? 'browser standard' : (mapping.hasMapping ? 'SDL DB' : 'unmapped');
+      console.log(`[Gamepad] Mapped as: "${mapping.controllerName}" (${mappingType})`);
     });
 
     window.addEventListener('gamepaddisconnected', (e: GamepadEvent) => {
