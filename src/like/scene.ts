@@ -4,8 +4,10 @@ export interface Scene {
   load?: () => void;
   update: (dt: number) => void;
   draw: () => void;
-  keypressed?: (key: string) => void;
-  keyreleased?: (key: string) => void;
+  keypressed?: (scancode: string, keycode: string) => void;
+  keyreleased?: (scancode: string, keycode: string) => void;
   mousepressed?: (x: number, y: number, button: number) => void;
   mousereleased?: (x: number, y: number, button: number) => void;
+  actionpressed?: (action: string) => void;
+  actionreleased?: (action: string) => void;
 }

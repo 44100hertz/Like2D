@@ -10,9 +10,18 @@ let lastSleepTime = 0;
 let sleepStatus = '';
 let currentSaveStatus: string | undefined = undefined;
 
+// Player state for movement demo
+const player = {
+  x: 250,
+  y: 350,
+  speed: 200, // pixels per second
+};
+
 // Game state for save/load demo
 interface GameState {
   rotation: number;
+  playerX: number;
+  playerY: number;
   savedAt: string;
 }
 
@@ -31,11 +40,120 @@ const demoScene: Scene = {
     // Set initial background color (dark gray)
     like.graphics.setBackgroundColor(0.1, 0.1, 0.15, 1);
     like.graphics.setFont(24);
+    
+    // Setup input mappings for game actions
+    like.input.map('jump', ['Space', 'ArrowUp', 'KeyW']);
+    like.input.map('fire', ['MouseLeft', 'KeyZ']);
+    like.input.map('move_left', ['ArrowLeft', 'KeyA']);
+    like.input.map('move_right', ['ArrowRight', 'KeyD']);
+    like.input.map('move_up', ['ArrowUp', 'KeyW']);
+    like.input.map('move_down', ['ArrowDown', 'KeyS']);
+    
+    // Menu/system actions
+    like.input.map('audio_play_pause', ['Space']);
+    like.input.map('audio_stop', ['KeyS']);
+    like.input.map('audio_pause_resume', ['KeyP']);
+    like.input.map('save_game', ['F5']);
+    like.input.map('load_game', ['F9']);
+    like.input.map('sleep_timer', ['KeyL']);
   },
 
   update: (dt: number) => {
     // Update rotation
     rotation += dt;
+    
+    // Smooth player movement using isDown (continuous)
+    if (like.input.isDown('move_left')) {
+      player.x -= player.speed * dt;
+    }
+    if (like.input.isDown('move_right')) {
+      player.x += player.speed * dt;
+    }
+    if (like.input.isDown('move_up')) {
+      player.y -= player.speed * dt;
+    }
+    if (like.input.isDown('move_down')) {
+      player.y += player.speed * dt;
+    }
+    
+    // Keep player in bounds
+    player.x = Math.max(15, Math.min(like.getWidth() - 15, player.x));
+    player.y = Math.max(15, Math.min(like.getHeight() - 15, player.y));
+  },
+
+  actionpressed: async (action: string) => {
+    console.log('Action pressed:', action);
+
+    switch (action) {
+      case 'jump':
+        console.log('Jump action triggered!');
+        break;
+      case 'fire':
+        console.log('Fire action triggered!');
+        break;
+      case 'audio_play_pause':
+        if (audioSource && audioSource.isReady()) {
+          if (audioSource.isPlaying()) {
+            audioSource.stop();
+          } else {
+            audioSource.play();
+          }
+        }
+        break;
+      case 'audio_stop':
+        if (audioSource && audioSource.isReady()) {
+          audioSource.stop();
+        }
+        break;
+      case 'audio_pause_resume':
+        if (audioSource && audioSource.isReady()) {
+          if (audioSource.isPlaying()) {
+            audioSource.pause();
+          } else if (audioSource.isPaused()) {
+            audioSource.resume();
+          }
+        }
+        break;
+      case 'sleep_timer':
+        lastSleepTime = like.timer.getTime();
+        like.timer.sleep(2);
+        sleepStatus = 'Timer sleep activated (2 seconds)';
+        console.log('Timer sleeping for 2 seconds starting at:', lastSleepTime);
+        break;
+      case 'save_game': {
+        const state: GameState = {
+          rotation: rotation,
+          playerX: player.x,
+          playerY: player.y,
+          savedAt: new Date().toLocaleString()
+        };
+        const writeSuccess = await like.localstorage.write('demo_save', state);
+        if (writeSuccess) {
+          currentSaveStatus = `Saved at ${state.savedAt}`;
+        } else {
+          currentSaveStatus = 'Failed to save!';
+        }
+        console.log('Save result:', writeSuccess, state);
+        break;
+      }
+      case 'load_game': {
+        const loadedState = await like.localstorage.read<GameState>('demo_save');
+        if (loadedState) {
+          rotation = loadedState.rotation;
+          player.x = loadedState.playerX;
+          player.y = loadedState.playerY;
+          currentSaveStatus = `Loaded from ${loadedState.savedAt}`;
+          console.log('Loaded state:', loadedState);
+        } else {
+          currentSaveStatus = 'No save file found!';
+        }
+        break;
+      }
+    }
+  },
+
+  actionreleased: (action: string) => {
+    console.log('Action released:', action);
   },
 
   draw: () => {
@@ -159,14 +277,29 @@ const demoScene: Scene = {
       like.graphics.print(currentSaveStatus, 20, 550);
     }
     
+    // Input action system demo
+    like.graphics.setColor(0.9, 0.7, 0.2, 1);
+    like.graphics.setFont(16);
+    like.graphics.print('Input Actions (mapped):', like.getWidth() - 250, 130);
+    
+    const jumpActive = like.input.isDown('jump');
+    const fireActive = like.input.isDown('fire');
+    
+    like.graphics.setColor(jumpActive ? 0.2 : 0.5, jumpActive ? 0.9 : 0.5, 0.2, 1);
+    like.graphics.print(`Jump: ${jumpActive ? 'PRESSED' : 'up'}`, like.getWidth() - 250, 155);
+    
+    like.graphics.setColor(fireActive ? 0.9 : 0.5, fireActive ? 0.2 : 0.5, 0.2, 1);
+    like.graphics.print(`Fire: ${fireActive ? 'PRESSED' : 'up'}`, like.getWidth() - 250, 175);
+    
     // Print instructions
     like.graphics.setColor(0.6, 0.6, 0.6, 1);
     like.graphics.setFont(16);
-    like.graphics.print('Press any key to see it logged', 20, like.getHeight() - 100);
-    like.graphics.print('Click anywhere for mouse position', 20, like.getHeight() - 80);
-    like.graphics.print('Audio: Space=Play/Stop, P=Pause/Resume', 20, like.getHeight() - 60);
-    like.graphics.print('Save/Load: F5=Save, F9=Load', 20, like.getHeight() - 40);
-    like.graphics.print('Timer: L=Sleep 2 seconds', 20, like.getHeight() - 20);
+    like.graphics.print('Press any key to see it logged', 20, like.getHeight() - 120);
+    like.graphics.print('Click anywhere for mouse position', 20, like.getHeight() - 100);
+    like.graphics.print('Audio: Space=Play/Stop, S=Stop, P=Pause/Resume', 20, like.getHeight() - 80);
+    like.graphics.print('Save/Load: F5=Save, F9=Load', 20, like.getHeight() - 60);
+    like.graphics.print('Timer: L=Sleep 2 seconds', 20, like.getHeight() - 40);
+    like.graphics.print('Input: WASD/Arrows to move, Space/W/Up to jump', 20, like.getHeight() - 20);
     
     // ===== KEYBOARD & MOUSE INPUT DEMO =====
     
@@ -198,11 +331,11 @@ const demoScene: Scene = {
     like.graphics.print('Keyboard (hold to see):', 20, keyY);
     keyY += 25;
     
-    // Draw arrow key states
-    const up = like.keyboard.isDown('ArrowUp') || like.keyboard.isDown('w') || like.keyboard.isDown('W');
-    const down = like.keyboard.isDown('ArrowDown') || like.keyboard.isDown('s') || like.keyboard.isDown('S');
-    const left = like.keyboard.isDown('ArrowLeft') || like.keyboard.isDown('a') || like.keyboard.isDown('A');
-    const right = like.keyboard.isDown('ArrowRight') || like.keyboard.isDown('d') || like.keyboard.isDown('D');
+    // Draw arrow key states using input mapping
+    const up = like.input.isDown('move_up');
+    const down = like.input.isDown('move_down');
+    const left = like.input.isDown('move_left');
+    const right = like.input.isDown('move_right');
     
     like.graphics.setColor(up ? 0.2 : 0.5, up ? 0.9 : 0.5, 0.2, 1);
     like.graphics.rectangle(up ? 'fill' : 'line', 170, keyY - 5, 25, 25);
@@ -242,79 +375,17 @@ const demoScene: Scene = {
     // Interactive element - move a circle with WASD/Arrows
     keyY += 40;
     like.graphics.setColor(0.5, 0.5, 0.5, 1);
-    like.graphics.print('Move this with WASD or Arrow keys:', 20, keyY);
+    like.graphics.print('Move player with WASD or Arrow keys:', 20, keyY);
+    like.graphics.print(`Player: (${Math.round(player.x)}, ${Math.round(player.y)})`, 20, keyY + 20);
     
-    // Calculate player position based on keyboard input
-    const playerX = 250 + (right ? 30 : left ? -30 : 0);
-    const playerY = keyY + 50 + (down ? 30 : up ? -30 : 0);
-    
+    // Draw player at actual position
     like.graphics.setColor(0.2, 0.9, 0.4, 1);
-    like.graphics.circle('fill', playerX, playerY, 15);
+    like.graphics.circle('fill', player.x, player.y, 15);
     like.graphics.setColor(0, 1, 0, 1);
-    like.graphics.circle('line', playerX, playerY, 15);
+    like.graphics.circle('line', player.x, player.y, 15);
   },
 
-  keypressed: async (key: string) => {
-    console.log('Key pressed:', key);
 
-    // Audio controls
-    if (audioSource && audioSource.isReady()) {
-      switch (key.toLowerCase()) {
-        case ' ':
-          if (audioSource.isPlaying()) {
-            audioSource.stop();
-          } else {
-            audioSource.play();
-          }
-          break;
-        case 's':
-          audioSource.stop();
-          break;
-        case 'p':
-          if (audioSource.isPlaying()) {
-            audioSource.pause();
-          } else if (audioSource.isPaused()) {
-            audioSource.resume();
-          }
-          break;
-      }
-    }
-
-    // Timer test - sleep for 2 seconds
-    if (key.toLowerCase() === 'l') {
-      lastSleepTime = like.timer.getTime();
-      like.timer.sleep(2);
-      sleepStatus = 'Timer sleep activated (2 seconds)';
-      console.log('Timer sleeping for 2 seconds starting at:', lastSleepTime);
-    }
-
-    // Save/Load controls
-    switch (key) {
-      case 'F5':
-        const state: GameState = {
-          rotation: rotation,
-          savedAt: new Date().toLocaleString()
-        };
-        const writeSuccess = await like.localstorage.write('demo_save', state);
-        if (writeSuccess) {
-          currentSaveStatus = `Saved at ${state.savedAt}`;
-        } else {
-          currentSaveStatus = 'Failed to save!';
-        }
-        console.log('Save result:', writeSuccess, state);
-        break;
-      case 'F9':
-        const loadedState = await like.localstorage.read<GameState>('demo_save');
-        if (loadedState) {
-          rotation = loadedState.rotation;
-          currentSaveStatus = `Loaded from ${loadedState.savedAt}`;
-          console.log('Loaded state:', loadedState);
-        } else {
-          currentSaveStatus = 'No save file found!';
-        }
-        break;
-    }
-  },
 
   mousepressed: (x: number, y: number, button: number) => {
     console.log('Mouse pressed at', x, y, 'button:', button);

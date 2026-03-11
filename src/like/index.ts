@@ -2,6 +2,7 @@ import graphics from './graphics.ts';
 import audio from './audio.ts';
 import keyboard from './keyboard.ts';
 import mouse from './mouse.ts';
+import input from './input.ts';
 import timer from './timer.ts';
 import localstorage from './localstorage.ts';
 import { Scene } from './scene.ts';
@@ -19,6 +20,7 @@ class Like {
   audio = audio;
   keyboard = keyboard;
   mouse = mouse;
+  input = input;
   timer = timer;
   localstorage = localstorage;
 
@@ -76,13 +78,13 @@ class Like {
   private setupInputHandlers(): void {
     window.addEventListener('keydown', (e) => {
       if (this.currentScene?.keypressed) {
-        this.currentScene.keypressed(e.key);
+        this.currentScene.keypressed(e.code, e.key);
       }
     });
 
     window.addEventListener('keyup', (e) => {
       if (this.currentScene?.keyreleased) {
-        this.currentScene.keyreleased(e.key);
+        this.currentScene.keyreleased(e.code, e.key);
       }
     });
 
@@ -154,6 +156,20 @@ class Like {
     }
 
     timer.update(dt);
+    const { pressed, released } = input.update();
+
+    // Trigger action callbacks
+    if (this.currentScene.actionpressed) {
+      for (const action of pressed) {
+        this.currentScene.actionpressed(action);
+      }
+    }
+    if (this.currentScene.actionreleased) {
+      for (const action of released) {
+        this.currentScene.actionreleased(action);
+      }
+    }
+
     this.currentScene.update(dt);
 
     if (this.ctx) {
@@ -189,3 +205,4 @@ export { timer } from './timer.ts';
 export { localstorage } from './localstorage.ts';
 export type { Scene } from './scene.ts';
 export type { ImageHandle } from './graphics.ts';
+export { input } from './input.ts';

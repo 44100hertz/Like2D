@@ -24,19 +24,20 @@
 - [x] Update SPEC.md documentation
 - [x] Export `ImageHandle` type from index.ts
 
-## Phase 3: Input Mapping System
+## Phase 3: Input Mapping System ✓
 
 Use scancodes for actions, but pass both keycodes and scancodes into callbacks.
 
-- [ ] Create `like.input` module
-- [ ] Implement `like.input.map(action, inputs[])`
-- [ ] Implement `like.input.isDown(action)` - checks if any mapped input is held
-- [ ] Implement `like.input.justPressed(action)` - true on first frame of press
-- [ ] Implement `like.input.justReleased(action)` - true on first frame of release
-- [ ] Support keyboard keys in mapping
-- [ ] Support mouse buttons in mapping
+- [x] Create `like.input` module
+- [x] Implement `like.input.map(action, inputs[])`
+- [x] Implement `like.input.isDown(action)` - checks if any mapped input is held
+- [x] Implement `like.input.justPressed(action)` - true on first frame of press
+- [x] Implement `like.input.justReleased(action)` - true on first frame of release
+- [x] Support keyboard keys in mapping (scancodes)
+- [x] Support mouse buttons in mapping
 - [ ] Support gamepad buttons, axes, and D-pad in mapping
-- [ ] Maintain low-level `like.keyboard`, `like.mouse`, and `like.gamepad` access, but only through callbacks
+- [x] Maintain low-level `like.keyboard`, `like.mouse` access
+- [x] Update demo to use input mapping system
 
 ## Phase 4: Modernize Existing Modules
 
