@@ -1,312 +1,71 @@
 # Graphics API
 
-This document defines the graphics rendering API for Like2D.
+2D rendering API. All drawing functions are on `like.graphics`.
+
+## Types
+
+- `Color = [number, number, number, number?] | string` - RGBA array (0-1) or CSS color string
+- `Vector2 = [number, number]` - See [vector2.md](./vector2.md)
+- `Rect = [number, number, number, number]` - See [rect.md](./rect.md)
+- `Canvas` - Offscreen render target handle
 
 ## Design Principles
 
-- **Required args first**: All required values are positional arguments
-- **Optional values in props**: All optional values in a trailing props object
-- **Color as property**: Color is part of the props, not a separate setColor call
-- **Simplified functions**: Combined functions where semantics are similar (draw/drawq, print/printf)
-
-## Type Definitions
-
-```typescript
-type Color = [number, number, number, number?] | string;
-type Vector2 = [number, number];
-type Rect = [number, number, number, number];  // x, y, width, height
-```
-
-### Color
-Colors can be specified in two ways:
-- Array form: `[r, g, b, a?]` where values are 0.0-1.0 floats (default alpha: 1.0)
-- String form: Any valid CSS color string
-
-### Vector2
-A two-item array representing an (x, y) coordinate pair. Used for positions, sizes, velocities, etc. See [vector2.md](./vector2.md) for operations.
-
-### Rect
-A four-item array representing a rectangle as `[x, y, width, height]`. Used for both screen rectangles and texture regions. See [rect.md](./rect.md) for operations.
+- **Required args first**: Required values are positional arguments
+- **Optional values in props**: Optional values in a trailing props object
+- **Color first when required**: Color is the first argument for shape drawing; optional in props for images/text
+- **Tuple types for positions**: Use `Vector2` for positions and `Rect` for rectangles instead of loose coordinates
+- **Simplified functions**: Combined functions where semantics are similar
 
 ## Shape Drawing
 
-### rectangle
-Draw a rectangle.
+- `rectangle(mode, color, rect, props?)` - Draw rectangle (fill or line)
+- `circle(mode, color, position, radii, props?)` - Draw circle or ellipse
+- `ellipse(mode, color, position, radii, rotation, props?)` - Draw rotated ellipse
+- `line(color, points, props?)` - Draw polyline
+- `polygon(mode, color, points, props?)` - Draw polygon
+- `arc(mode, color, position, radii, angles, props?)` - Draw arc
+- `points(color, points)` - Draw individual pixels
 
-```typescript
-rectangle(mode: 'fill' | 'line', x: number, y: number, width: number, height: number, props?: {
-  color?: Color;
-  lineWidth?: number;
-}): void
-```
+Props: `lineWidth`, `lineCap`, `lineJoin`, `miterLimit`
 
-### circle
-Draw a circle.
-
-```typescript
-circle(mode: 'fill' | 'line', x: number, y: number, radius: number, props?: {
-  color?: Color;
-  lineWidth?: number;
-}): void
-```
-
-### line
-Draw a polyline connecting points.
-
-```typescript
-line(points: number[], props?: {
-  color?: Color;
-  lineWidth?: number;
-}): void
-```
-
-Points are specified as a flat array: `[x1, y1, x2, y2, ...]`
-
-### polygon
-Draw a polygon.
-
-```typescript
-polygon(mode: 'fill' | 'line', points: number[], props?: {
-  color?: Color;
-  lineWidth?: number;
-}): void
-```
-
-Points are specified as a flat array: `[x1, y1, x2, y2, ...]`
-
-### arc
-Draw an arc (pie slice or arc segment).
-
-```typescript
-arc(mode: 'fill' | 'line', x: number, y: number, radius: number, angle1: number, angle2: number, props?: {
-  color?: Color;
-  lineWidth?: number;
-}): void
-```
-
-### points
-Draw individual points (pixels).
-
-```typescript
-points(points: number[], props?: {
-  color?: Color;
-}): void
-```
-
-Points are specified as a flat array: `[x1, y1, x2, y2, ...]`
+Points are `Vector2[]`: `[[x1, y1], [x2, y2], ...]`
+Radii: `number` for circle, `Vector2` for ellipse `[rx, ry]`
+Angles: `[angle1, angle2]` tuple
 
 ## Image Drawing
 
-### draw
-Draw an image or a sub-region (quad) of an image. If a quad is provided, draws that region.
+- `draw(handle, position, props?)` - Draw image or sub-region
+- `newImage(path)` - Load image, returns `ImageHandle`
+- `newCanvas(size)` - Create offscreen render target
+- `setCanvas(canvas?)` - Set render target (null for screen)
 
-```typescript
-draw(
-  handle: ImageHandle | string,
-  x: number,
-  y: number,
-  props?: {
-    color?: Color;
-    quad?: Rect;     // sub-region of image to draw
-    r?: number;      // rotation in radians (default: 0)
-    sx?: number;     // scale x (default: 1)
-    sy?: number;     // scale y (default: sx)
-    ox?: number;     // origin x offset (default: 0)
-    oy?: number;     // origin y offset (default: 0)
-  }
-): void
-```
+Props: `color` (tint), `quad`, `r` (rotation), `sx`, `sy`, `ox`, `oy`
+
+ImageHandle: `path`, `isReady()`, `ready()`, `size` (Vector2)
+Canvas: `size` (Vector2), internal canvas handle
 
 ## Text Rendering
 
-### print
-Draw text. If `limit` is provided, wraps text to that width.
+- `print(color, text, position, props?)` - Draw text
+- `setFont(size, font?)` - Set default font
+- `getFont()` - Get current font string
 
-```typescript
-print(
-  text: string,
-  x: number,
-  y: number,
-  props?: {
-    color?: Color;
-    font?: string;   // font string, e.g., "16px sans-serif"
-    limit?: number;  // max width for wrapping (if provided, enables wrapping)
-    align?: 'left' | 'center' | 'right';  // alignment when wrapping (default: 'left')
-  }
-): void
-```
+Props: `font`, `limit` (wrap width), `align`
 
 ## Coordinate Transformations
 
-### push
-Save the current transformation state.
+- `push()` / `pop()` - Save/restore transform state
+- `translate(delta)` - Translate by Vector2
+- `rotate(angle)` - Rotate (radians)
+- `scale(s)` - Scale (number or Vector2)
 
-```typescript
-push(): void
-```
+## Clipping
 
-### pop
-Restore the previous transformation state.
-
-```typescript
-pop(): void
-```
-
-### translate
-Translate the coordinate system.
-
-```typescript
-translate(x: number, y: number): void
-```
-
-### rotate
-Rotate the coordinate system.
-
-```typescript
-rotate(angle: number): void
-```
-
-### scale
-Scale the coordinate system.
-
-```typescript
-scale(x: number, y?: number): void  // y defaults to x
-```
+- `clip(rect?)` - Clip to rect, or reset if no rect
 
 ## State Management
 
-### clear
-Clear the canvas with the background color.
-
-```typescript
-clear(): void
-```
-
-### setBackgroundColor
-Set the background color (used by clear).
-
-```typescript
-setBackgroundColor(color: number[] | string): void
-```
-
-## Font Management
-
-### setFont
-Set the current font (used when text props don't specify a font).
-
-```typescript
-setFont(size: number, font?: string): void  // font defaults to 'sans-serif'
-```
-
-### getFont
-Get the current font string.
-
-```typescript
-getFont(): string
-```
-
-## Image Loading
-
-### newImage
-Load an image and return a handle. Images are cached by path.
-
-```typescript
-newImage(path: string): ImageHandle
-```
-
-### ImageHandle
-
-```typescript
-interface ImageHandle {
-  readonly path: string;
-  isReady(): boolean;
-  ready(): Promise<void>;
-  readonly width: number;
-  readonly height: number;
-}
-```
-
-## Canvas Info
-
-### getWidth
-Get the canvas width in pixels.
-
-```typescript
-getWidth(): number
-```
-
-### getHeight
-Get the canvas height in pixels.
-
-```typescript
-getHeight(): number
-```
-
-## Examples
-
-### Basic Shapes
-
-```typescript
-// Filled red rectangle
-like.graphics.rectangle('fill', 100, 100, 50, 50, { color: [1, 0, 0] });
-
-// Outlined green circle
-like.graphics.circle('line', 200, 200, 30, { color: [0, 1, 0] });
-
-// Blue line
-like.graphics.line([0, 0, 100, 100, 200, 50], { color: [0, 0, 1] });
-
-// Purple polygon
-like.graphics.polygon('fill', [100, 100, 150, 150, 100, 200, 50, 150], { 
-  color: [0.8, 0.3, 0.8] 
-});
-```
-
-### Images
-
-```typescript
-const img = like.graphics.newImage('player.png');
-
-// Draw at position
-like.graphics.draw(img, 100, 100);
-
-// Draw with rotation and scaling
-like.graphics.draw(img, 200, 200, { r: Math.PI / 4, sx: 2, sy: 2 });
-
-// Draw with a sub-region (quad)
-like.graphics.draw(img, 300, 300, {
-  quad: [0, 0, 32, 32] as Rect,
-  sx: 2,
-  sy: 2
-});
-```
-
-### Text
-
-```typescript
-// Simple text
-like.graphics.print('Hello', 100, 100, { color: [1, 1, 1] });
-
-// With custom font
-like.graphics.print('World', 100, 150, { 
-  color: [1, 1, 0],
-  font: '24px monospace'
-});
-
-// Wrapped text
-like.graphics.print('This is a long text that will wrap', 100, 200, {
-  color: [1, 1, 1],
-  limit: 200,
-  align: 'center'
-});
-```
-
-### Coordinate Transformations
-
-```typescript
-like.graphics.push();
-like.graphics.translate(100, 100);
-like.graphics.rotate(Math.PI / 4);
-like.graphics.rectangle('fill', -25, -25, 50, 50, { color: [1, 0, 0] });
-like.graphics.pop();
-```
+- `clear()` - Clear canvas with background color
+- `setBackgroundColor(color)` - Set background color
+- `getCanvasSize()` - Canvas dimensions as Vector2

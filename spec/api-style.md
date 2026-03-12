@@ -20,14 +20,14 @@ import { like, Scene } from './like/index.ts';
 // Required: path. Optional: volume, pitch, looping in props table
 const source = like.audio.newSource('sound.ogg', { volume: 0.5, looping: true });
 
-// Required: mode, position, size. Optional: color, lineWidth in props
-like.graphics.rectangle('fill', 100, 100, 50, 50, { color: [1, 0, 0] });
+// Required: mode, color, rect. Optional: lineWidth in props
+like.graphics.rectangle('fill', [1, 0, 0], [100, 100, 50, 50]);
 
-// Required: text, position. Optional: color, font, wrapping in props
-like.graphics.print('Hello', 100, 100, { color: [1, 1, 1], limit: 200, align: 'center' });
+// Required: color, text, position. Optional: font, wrapping in props
+like.graphics.print([1, 1, 1], 'Hello', [100, 100], { limit: 200, align: 'center' });
 
 // Required: image, position. Optional: quad, rotation, scale in props
-like.graphics.draw(playerImage, x, y, { quad: spriteQuad, r: rotation, sx: 2 });
+like.graphics.draw(playerImage, [x, y], { quad: spriteQuad, r: rotation, sx: 2 });
 ```
 
 **Tuple types for coordinates** - Use `Vector2` and `Rect` tuples for geometric data:
