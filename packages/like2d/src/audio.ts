@@ -1,214 +1,165 @@
 export interface SourceOptions {
   volume?: number;
-  pitch?: number;
-  looping?: boolean;
 }
 
+/**
+ * Handle to a loaded audio resource.
+ * Access the underlying HTMLAudioElement via `source.audio` for playback control,
+ * looping, pitch, etc. Note: Use `source.setVolume()` instead of setting
+ * `source.audio.volume` directly to ensure global volume scaling works correctly.
+ */
 export class Source {
-  private audio: HTMLAudioElement;
-  private _volume: number = 1;
-  private _pitch: number = 1;
-  private _looping: boolean = false;
-  private path: string;
-  private isLoaded = false;
-  private loadPromise: Promise<void>;
-  private globalVolume: number = 1;
+  readonly path: string;
+  /** Underlying HTMLAudioElement. Modify directly for looping, pitch, etc. Avoid setting volume directly. */
+  readonly audio: HTMLAudioElement;
+  readonly options: Required<SourceOptions>;
+  /** Resolves when the audio is loaded and ready to play. */
+  readonly ready: Promise<void>;
+  private loaded = false;
+  private audioRef: Audio;
 
-  constructor(path: string, options: SourceOptions = {}) {
+  constructor(path: string, audioRef: Audio, options: SourceOptions = {}) {
     this.path = path;
+    this.audioRef = audioRef;
     this.audio = document.createElement('audio');
     this.audio.src = path;
-    this._volume = options.volume ?? 1;
-    this._pitch = options.pitch ?? 1;
-    this._looping = options.looping ?? false;
 
-    this.audio.volume = this._volume;
-    this.audio.loop = this._looping;
-    this.updatePlaybackRate();
+    this.options = {
+      volume: Math.max(0, Math.min(1, options.volume ?? 1))
+    };
 
-    this.loadPromise = new Promise((resolve, reject) => {
+    this.audio.volume = this.options.volume * audioRef.getVolume();
+
+    this.ready = new Promise((resolve, reject) => {
       this.audio.oncanplaythrough = () => {
-        this.isLoaded = true;
+        this.loaded = true;
         resolve();
       };
-
-      this.audio.onerror = () => {
-        reject(new Error(`Failed to load audio: ${path}`));
-      };
-
+      this.audio.onerror = () => reject(new Error(`Failed to load audio: ${path}`));
       if (this.audio.readyState >= 4) {
-        this.isLoaded = true;
+        this.loaded = true;
         resolve();
       }
     });
   }
 
-  _setGlobalVolume(vol: number): void {
-    this.globalVolume = vol;
-    this.audio.volume = this._volume * this.globalVolume;
-  }
-
-  ready(): Promise<void> {
-    return this.loadPromise;
-  }
-
-  private updatePlaybackRate(): void {
-    this.audio.playbackRate = this._pitch;
+  isReady(): boolean {
+    return this.loaded;
   }
 
   play(): boolean {
-    if (!this.isLoaded) {
-      // Silently return false - asset not loaded yet
-      return false;
-    }
-    
-    // Only reset to beginning if stopped (not paused)
-    if (this.isStopped() || this.audio.ended) {
+    if (!this.loaded) return false;
+
+    if (this.audio.paused || this.audio.ended) {
       this.audio.currentTime = 0;
     }
-    
-    const playPromise = this.audio.play();
-    if (playPromise) {
-      playPromise.catch(err => {
-        console.warn(`Failed to play audio "${this.path}":`, err.message);
-      });
-    }
+
+    this.audio.play().catch(err => {
+      console.warn(`Failed to play audio "${this.path}":`, err.message);
+    });
     return true;
   }
 
   stop(): void {
+    if (!this.loaded) return;
     this.audio.pause();
     this.audio.currentTime = 0;
   }
 
   pause(): void {
+    if (!this.loaded) return;
     this.audio.pause();
   }
 
   resume(): boolean {
-    if (this.audio.paused) {
-      return this.play();
-    }
-    return false;
+    return this.loaded && this.audio.paused ? this.play() : false;
   }
 
   seek(position: number): void {
+    if (!this.loaded) return;
     this.audio.currentTime = position;
   }
 
   tell(): number {
-    return this.audio.currentTime;
+    return this.loaded ? this.audio.currentTime : 0;
   }
 
   getDuration(): number {
-    return this.audio.duration || 0;
+    return this.loaded ? this.audio.duration || 0 : 0;
   }
 
   isPlaying(): boolean {
-    return !this.audio.paused && !this.audio.ended;
+    return this.loaded && !this.audio.paused && !this.audio.ended;
   }
 
   isPaused(): boolean {
-    return this.audio.paused && this.audio.currentTime > 0;
+    return this.loaded && this.audio.paused && this.audio.currentTime > 0;
   }
 
   isStopped(): boolean {
-    return this.audio.paused && this.audio.currentTime === 0;
+    return this.loaded && this.audio.paused && this.audio.currentTime === 0;
   }
 
-  isReady(): boolean {
-    return this.isLoaded;
-  }
-
+  /** Set volume (0-1). Applies global volume scaling. Prefer this over `source.audio.volume`. */
   setVolume(volume: number): void {
-    this._volume = Math.max(0, Math.min(1, volume));
-    this.audio.volume = this._volume * this.globalVolume;
+    this.options.volume = Math.max(0, Math.min(1, volume));
+    this.audio.volume = this.options.volume * this.audioRef.getVolume();
   }
 
   getVolume(): number {
-    return this._volume;
-  }
-
-  setPitch(pitch: number): void {
-    this._pitch = Math.max(0.125, Math.min(8, pitch));
-    this.updatePlaybackRate();
-  }
-
-  getPitch(): number {
-    return this._pitch;
-  }
-
-  setLooping(looping: boolean): void {
-    this._looping = looping;
-    this.audio.loop = looping;
-  }
-
-  isLooping(): boolean {
-    return this._looping;
-  }
-
-  clone(): Source {
-    const clone = new Source(this.path, {
-      volume: this._volume,
-      pitch: this._pitch,
-      looping: this._looping
-    });
-    clone._setGlobalVolume(this.globalVolume);
-    return clone;
+    return this.options.volume;
   }
 }
 
 export class Audio {
-  private sources: Set<Source> = new Set();
-  private globalVolume: number = 1;
+  private sources: WeakRef<Source>[] = [];
+  private globalVolume = 1;
 
   newSource(path: string, options?: SourceOptions): Source {
-    const source = new Source(path, options);
-    source._setGlobalVolume(this.globalVolume);
-    this.sources.add(source);
+    const source = new Source(path, this, options);
+    this.sources.push(new WeakRef(source));
     return source;
   }
 
-  play(source: Source): boolean {
-    return source.play();
+  private getAllSources(): Source[] {
+    const active: Source[] = [];
+    this.sources = this.sources.filter(ref => {
+      const source = ref.deref();
+      if (source) {
+        active.push(source);
+        return true;
+      }
+      return false;
+    });
+    return active;
   }
 
-  stop(source?: Source): void {
-    if (source) {
-      source.stop();
-    } else {
-      this.sources.forEach(s => s.stop());
-    }
+  stopAll(): void {
+    this.getAllSources().forEach(s => {
+      s.audio.pause();
+      s.audio.currentTime = 0;
+    });
   }
 
-  pause(source?: Source): void {
-    if (source) {
-      source.pause();
-    } else {
-      this.sources.forEach(s => {
-        if (s.isPlaying()) {
-          s.pause();
-        }
-      });
-    }
+  pauseAll(): void {
+    this.getAllSources().forEach(s => s.audio.pause());
   }
 
-  resume(source?: Source): void {
-    if (source) {
-      source.resume();
-    } else {
-      this.sources.forEach(s => {
-        if (s.isPaused()) {
-          s.resume();
-        }
-      });
-    }
+  resumeAll(): boolean {
+    let resumed = false;
+    this.getAllSources().forEach(s => {
+      if (s.isReady() && s.audio.paused && s.audio.currentTime > 0) {
+        s.play();
+        resumed = true;
+      }
+    });
+    return resumed;
   }
 
   setVolume(volume: number): void {
     this.globalVolume = Math.max(0, Math.min(1, volume));
-    this.sources.forEach(source => {
-      source._setGlobalVolume(this.globalVolume);
+    this.getAllSources().forEach(s => {
+      s.audio.volume = s.options.volume * this.globalVolume;
     });
   }
 
@@ -216,24 +167,8 @@ export class Audio {
     return this.globalVolume;
   }
 
-  getActiveSourceCount(): number {
-    let count = 0;
-    this.sources.forEach(source => {
-      if (source.isPlaying()) {
-        count++;
-      }
-    });
-    return count;
-  }
-
-  getActiveSources(): Source[] {
-    const active: Source[] = [];
-    this.sources.forEach(source => {
-      if (source.isPlaying()) {
-        active.push(source);
-      }
-    });
-    return active;
+  clone(source: Source): Source {
+    return this.newSource(source.path, { ...source.options });
   }
 }
 
