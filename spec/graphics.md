@@ -1,71 +1,74 @@
 # Graphics API
 
-2D rendering API. All drawing functions are on `like.graphics`.
+2D rendering API available via `like.graphics`.
 
-## Types
+## Core Design Principles
 
-- `Color = [number, number, number, number?] | string` - RGBA array (0-1) or CSS color string
-- `Vector2 = [number, number]` - See [vector2.md](./vector2.md)
-- `Rect = [number, number, number, number]` - See [rect.md](./rect.md)
-- `Canvas` - Offscreen render target handle
+### 1. Type Safety with Tuple Types
+All geometric data uses tuple types rather than loose coordinates:
+- `Vector2 = [number, number]` for positions, directions, and 2D values
+- `Rect = [number, number, number, number]` for rectangles `[x, y, w, h]`
+- These types are lightweight arrays that work well with destructuring
 
-## Design Principles
+### 2. Consistent Parameter Ordering
+- **Required arguments** come first as positional parameters
+- **Optional arguments** are grouped in a trailing `props` object
+- **Color** is the first argument for shape drawing when required
 
-- **Required args first**: Required values are positional arguments
-- **Optional values in props**: Optional values in a trailing props object
-- **Color first when required**: Color is the first argument for shape drawing; optional in props for images/text
-- **Tuple types for positions**: Use `Vector2` for positions and `Rect` for rectangles instead of loose coordinates
-- **Simplified functions**: Combined functions where semantics are similar
+### 3. Unified Scale and Origin
+Drawing operations use unified parameters:
+- `scale: number | Vector2` - Single number for uniform scale, tuple for non-uniform
+- `origin: number | Vector2` - Single number for both axes, tuple for separate values
 
-## Shape Drawing
+### 4. State Isolation
+Each drawing operation resets relevant canvas state before executing:
+- Stroke properties (`lineWidth`, `lineCap`, `lineJoin`, `miterLimit`) are always set to defaults first
+- No state leakage between drawing calls
 
-- `rectangle(mode, color, rect, props?)` - Draw rectangle (fill or line)
-- `circle(mode, color, position, radii, props?)` - Draw circle or ellipse
-- `ellipse(mode, color, position, radii, rotation, props?)` - Draw rotated ellipse
-- `line(color, points, props?)` - Draw polyline
-- `polygon(mode, color, points, props?)` - Draw polygon
-- `arc(mode, color, position, radii, angles, props?)` - Draw arc
-- `points(color, points)` - Draw individual pixels
+### 5. Handle-Based Resources
+Images and canvases use handle objects:
+- `ImageHandle` - Reference to loaded image with `size` property
+- `Canvas` - Offscreen render target with `size` property
 
-Props: `lineWidth`, `lineCap`, `lineJoin`, `miterLimit`
+## Color Representation
 
-Points are `Vector2[]`: `[[x1, y1], [x2, y2], ...]`
-Radii: `number` for circle, `Vector2` for ellipse `[rx, ry]`
-Angles: `[angle1, angle2]` tuple
+`Color = [number, number, number, number?] | string`
 
-## Image Drawing
+- RGBA array with values 0-1: `[r, g, b, a]`
+- Alpha defaults to 1 if omitted
+- CSS color strings also accepted: `"red"`, `"#ff0000"`, `"rgb(255,0,0)"`
 
-- `draw(handle, position, props?)` - Draw image or sub-region
-- `newImage(path)` - Load image, returns `ImageHandle`
-- `newCanvas(size)` - Create offscreen render target
-- `setCanvas(canvas?)` - Set render target (null for screen)
+## Drawing Modes
 
-Props: `color` (tint), `quad`, `r` (rotation), `sx`, `sy`, `ox`, `oy`
+Shape drawing uses explicit modes:
+- `"fill"` - Filled shape
+- `"line"` - Outlined shape
 
-ImageHandle: `path`, `isReady()`, `ready()`, `size` (Vector2)
-Canvas: `size` (Vector2), internal canvas handle
+## Coordinate System
 
-## Text Rendering
+- Origin (0, 0) at top-left
+- X increases right
+- Y increases down
+- Angles in radians, 0 is right, positive is clockwise
 
-- `print(color, text, position, props?)` - Draw text
-- `setFont(size, font?)` - Set default font
-- `getFont()` - Get current font string
+## API Categories
 
-Props: `font`, `limit` (wrap width), `align`
+### Shapes
+Rectangle, circle/ellipse, line, polygon, arc, points - using `Vector2` and `Rect` types throughout.
 
-## Coordinate Transformations
+### Images
+Drawing with rotation, scaling, origin offset, and optional sub-region (quad).
 
-- `push()` / `pop()` - Save/restore transform state
-- `translate(delta)` - Translate by Vector2
-- `rotate(angle)` - Rotate (radians)
-- `scale(s)` - Scale (number or Vector2)
+### Text
+Single function for text rendering with optional wrapping and alignment.
 
-## Clipping
+### Transformations
+Stack-based coordinate transformations: push/pop, translate, rotate, scale.
 
-- `clip(rect?)` - Clip to rect, or reset if no rect
+### State
+Background color, canvas sizing, clipping, and render target management.
 
-## State Management
+## See Also
 
-- `clear()` - Clear canvas with background color
-- `setBackgroundColor(color)` - Set background color
-- `getCanvasSize()` - Canvas dimensions as Vector2
+- [vector2.md](./vector2.md) - Vector2 type and V2 namespace
+- [rect.md](./rect.md) - Rect type and R namespace
