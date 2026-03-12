@@ -26,13 +26,20 @@ Implemented Vector2 and Rect as tuple types with pure function libraries.
 - Constants exported for common vectors: zero, one, up, down, left, right
 - Quad type in graphics is now an alias of Rect
 
-### TODO: Consideration: reducing state, preferring objects over args.
+### DONE: Consideration: reducing state, preferring objects over args.
 It is rare that we benefit from setting color, then line width, then calling draw afterwards. 
 Instead, let's require that a color be passed into any draw call which requires a color. Line width can be optional.
 For example, line drawing take a color argument. However, if images could take an optional tint argument, put that in a props table.
 Or, for the best ergonomics, maybe colors should be optional as an argument and override the currently set color.
 
 Are there other parts of the codebase that suffer from too much statefulness? Would they be cleaner if state was handled by the user?
+
+### DONE: Unified events
+Replaced the myriad of event handler callbacks in Scene with a single `handleEvent` method that receives all events as a tagged union.
+
+This allows events to be passed around to create layered scenes and simplifies the code by having one entry point instead of many optional callbacks.
+
+See `spec/unified-events.md` for the full specification.
 
 ## Future Considerations (Post-Game Object Model)
 

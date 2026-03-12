@@ -1,5 +1,5 @@
 import { like, ImageHandle } from "./like/index.ts";
-import type { Source, Scene } from './like/index.ts';
+import type { Source, Scene, Event } from './like/index.ts';
 import { getButtonName } from './like/index.ts';
 import { R, V2 } from './like/index.ts';
 
@@ -67,58 +67,67 @@ const demoScene: Scene = {
     player.pos = V2.clamp(player.pos, [15, 15], V2.sub(canvasSize, [15, 15]));
   },
 
-  actionpressed: async (action: string) => {
-    console.log('Action pressed:', action);
+  handleEvent: async (event: Event) => {
+    switch (event.type) {
+      case 'actionpressed': {
+        console.log('Action pressed:', event.action);
 
-    switch (action) {
-      case 'jump':
-        console.log('Jump action triggered!');
-        break;
-      case 'fire':
-        console.log('Fire action triggered!');
-        break;
-      case 'audio_play_pause':
-        if (audioSource && audioSource.isReady()) {
-          if (audioSource.isPlaying()) {
-            audioSource.stop();
-          } else {
-            audioSource.play();
-          }
+        switch (event.action) {
+          case 'jump':
+            console.log('Jump action triggered!');
+            break;
+          case 'fire':
+            console.log('Fire action triggered!');
+            break;
+          case 'audio_play_pause':
+            if (audioSource && audioSource.isReady()) {
+              if (audioSource.isPlaying()) {
+                audioSource.stop();
+              } else {
+                audioSource.play();
+              }
+            }
+            break;
+          case 'audio_stop':
+            if (audioSource && audioSource.isReady()) {
+              audioSource.stop();
+            }
+            break;
+          case 'audio_pause_resume':
+            if (audioSource && audioSource.isReady()) {
+              if (audioSource.isPlaying()) {
+                audioSource.pause();
+              } else if (audioSource.isPaused()) {
+                audioSource.resume();
+              }
+            }
+            break;
+          case 'sleep_timer':
+            lastSleepTime = like.timer.getTime();
+            like.timer.sleep(2);
+            sleepStatus = 'Timer sleep activated (2 seconds)';
+            console.log('Timer sleeping for 2 seconds starting at:', lastSleepTime);
+            break;
         }
         break;
-      case 'audio_stop':
-        if (audioSource && audioSource.isReady()) {
-          audioSource.stop();
-        }
+      }
+      case 'actionreleased': {
+        console.log('Action released:', event.action);
         break;
-      case 'audio_pause_resume':
-        if (audioSource && audioSource.isReady()) {
-          if (audioSource.isPlaying()) {
-            audioSource.pause();
-          } else if (audioSource.isPaused()) {
-            audioSource.resume();
-          }
-        }
+      }
+      case 'gamepadpressed': {
+        console.log(`Gamepad ${event.gamepadIndex}: ${event.buttonName} (button ${event.buttonIndex}) pressed`);
         break;
-      case 'sleep_timer':
-        lastSleepTime = like.timer.getTime();
-        like.timer.sleep(2);
-        sleepStatus = 'Timer sleep activated (2 seconds)';
-        console.log('Timer sleeping for 2 seconds starting at:', lastSleepTime);
+      }
+      case 'gamepadreleased': {
+        console.log(`Gamepad ${event.gamepadIndex}: ${event.buttonName} (button ${event.buttonIndex}) released`);
         break;
+      }
+      case 'mousepressed': {
+        console.log('Mouse pressed at', event.x, event.y, 'button:', event.button);
+        break;
+      }
     }
-  },
-
-  actionreleased: (action: string) => {
-    console.log('Action released:', action);
-  },
-
-  gamepadpressed: (gamepadIndex: number, buttonIndex: number, buttonName: string) => {
-    console.log(`Gamepad ${gamepadIndex}: ${buttonName} (button ${buttonIndex}) pressed`);
-  },
-
-  gamepadreleased: (gamepadIndex: number, buttonIndex: number, buttonName: string) => {
-    console.log(`Gamepad ${gamepadIndex}: ${buttonName} (button ${buttonIndex}) released`);
   },
 
   draw: () => {
@@ -416,12 +425,6 @@ const demoScene: Scene = {
     like.graphics.circle('fill', 'springgreen', player.pos, 15);
     like.graphics.circle('line', 'lime', player.pos, 15);
   },
-
-
-
-  mousepressed: (x: number, y: number, button: number) => {
-    console.log('Mouse pressed at', x, y, 'button:', button);
-  }
 };
 
 // Initialize with scene

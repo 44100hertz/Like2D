@@ -6,6 +6,7 @@ import { input } from './input.ts';
 import { gamepad } from './gamepad.ts';
 import { timer } from './timer.ts';
 import { Scene } from './scene.ts';
+import type { Event } from './events.ts';
 
 class Like {
   private canvas: HTMLCanvasElement | null = null;
@@ -80,37 +81,39 @@ class Like {
 
   private setupInputHandlers(): void {
     window.addEventListener('keydown', (e) => {
-      if (this.currentScene?.keypressed) {
-        this.currentScene.keypressed(e.code, e.key);
+      if (this.currentScene?.handleEvent) {
+        this.currentScene.handleEvent({ type: 'keypressed', scancode: e.code, keycode: e.key });
       }
     });
 
     window.addEventListener('keyup', (e) => {
-      if (this.currentScene?.keyreleased) {
-        this.currentScene.keyreleased(e.code, e.key);
+      if (this.currentScene?.handleEvent) {
+        this.currentScene.handleEvent({ type: 'keyreleased', scancode: e.code, keycode: e.key });
       }
     });
 
     if (this.canvas) {
       this.canvas.addEventListener('mousedown', (e) => {
-        if (this.currentScene?.mousepressed) {
+        if (this.currentScene?.handleEvent) {
           const rect = this.canvas!.getBoundingClientRect();
-          this.currentScene.mousepressed(
-            e.clientX - rect.left,
-            e.clientY - rect.top,
-            e.button + 1
-          );
+          this.currentScene.handleEvent({
+            type: 'mousepressed',
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+            button: e.button + 1
+          });
         }
       });
 
       this.canvas.addEventListener('mouseup', (e) => {
-        if (this.currentScene?.mousereleased) {
+        if (this.currentScene?.handleEvent) {
           const rect = this.canvas!.getBoundingClientRect();
-          this.currentScene.mousereleased(
-            e.clientX - rect.left,
-            e.clientY - rect.top,
-            e.button + 1
-          );
+          this.currentScene.handleEvent({
+            type: 'mousereleased',
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+            button: e.button + 1
+          });
         }
       });
     }
@@ -163,26 +166,26 @@ class Like {
     const { pressed, released, gamepadPressed, gamepadReleased } = input.update();
 
     // Trigger action callbacks
-    if (this.currentScene.actionpressed) {
+    if (this.currentScene?.handleEvent) {
       for (const action of pressed) {
-        this.currentScene.actionpressed(action);
+        this.currentScene.handleEvent({ type: 'actionpressed', action });
       }
     }
-    if (this.currentScene.actionreleased) {
+    if (this.currentScene?.handleEvent) {
       for (const action of released) {
-        this.currentScene.actionreleased(action);
+        this.currentScene.handleEvent({ type: 'actionreleased', action });
       }
     }
 
     // Trigger gamepad callbacks
-    if (this.currentScene.gamepadpressed) {
+    if (this.currentScene?.handleEvent) {
       for (const { gamepadIndex, buttonIndex, buttonName } of gamepadPressed) {
-        this.currentScene.gamepadpressed(gamepadIndex, buttonIndex, buttonName);
+        this.currentScene.handleEvent({ type: 'gamepadpressed', gamepadIndex, buttonIndex, buttonName });
       }
     }
-    if (this.currentScene.gamepadreleased) {
+    if (this.currentScene?.handleEvent) {
       for (const { gamepadIndex, buttonIndex, buttonName } of gamepadReleased) {
-        this.currentScene.gamepadreleased(gamepadIndex, buttonIndex, buttonName);
+        this.currentScene.handleEvent({ type: 'gamepadreleased', gamepadIndex, buttonIndex, buttonName });
       }
     }
 
@@ -228,3 +231,4 @@ export type { Vector2 } from './vector2.ts';
 export { V2 } from './vector2.ts';
 export type { Rect } from './rect.ts';
 export { R } from './rect.ts';
+export type { Event } from './events.ts';

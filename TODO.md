@@ -126,3 +126,60 @@ Add clipping:
 - [x] Replace separate `sx` and `sy` parameters with a single `scale` parameter that accepts `number | Vector2`
 - [x] Replace separate `ox` and `oy` parameters with a single `origin` parameter that accepts `number | Vector2`
 - [x] Update main.ts to use the new API (e.g., `scale: 0.5` or `scale: [0.5, 0.5]`, `origin: [imgWidth/2, imgHeight/2]`)
+
+---
+
+# Unified Events Implementation
+
+## Overview
+Replace multiple input event callbacks with a single `handleEvent` method using a tagged union type.
+
+## TODO
+
+### 1. Create Event type
+**File:** `src/like/events.ts`
+**Spec:** `spec/unified-events.md`
+
+- [x] Export `Event` discriminated union type with all input events:
+  - [x] `keypressed` - `{ type: 'keypressed'; scancode: string; keycode: string }`
+  - [x] `keyreleased` - `{ type: 'keyreleased'; scancode: string; keycode: string }`
+  - [x] `mousepressed` - `{ type: 'mousepressed'; x: number; y: number; button: number }`
+  - [x] `mousereleased` - `{ type: 'mousereleased'; x: number; y: number; button: number }`
+  - [x] `actionpressed` - `{ type: 'actionpressed'; action: string }`
+  - [x] `actionreleased` - `{ type: 'actionreleased'; action: string }`
+  - [x] `gamepadpressed` - `{ type: 'gamepadpressed'; gamepadIndex: number; buttonIndex: number; buttonName: string }`
+  - [x] `gamepadreleased` - `{ type: 'gamepadreleased'; gamepadIndex: number; buttonIndex: number; buttonName: string }`
+
+### 2. Update Scene interface
+**File:** `src/like/scene.ts`
+**Spec:** `spec/unified-events.md`
+
+- [x] Remove old callback methods: `keypressed`, `keyreleased`, `mousepressed`, `mousereleased`, `actionpressed`, `actionreleased`, `gamepadpressed`, `gamepadreleased`
+- [x] Add optional `handleEvent?: (event: Event) => void` method
+- [x] Keep `load`, `update`, `draw` as separate methods (not part of unified events)
+
+### 3. Update main loop to dispatch events
+**File:** `src/like/index.ts`
+**Spec:** `spec/unified-events.md`
+
+- [x] Import `Event` type from events module
+- [x] Replace individual callback invocations with `handleEvent` calls:
+  - [x] Keyboard events → `handleEvent({ type: 'keypressed'/'keyreleased', ... })`
+  - [x] Mouse events → `handleEvent({ type: 'mousepressed'/'mousereleased', ... })`
+  - [x] Action events → `handleEvent({ type: 'actionpressed'/'actionreleased', ... })`
+  - [x] Gamepad events → `handleEvent({ type: 'gamepadpressed'/'gamepadreleased', ... })`
+- [x] Check if `handleEvent` exists before calling (it's optional)
+
+### 4. Export Event type
+**File:** `src/like/index.ts`
+
+- [x] Re-export `Event` type from events module
+- [x] Re-export `Event` type from scene module (if needed for circular imports)
+
+### 5. Update main.ts examples
+**File:** `src/main.ts`
+**Spec:** `spec/unified-events.md`
+
+- [x] Replace individual callback methods with `handleEvent` method
+- [x] Use switch statement on `event.type` to handle different input types
+- [x] Show example of event forwarding to demonstrate composability
