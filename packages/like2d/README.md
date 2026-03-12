@@ -7,19 +7,19 @@ LIKE is in the same family as LÖVE or Raylib, but only for web.
 
 ## But why?
 
-** Beginner Friendly **
+**Beginner Friendly**
 
 LIKE is easy to get started with. There's no boilerplate,
 and you can get things on screen in an instant.
 
-** Fire-and-forget asset loading **
+**Fire-and-forget asset loading**
 
 Loading sound and images in Vanilla JS is clunky and can interrupt your game loop.
 
 LIKE abstracts away DOM operations, giving synchronous
 asset handles that are ignored until the asset is actually loaded.
 
-** Zero boilerplate, physical game input **
+**Zero boilerplate, physical game input**
 
 LIKE keeps track of which inputs are down or pressed.
 
@@ -29,7 +29,7 @@ than just their names by using the standard SDL database.
 On top of that, inputs can be grouped into actions, so it's easy to
 map multiple buttons to one input, or to make remapping systems.
 
-** Stateless Canvas API **
+**Stateless Canvas API**
 
 JS canvas has a several stateful properties to keep track of, like color and line width.
 Don't change one and forget to change it back!
@@ -42,7 +42,7 @@ Don't bother setting and clearing stateful listeners, juggling them around all d
 
 LIKE keeps event handling simple by running it all through a single callback.
 
-** Build it how you want it **
+**Build it how you want it**
 
 It's not an engine, it's a framework.
 
