@@ -33,4 +33,3 @@ export class Keyboard {
 }
 
 export const keyboard = new Keyboard();
-export default keyboard;

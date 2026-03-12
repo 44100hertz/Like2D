@@ -378,4 +378,3 @@ export class Graphics {
 }
 
 export const graphics = new Graphics();
-export default graphics;

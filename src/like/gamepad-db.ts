@@ -213,4 +213,3 @@ export class GamepadDatabase {
 
 // Singleton instance
 export const gamepadDatabase = new GamepadDatabase();
-export default gamepadDatabase;

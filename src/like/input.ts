@@ -1,6 +1,6 @@
-import keyboard from './keyboard.ts';
-import mouse from './mouse.ts';
-import gamepad from './gamepad.ts';
+import { keyboard } from "./keyboard.ts";
+import { mouse } from "./mouse.ts";
+import { gamepad } from "./gamepad.ts";
 import { InputStateTracker } from './input-state.ts';
 import { getButtonIndex } from './gamepad-button-map.ts';
 
@@ -144,4 +144,3 @@ export class Input {
 }
 
 export const input = new Input();
-export default input;

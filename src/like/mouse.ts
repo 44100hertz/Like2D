@@ -75,4 +75,3 @@ export class Mouse {
 }
 
 export const mouse = new Mouse();
-export default mouse;

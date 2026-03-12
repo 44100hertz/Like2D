@@ -239,4 +239,3 @@ export class Gamepad {
 }
 
 export const gamepad = new Gamepad();
-export default gamepad;

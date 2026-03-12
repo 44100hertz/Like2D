@@ -214,4 +214,3 @@ export class GamepadMapping {
 
 // Singleton instance
 export const gamepadMapping = new GamepadMapping();
-export default gamepadMapping;

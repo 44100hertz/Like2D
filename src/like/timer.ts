@@ -56,4 +56,3 @@ export class Timer {
 }
 
 export const timer = new Timer();
-export default timer;

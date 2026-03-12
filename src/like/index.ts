@@ -1,10 +1,10 @@
-import graphics from './graphics.ts';
-import audio from './audio.ts';
-import keyboard from './keyboard.ts';
-import mouse from './mouse.ts';
-import input from './input.ts';
-import gamepad from './gamepad.ts';
-import timer from './timer.ts';
+import { graphics } from './graphics.ts';
+import { audio } from './audio.ts';
+import { keyboard } from './keyboard.ts';
+import { mouse } from './mouse.ts';
+import { input } from './input.ts';
+import { gamepad } from './gamepad.ts';
+import { timer } from './timer.ts';
 import { Scene } from './scene.ts';
 
 class Like {
@@ -213,8 +213,7 @@ class Like {
   }
 }
 
-const like = new Like();
-export default like;
+export const like = new Like();
 export const love = like;
 export { Source } from './audio.ts';
 export { timer } from './timer.ts';

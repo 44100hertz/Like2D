@@ -1,4 +1,4 @@
-import like from './like/index.ts';
+import { like } from "./like/index.ts";
 import { Source, Scene, ImageHandle, getButtonName } from './like/index.ts';
 
 // Example demonstrating Like2D graphics API with Scene-based architecture

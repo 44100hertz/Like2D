@@ -238,4 +238,3 @@ export class Audio {
 }
 
 export const audio = new Audio();
-export default audio;
