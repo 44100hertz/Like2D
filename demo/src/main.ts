@@ -1,7 +1,7 @@
-import { like, ImageHandle } from "./like/index.ts";
-import type { Source, Scene, Event } from './like/index.ts';
-import { getButtonName } from './like/index.ts';
-import { R, V2 } from './like/index.ts';
+import { like, ImageHandle } from "like2d";
+import type { Source, Scene, Event } from 'like2d';
+import { getButtonName } from 'like2d';
+import { R, V2 } from 'like2d';
 
 // Example demonstrating Like2D graphics API with Scene-based architecture
 let rotation = 0;
@@ -427,7 +427,16 @@ const demoScene: Scene = {
   },
 };
 
-// Initialize with scene
-await like.init();
-like.setScene(demoScene);
-like.start();
+// Initialize and start with scene
+const container = document.getElementById('game-container')!;
+await like.init(container);
+
+// Setup fullscreen button
+const fullscreenBtn = document.getElementById('fullscreen-btn');
+if (fullscreenBtn) {
+  fullscreenBtn.addEventListener('click', () => {
+    like.toggleFullscreen();
+  });
+}
+
+like.start(demoScene);

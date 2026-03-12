@@ -1,0 +1,9 @@
+{
+  "entryPoints": ["../../packages/like2d/src/index.ts"],
+  "json": "docs/generated/api.json",
+  "tsconfig": "../../packages/like2d/tsconfig.json",
+  "excludeExternals": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "sort": ["source-order"]
+}

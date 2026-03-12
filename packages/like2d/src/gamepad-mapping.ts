@@ -1,8 +1,8 @@
 // Gamepad button mapping layer
 // Bridges SDL database mappings with our internal button naming system
 
-import { gamepadDatabase, ControllerMapping } from './gamepad-db.ts';
-import { getButtonIndex } from './gamepad-button-map.ts';
+import { gamepadDatabase, ControllerMapping } from './gamepad-db';
+import { getButtonIndex } from './gamepad-button-map';
 
 // Map SDL button names to our internal button names
 const SDL_TO_INTERNAL_BUTTON: Record<string, string> = {

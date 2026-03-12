@@ -1,4 +1,4 @@
-import type { Vector2 } from './vector2.ts';
+import type { Vector2 } from './vector2';
 
 export class Mouse {
   private x = 0;

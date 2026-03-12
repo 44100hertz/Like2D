@@ -1,12 +1,25 @@
 {
-  "name": "like2d",
+  "name": "like2d-workspace",
   "version": "1.0.0",
   "description": "A web-native game framework inspired by Love2D",
+  "private": true,
   "type": "module",
-"scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "update-gamepad-db": "curl -o src/like/gamecontrollerdb.txt https://raw.githubusercontent.com/gabomdq/SDL_GameControllerDB/master/gamecontrollerdb.txt"
+  "scripts": {
+    "dev": "pnpm --filter demo dev",
+    "dev:website": "pnpm --filter website dev",
+    "build": "pnpm -r build",
+    "build:lib": "pnpm --filter like2d build",
+    "build:demo": "pnpm --filter demo build",
+    "build:website": "pnpm --filter website build",
+    "preview": "pnpm --filter demo preview",
+    "preview:website": "pnpm --filter website preview",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "update-gamepad-db": "curl -o packages/like2d/src/gamecontrollerdb.txt https://raw.githubusercontent.com/gabomdq/SDL_GameControllerDB/master/gamecontrollerdb.txt",
+    "clean": "pnpm -r exec rm -rf dist node_modules/.cache"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
   }
 }

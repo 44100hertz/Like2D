@@ -1,6 +1,6 @@
-import { getButtonName, getButtonIndex } from './gamepad-button-map.ts';
-import { InputStateTracker } from './input-state.ts';
-import { gamepadMapping, ButtonMapping } from './gamepad-mapping.ts';
+import { getButtonName, getButtonIndex } from './gamepad-button-map';
+import { InputStateTracker } from './input-state';
+import { gamepadMapping, ButtonMapping } from './gamepad-mapping';
 
 export { getButtonName, getButtonIndex };
 

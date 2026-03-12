@@ -1,0 +1,64 @@
+{
+  "name": "like2d",
+  "version": "1.0.0",
+  "description": "A web-native game framework inspired by Love2D",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./graphics": {
+      "import": "./dist/graphics.js",
+      "types": "./dist/graphics.d.ts"
+    },
+    "./audio": {
+      "import": "./dist/audio.js",
+      "types": "./dist/audio.d.ts"
+    },
+    "./input": {
+      "import": "./dist/input.js",
+      "types": "./dist/input.d.ts"
+    },
+    "./scene": {
+      "import": "./dist/scene.js",
+      "types": "./dist/scene.d.ts"
+    },
+    "./vector2": {
+      "import": "./dist/vector2.js",
+      "types": "./dist/vector2.d.ts"
+    },
+    "./rect": {
+      "import": "./dist/rect.js",
+      "types": "./dist/rect.d.ts"
+    }
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc && cp src/gamecontrollerdb.txt dist/",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'No linting configured'",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "game",
+    "framework",
+    "2d",
+    "love2d",
+    "canvas",
+    "web",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

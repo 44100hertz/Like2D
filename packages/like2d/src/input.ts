@@ -1,8 +1,8 @@
-import { keyboard } from "./keyboard.ts";
-import { mouse } from "./mouse.ts";
-import { gamepad } from "./gamepad.ts";
-import { InputStateTracker } from './input-state.ts';
-import { getButtonIndex } from './gamepad-button-map.ts';
+import { keyboard } from "./keyboard";
+import { mouse } from "./mouse";
+import { gamepad } from "./gamepad";
+import { InputStateTracker } from './input-state';
+import { getButtonIndex } from './gamepad-button-map';
 
 export type InputType = 'keyboard' | 'mouse' | 'gamepad';
 

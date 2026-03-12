@@ -1,5 +1,5 @@
-import type { Vector2 } from './vector2.ts';
-import type { Rect } from './rect.ts';
+import type { Vector2 } from './vector2';
+import type { Rect } from './rect';
 
 type DrawMode = 'fill' | 'line';
 

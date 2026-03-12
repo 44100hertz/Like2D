@@ -1,4 +1,4 @@
-import type { Event } from './events.ts';
+import type { Event } from './events';
 
 export interface Scene {
   width: number;
