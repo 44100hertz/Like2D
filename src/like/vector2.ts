@@ -95,11 +95,11 @@ export namespace V2 {
   export function fromAngle(angle: number, len: number = 1): Vector2 {
     return [Math.cos(angle) * len, Math.sin(angle) * len];
   }
-}
 
-export const zero: Vector2 = [0, 0];
-export const one: Vector2 = [1, 1];
-export const up: Vector2 = [0, -1];
-export const down: Vector2 = [0, 1];
-export const left: Vector2 = [-1, 0];
-export const right: Vector2 = [1, 0];
+  export const zero: Vector2 = [0, 0];
+  export const one: Vector2 = [1, 1];
+  export const up: Vector2 = [0, -1];
+  export const down: Vector2 = [0, 1];
+  export const left: Vector2 = [-1, 0];
+  export const right: Vector2 = [1, 0];
+}

@@ -49,38 +49,38 @@ Implement Vector2 and Rect tuple types with pure function libraries.
 **Spec:** `spec/graphics.md`
 
 Update all shape drawing functions to require color as the first argument and use Vector2/Rect:
-- [ ] `rectangle(mode, color, rect, props?)` - takes Rect instead of x,y,w,h
-- [ ] `circle(mode, color, position, radii, props?)` - takes Vector2 position, radii as number or Vector2, and add optional `angle` to props for rotated ellipse. Add optional `arc` to props, which takes [angle1, angle2].
-- [ ] `line(color, points, props?)` - points as Vector2[]
-- [ ] `polygon(mode, color, points, props?)` - points as Vector2[]
-- [ ] `points(color, points)` - points as Vector2[]
+- [x] `rectangle(mode, color, rect, props?)` - takes Rect instead of x,y,w,h
+- [x] `circle(mode, color, position, radii, props?)` - takes Vector2 position, radii as number or Vector2, and add optional `angle` to props for rotated ellipse. Add optional `arc` to props, which takes [angle1, angle2].
+- [x] `line(color, points, props?)` - points as Vector2[]
+- [x] `polygon(mode, color, points, props?)` - points as Vector2[]
+- [x] `points(color, points)` - points as Vector2[]
 
 Shape drawing props: add `lineCap`, `lineJoin`, `miterLimit`
 
 Keep optional color in props for:
-- [ ] `draw(handle, position, props?)` - color optional (tinting), takes Vector2 position
+- [x] `draw(handle, position, props?)` - color optional (tinting), takes Vector2 position
 
 Require color as first argument, use Vector2:
-- [ ] `print(color, text, position, props?)` - color required (no default), takes Vector2 position
+- [x] `print(color, text, position, props?)` - color required (no default), takes Vector2 position
 
 Update transformation functions:
-- [ ] `translate(delta)` - takes Vector2 instead of x, y
-- [ ] `scale(s)` - takes number or Vector2 instead of x, y?
+- [x] `translate(delta)` - takes Vector2 instead of x, y
+- [x] `scale(s)` - takes number or Vector2 instead of x, y?
 
 Replace canvas dimension functions:
-- [ ] Remove `getWidth()` / `getHeight()`
-- [ ] Add `getCanvasSize()` returning Vector2
+- [x] Remove `getWidth()` / `getHeight()`
+- [x] Add `getCanvasSize()` returning Vector2
 
 Update ImageHandle:
-- [ ] Replace `width`, `height` with `size` returning Vector2
+- [x] Replace `width`, `height` with `size` returning Vector2
 
 Add canvas/render target support:
-- [ ] `newCanvas(size)` - Create offscreen render target, takes Vector2
-- [ ] `setCanvas(canvas?)` - Set render target (null for screen)
-- [ ] `Canvas` type with `size` property
+- [x] `newCanvas(size)` - Create offscreen render target, takes Vector2
+- [x] `setCanvas(canvas?)` - Set render target (null for screen)
+- [x] `Canvas` type with `size` property
 
 Add clipping:
-- [ ] `clip(rect?)` - Clip to rect, or reset if no rect
+- [x] `clip(rect?)` - Clip to rect, or reset if no rect
 
 ### 5. Update Mouse module  
 **File:** `src/like/mouse.ts`
@@ -99,3 +99,30 @@ Add clipping:
 **File:** `PHASES.md`
 
 - [x] Move "Consideration: Geometric Data Types" to DONE section
+
+### 8. Graphics State Cleanup
+**File:** `src/like/graphics.ts`
+
+- [x] Fix optional properties that could affect state - ensure browser doesn't "remember" last shape's properties, library should remove excess state from drawing
+- [x] Remove `width` and `height` props from image type; `size` is all that's required
+- [x] Use spread operator more often to make code more concise
+
+### 9. Update main.ts Examples
+**File:** `src/main.ts`
+
+- [x] Use `Vector2` and `Rect` helper functions to demonstrate the library
+
+### 10. Flatten Vector2 and Rect Exports
+**File:** `src/like/index.ts`
+
+- [x] Export all Vector2 constants and functions in a flat namespace (e.g., `V2.zero`, `V2.up`, `V2.down`, `V2.left`, `V2.right` instead of separate `zero`, `up`, etc. exports)
+- [x] Export all Rect constants and functions in a flat namespace (e.g., `R.empty` if applicable)
+- [x] Update main.ts to use the flat namespace (e.g., `V2.zero` instead of importing `zero` separately)
+
+### 11. Simplify Graphics draw() API
+**File:** `src/like/graphics.ts`
+
+- [x] Remove string-based image handles from `like.graphics.draw()` - only accept `ImageHandle` objects
+- [x] Replace separate `sx` and `sy` parameters with a single `scale` parameter that accepts `number | Vector2`
+- [x] Replace separate `ox` and `oy` parameters with a single `origin` parameter that accepts `number | Vector2`
+- [x] Update main.ts to use the new API (e.g., `scale: 0.5` or `scale: [0.5, 0.5]`, `origin: [imgWidth/2, imgHeight/2]`)
