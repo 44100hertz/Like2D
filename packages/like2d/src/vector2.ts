@@ -57,10 +57,6 @@ export namespace V2 {
     return [v[0] * cos - v[1] * sin, v[0] * sin + v[1] * cos];
   }
 
-  export function perpendicular(v: Vector2): Vector2 {
-    return [-v[1], v[0]];
-  }
-
   export function negate(v: Vector2): Vector2 {
     return [-v[0], -v[1]];
   }
@@ -96,10 +92,7 @@ export namespace V2 {
     return [Math.cos(angle) * len, Math.sin(angle) * len];
   }
 
-  export const zero: Vector2 = [0, 0];
-  export const one: Vector2 = [1, 1];
-  export const up: Vector2 = [0, -1];
-  export const down: Vector2 = [0, 1];
-  export const left: Vector2 = [-1, 0];
-  export const right: Vector2 = [1, 0];
+  export function zero(): Vector2 {
+    return [0, 0];
+  }
 }
