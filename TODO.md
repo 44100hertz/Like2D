@@ -6,13 +6,6 @@
 - [ ] Configure GitHub Pages deployment for website
 - [ ] Add LICENSE file to packages/like2d
 
-## Scene Adapter State Management
-
-### Gamepad Listener Cleanup
-**Task**: Apply the same centralized listener approach to Gamepad module.
-- Ensure Gamepad global listeners are included in centralized cleanup
-- **Goal**: Consistent cleanup across all input modules
-
 ## Future Ideas
 
 ### Multiplayer System Design
