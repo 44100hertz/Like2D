@@ -57,69 +57,45 @@ export const like = {
 
     await gamepad.init();
 
-    const startGame = () => {
-      engine!.onEvent((event: Event) => {
-        switch (event.type) {
-          case 'load':
-            this.load?.();
-            break;
-          case 'update':
-            this.update?.(event.dt);
-            break;
-          case 'draw':
-            this.draw?.();
-            break;
-          case 'keypressed':
-            this.keypressed?.(event.scancode, event.keycode);
-            break;
-          case 'keyreleased':
-            this.keyreleased?.(event.scancode, event.keycode);
-            break;
-          case 'mousepressed':
-            this.mousepressed?.(event.position[0], event.position[1], event.button);
-            break;
-          case 'mousereleased':
-            this.mousereleased?.(event.position[0], event.position[1], event.button);
-            break;
-          case 'gamepadpressed':
-            this.gamepadpressed?.(event.gamepadIndex, event.buttonIndex, event.buttonName);
-            break;
-          case 'gamepadreleased':
-            this.gamepadreleased?.(event.gamepadIndex, event.buttonIndex, event.buttonName);
-            break;
-          default:
-            // All other events (including custom events) go to handleEvent
-            this.handleEvent?.(event);
-            break;
-        }
-      });
+    // Register event handlers before starting
+    engine.onEvent((event: Event) => {
+      switch (event.type) {
+        case 'load':
+          this.load?.();
+          break;
+        case 'update':
+          this.update?.(event.dt);
+          break;
+        case 'draw':
+          this.draw?.();
+          break;
+        case 'keypressed':
+          this.keypressed?.(event.scancode, event.keycode);
+          break;
+        case 'keyreleased':
+          this.keyreleased?.(event.scancode, event.keycode);
+          break;
+        case 'mousepressed':
+          this.mousepressed?.(event.position[0], event.position[1], event.button);
+          break;
+        case 'mousereleased':
+          this.mousereleased?.(event.position[0], event.position[1], event.button);
+          break;
+        case 'gamepadpressed':
+          this.gamepadpressed?.(event.gamepadIndex, event.buttonIndex, event.buttonName);
+          break;
+        case 'gamepadreleased':
+          this.gamepadreleased?.(event.gamepadIndex, event.buttonIndex, event.buttonName);
+          break;
+        default:
+          // All other events (including custom events) go to handleEvent
+          this.handleEvent?.(event);
+          break;
+      }
+    });
 
-      engine!.start();
-    };
-
-    if (showStartupScreen) {
-      const canvas = engine.getCanvas();
-      const ctx = engine.getContext();
-      const [width, height] = [canvas.width, canvas.height];
-      
-      // Draw startup screen
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, width, height);
-      ctx.fillStyle = '#fff';
-      ctx.font = '32px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(startupText, width / 2, height / 2);
-      
-      // Wait for click to start
-      const onClick = () => {
-        canvas.removeEventListener('click', onClick);
-        startGame();
-      };
-      canvas.addEventListener('click', onClick);
-    } else {
-      startGame();
-    }
+    // Start the engine with startup screen support
+    engine.start(undefined, undefined, { showStartupScreen, startupText });
   }
 };
 

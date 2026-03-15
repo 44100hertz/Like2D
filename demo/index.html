@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Like2D Game</title>
+  <title>Like2D - Demo</title>
   <style>
     body {
       margin: 0;
@@ -14,31 +14,60 @@
       background: #222;
       color: #fff;
       font-family: sans-serif;
+      gap: 30px;
     }
-    #game-container {
+    .demo-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      border: 2px solid #444;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .demo-label {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .scene-label { color: #2196F3; }
+    .love-label { color: #E91E63; }
+    .game-container {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 10px;
     }
-    #fullscreen-btn {
+    button {
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
-      background: #4CAF50;
-      color: white;
       border: none;
       border-radius: 4px;
+      background: #4CAF50;
+      color: white;
     }
-    #fullscreen-btn:hover {
+    button:hover {
       background: #45a049;
     }
   </style>
 </head>
 <body>
-  <div id="game-container">
-    <button id="fullscreen-btn">Fullscreen</button>
+  <div class="demo-section">
+    <div class="demo-label scene-label">Scene Pattern</div>
+    <div id="scene-container" class="game-container">
+      <button id="scene-fullscreen">Fullscreen</button>
+    </div>
   </div>
+
+  <div class="demo-section">
+    <div class="demo-label love-label">Love2D Pattern</div>
+    <div id="love-container" class="game-container">
+      <button id="love-fullscreen">Fullscreen</button>
+    </div>
+  </div>
+
   <script type="module" src="./src/main.ts"></script>
+  <script type="module" src="./src/love-demo.ts"></script>
 </body>
 </html>

@@ -1,7 +1,17 @@
-import { like, graphics, audio, timer, input, keyboard, mouse, gamepad, ImageHandle, getButtonName, R, V2 } from "like2d/callback";
-import type { Source, Scene, Event } from 'like2d';
+import { SceneRunner, Scene, Event, V2, R, getButtonName, ImageHandle } from "like2d/scene";
+import type { Source } from 'like2d';
 
 // Example demonstrating Like2D graphics API with Scene-based architecture
+// This uses the SceneRunner class with Scene objects
+// See love-demo.ts for the Love2D-style callback pattern
+
+// Initialize and start with SceneRunner
+const container = document.getElementById('scene-container')!;
+const runner = new SceneRunner(container, 800, 600);
+
+// Get references to the runner's instances
+const { graphics, audio, timer, input, keyboard, mouse, gamepad } = runner;
+
 let rotation = 0;
 let pepperImage: ImageHandle | null = null;
 let audioSource: Source | null = null;
@@ -40,7 +50,6 @@ const demoScene: Scene = {
     input.map('move_down', ['ArrowDown', 'KeyS', 'GP DPadDown']);
     
     // Menu/system actions
-    // Space is also mapped to 'jump' above - this is fine because the action loop handles both
     input.map('audio_play_pause', ['Space']);
     input.map('audio_stop', ['KeyS']);
     input.map('audio_pause_resume', ['KeyP']);
@@ -135,7 +144,7 @@ const demoScene: Scene = {
     const [canvasWidth, canvasHeight] = canvasSize;
     
     // Draw title
-    graphics.print('white', 'Like2D Framework Demo', [20, 30], { 
+    graphics.print('white', 'Scene Pattern Demo', [20, 30], { 
       font: '28px sans-serif'
     });
     
@@ -426,20 +435,13 @@ const demoScene: Scene = {
   },
 };
 
-// Set up callbacks from the scene object
-like.load = demoScene.load?.bind(demoScene);
-like.update = demoScene.update.bind(demoScene);
-like.draw = demoScene.draw.bind(demoScene);
-like.handleEvent = demoScene.handleEvent?.bind(demoScene);
-
-// Initialize and start
-const container = document.getElementById('game-container')!;
-await like.init(container);
-
-// Setup fullscreen button
-const fullscreenBtn = document.getElementById('fullscreen-btn');
+// Wire up fullscreen button
+const fullscreenBtn = document.getElementById('scene-fullscreen');
 if (fullscreenBtn) {
   fullscreenBtn.addEventListener('click', () => {
-    like.toggleFullscreen();
+    runner['engine'].toggleFullscreen();
   });
 }
+
+// Start the scene with startup screen (required for audio autoplay)
+await runner.start(demoScene, { showStartupScreen: true });

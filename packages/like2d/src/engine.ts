@@ -92,63 +92,93 @@ export class Engine {
     }
   }
   
-  start(onUpdate?: (dt: number) => void, onDraw?: () => void) {
-    this.isRunning = true;
-    this.lastTime = performance.now();
-    
-    const loop = () => {
-      if (!this.isRunning) return;
+  // Note: Browsers block audio autoplay until user interaction. 
+  // A startup/click-to-start screen should be shown before calling start().
+  start(
+    onUpdate?: (dt: number) => void,
+    onDraw?: () => void,
+    options: { showStartupScreen?: boolean; startupText?: string } = {}
+  ) {
+    const { showStartupScreen = false, startupText = 'Click to Start' } = options;
+
+    const doStart = () => {
+      this.isRunning = true;
+      this.lastTime = performance.now();
       
-      const currentTime = performance.now();
-      const dt = (currentTime - this.lastTime) / 1000;
-      this.lastTime = currentTime;
-      
-      this.deps.timer.update(dt);
-      
-      const isSleeping = this.deps.timer.isSleeping();
-      
-      if (!isSleeping) {
-        const inputEvents = this.deps.input.update();
+      const loop = () => {
+        if (!this.isRunning) return;
         
-        for (const action of inputEvents.pressed) {
-          this.emit({ type: 'actionpressed', action });
-        }
-        for (const action of inputEvents.released) {
-          this.emit({ type: 'actionreleased', action });
-        }
-        for (const event of inputEvents.gamepadPressed) {
-          this.emit({
-            type: 'gamepadpressed',
-            gamepadIndex: event.gamepadIndex,
-            buttonIndex: event.buttonIndex,
-            buttonName: event.buttonName,
-            rawButtonIndex: event.rawButtonIndex,
-          });
-        }
-        for (const event of inputEvents.gamepadReleased) {
-          this.emit({
-            type: 'gamepadreleased',
-            gamepadIndex: event.gamepadIndex,
-            buttonIndex: event.buttonIndex,
-            buttonName: event.buttonName,
-            rawButtonIndex: event.rawButtonIndex,
-          });
+        const currentTime = performance.now();
+        const dt = (currentTime - this.lastTime) / 1000;
+        this.lastTime = currentTime;
+        
+        this.deps.timer.update(dt);
+        
+        const isSleeping = this.deps.timer.isSleeping();
+        
+        if (!isSleeping) {
+          const inputEvents = this.deps.input.update();
+          
+          for (const action of inputEvents.pressed) {
+            this.emit({ type: 'actionpressed', action });
+          }
+          for (const action of inputEvents.released) {
+            this.emit({ type: 'actionreleased', action });
+          }
+          for (const event of inputEvents.gamepadPressed) {
+            this.emit({
+              type: 'gamepadpressed',
+              gamepadIndex: event.gamepadIndex,
+              buttonIndex: event.buttonIndex,
+              buttonName: event.buttonName,
+              rawButtonIndex: event.rawButtonIndex,
+            });
+          }
+          for (const event of inputEvents.gamepadReleased) {
+            this.emit({
+              type: 'gamepadreleased',
+              gamepadIndex: event.gamepadIndex,
+              buttonIndex: event.buttonIndex,
+              buttonName: event.buttonName,
+              rawButtonIndex: event.rawButtonIndex,
+            });
+          }
+          
+          this.emit({ type: 'update', dt });
+          if (onUpdate) onUpdate(dt);
         }
         
-        this.emit({ type: 'update', dt });
-        if (onUpdate) onUpdate(dt);
-      }
+        this.deps.graphics.clear();
+        this.emit({ type: 'draw' });
+        if (onDraw) onDraw();
+        
+        requestAnimationFrame(loop);
+      };
       
-      this.deps.graphics.clear();
-      this.emit({ type: 'draw' });
-      if (onDraw) onDraw();
-      
+      this.emit({ type: 'load' });
+
       requestAnimationFrame(loop);
     };
-    
-    this.emit({ type: 'load' });
-    
-    requestAnimationFrame(loop);
+
+    if (showStartupScreen) {
+      // Draw startup screen
+      this.ctx.fillStyle = '#000';
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillStyle = '#fff';
+      this.ctx.font = '32px sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText(startupText, this.canvas.width / 2, this.canvas.height / 2);
+
+      // Wait for click to start
+      const onClick = () => {
+        this.canvas.removeEventListener('click', onClick);
+        doStart();
+      };
+      this.canvas.addEventListener('click', onClick);
+    } else {
+      doStart();
+    }
   }
   
   stop() { 

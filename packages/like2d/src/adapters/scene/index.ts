@@ -9,13 +9,13 @@ import { Engine } from '../../engine';
 import type { Event } from '../../core/events';
 import type { Scene } from './scene';
 
-export { Graphics } from '../../core/graphics';
+export { Graphics, ImageHandle } from '../../core/graphics';
 export { Audio } from '../../core/audio';
 export { Input } from '../../core/input';
 export { Timer } from '../../core/timer';
 export { Keyboard } from '../../core/keyboard';
 export { Mouse } from '../../core/mouse';
-export { Gamepad } from '../../core/gamepad';
+export { Gamepad, getButtonName } from '../../core/gamepad';
 export type { Event } from '../../core/events';
 export type { Scene } from './scene';
 export type { Vector2 } from '../../core/vector2';
@@ -26,19 +26,31 @@ export { R } from '../../core/rect';
 export class SceneRunner {
   private engine: Engine;
   private currentScene: Scene | null = null;
-  private mouse: Mouse;
-  private gamepad: Gamepad;
+  
+  // Expose the instances so the Scene can use them
+  readonly graphics: Graphics;
+  readonly audio: Audio;
+  readonly timer: Timer;
+  readonly input: Input;
+  readonly keyboard: Keyboard;
+  readonly mouse: Mouse;
+  readonly gamepad: Gamepad;
 
   constructor(container: HTMLElement, width = 800, height = 600) {
-    const graphics = new Graphics();
-    const keyboard = new Keyboard();
+    this.graphics = new Graphics();
+    this.keyboard = new Keyboard();
     this.mouse = new Mouse();
     this.gamepad = new Gamepad();
-    const input = new Input({ keyboard, mouse: this.mouse, gamepad: this.gamepad });
-    const timer = new Timer();
-    const audio = new Audio();
+    this.input = new Input({ keyboard: this.keyboard, mouse: this.mouse, gamepad: this.gamepad });
+    this.timer = new Timer();
+    this.audio = new Audio();
 
-    this.engine = new Engine(container, { graphics, input, timer, audio });
+    this.engine = new Engine(container, { 
+      graphics: this.graphics, 
+      input: this.input, 
+      timer: this.timer, 
+      audio: this.audio 
+    });
     this.engine.setSize(width, height);
 
     // Wire up mouse to canvas for proper coordinate tracking
@@ -70,12 +82,18 @@ export class SceneRunner {
     }
   }
 
-  async start(scene: Scene) {
+  async start(
+    scene: Scene,
+    options: { showStartupScreen?: boolean; startupText?: string } = {}
+  ) {
+    const { showStartupScreen = true, startupText = 'Click to Start' } = options;
+
     this.setScene(scene);
 
     // Initialize gamepad
     await this.gamepad.init();
 
-    this.engine.start();
+    // Start the engine with startup screen
+    this.engine.start(undefined, undefined, { showStartupScreen, startupText });
   }
 }
