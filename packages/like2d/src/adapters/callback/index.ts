@@ -47,7 +47,7 @@ export const like = {
     container: HTMLElement,
     options: { width?: number; height?: number; showStartupScreen?: boolean; startupText?: string } = {}
   ) {
-    const { width = 800, height = 600, showStartupScreen = false, startupText = 'Click to Start' } = options;
+    const { width = 800, height = 600, showStartupScreen = true, startupText = 'Click to Start' } = options;
 
     engine = new Engine(container, { graphics, input, timer, audio });
     engine.setSize(width, height);
