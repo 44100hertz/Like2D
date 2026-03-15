@@ -68,9 +68,17 @@
 - Ensure backward compatibility where possible
 
 ## Cleanup Tasks
-- [x] Remove legacy `/like/gamecontrollerdb.txt` fetch from `gamepad-mapping.ts` - the `/like/` path is dead code from old directory structure
-- [x] Simplify button mapping to unidirectional (`toStandard` only) - reverse mapping can be computed on demand for debugging
-- [x] Remove `rawButtonIndex` from `GamepadButtonEvent` - if needed, use a debug feature to iterate the mapping
-- [x] Consolidate mapping logic into `gamepad-mapping.ts` - remove `extractVendorProduct` duplication from `gamepad.ts` and simplify `gamepad.ts` to just pass browser strings and receive usable mappings
+- [x] Remove legacy `/like/gamecontrollerdb.txt` fetch from `gamepad-mapping.ts`
+- [x] Simplify button mapping to unidirectional (`toStandard` only)
+- [x] Remove `rawButtonIndex` from `GamepadButtonEvent`
+- [x] Consolidate mapping logic into `gamepad-mapping.ts`
 
-## All non-future tasks completed! 🎉
+## Future Ideas
+
+### Multiplayer System Design
+The current action system is designed for single-player use. We need a multiplayer input system that:
+- Separates controller management from action mapping (already started by removing GP0/GP1 prefixes)
+- Supports player assignment: local players bind to specific gamepads
+- Handles controller disconnect/reconnect with graceful player reassignment
+- Provides clean API for networked multiplayer (input prediction, reconciliation)
+- Consider: Should we have a `PlayerManager` that maps physical controllers to logical player slots?
