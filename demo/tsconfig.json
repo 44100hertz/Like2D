@@ -16,7 +16,9 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "like2d": ["../../packages/like2d/src/index.ts"]
+      "like2d": ["../../packages/like2d/src/index.ts"],
+      "like2d/callback": ["../../packages/like2d/src/adapters/callback/index.ts"],
+      "like2d/scene": ["../../packages/like2d/src/adapters/scene/index.ts"]
     }
   },
   "include": ["src/**/*"]
