@@ -616,6 +616,12 @@ export { Scene } from './scene';
 ### Canvas Resolution Handling
 Current implementation passes width/height to `like.init()`. We should handle canvas resolution setting/updating in a more Love2D-like manner (similar to `love.window.setMode()`). This is deferred to a future version - don't implement this now.
 
+### Custom Startup Screen
+The startup screen currently displays simple text. Future versions should support:
+- Custom background images for the startup screen
+- Custom styling/fonts
+- Animation/transitions
+
 ## Migration Guide
 
 ### [DEPRECATED] Current API → New API

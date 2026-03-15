@@ -99,30 +99,24 @@ export const like = {
 
     if (showStartupScreen) {
       const canvas = engine.getCanvas();
-      const overlay = document.createElement('div');
-      overlay.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        font-family: sans-serif;
-        font-size: 24px;
-        cursor: pointer;
-        z-index: 1000;
-      `;
-      overlay.textContent = startupText;
-      canvas.parentElement!.appendChild(overlay);
-
-      overlay.addEventListener('click', () => {
-        overlay.remove();
+      const ctx = engine.getContext();
+      const [width, height] = [canvas.width, canvas.height];
+      
+      // Draw startup screen
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = '#fff';
+      ctx.font = '32px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(startupText, width / 2, height / 2);
+      
+      // Wait for click to start
+      const onClick = () => {
+        canvas.removeEventListener('click', onClick);
         startGame();
-      });
+      };
+      canvas.addEventListener('click', onClick);
     } else {
       startGame();
     }
