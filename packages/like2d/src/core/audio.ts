@@ -12,25 +12,26 @@ export type SourceOptions = {
   volume?: number;
 }
 
+type LoadState =
+  | { loaded: false; pendingPlay: boolean; pendingSeek: number }
+  | { loaded: true };
+
 /**
  * Handle to a loaded audio resource.
- * Access the underlying HTMLAudioElement via `source.audio` for playback control,
- * looping, pitch, etc. Note: Use `source.setVolume()` instead of setting
+ * Use `play()`, `stop()`, `pause()`, `resume()` for playback control.
+ * Access the underlying HTMLAudioElement via `source.audio` for looping,
+ * pitch, etc. Note: Use `source.setVolume()` instead of setting
  * `source.audio.volume` directly to ensure global volume scaling works correctly.
  */
 export class Source {
   readonly path: string;
-  /** Underlying HTMLAudioElement. Modify directly for looping, pitch, etc. Avoid setting volume directly. */
+  /** Underlying HTMLAudioElement. Modify directly for looping, pitch, etc. Use methods for playback control. Avoid setting volume directly. */
   readonly audio: HTMLAudioElement;
   readonly options: Required<SourceOptions>;
   /** Resolves when the audio is loaded and ready to play. */
   readonly ready: Promise<void>;
-  private loaded = false;
+  private loadState: LoadState = { loaded: false, pendingPlay: false, pendingSeek: 0 };
   private audioRef: Audio;
-  private pending = {
-    position: 0,
-    playing: false
-  };
 
   constructor(path: string, audioRef: Audio, options: SourceOptions = {}) {
     this.path = path;
@@ -46,8 +47,8 @@ export class Source {
 
     this.ready = new Promise((resolve, reject) => {
       this.audio.oncanplaythrough = () => {
-        this.loaded = true;
         this.applyPendingState();
+        this.loadState = { loaded: true };
         resolve();
       };
       this.audio.onerror = () => reject(new Error(`Failed to load audio: ${path}`));
@@ -55,84 +56,85 @@ export class Source {
   }
 
   private applyPendingState(): void {
-    this.audio.currentTime = this.pending.position;
-    if (this.pending.playing) {
-      this.audio.play();
+    if (this.loadState.loaded) return;
+    this.audio.currentTime = this.loadState.pendingSeek;
+    if (this.loadState.pendingPlay) {
+      this.audio.play()?.catch(() => {
+        // Play failed (autoplay policy) - reset so user can retry
+      });
     }
   }
 
   isReady(): boolean {
-    return this.loaded;
+    return this.loadState.loaded;
   }
 
   play(): void {
-    if (this.loaded) {
+    if (this.loadState.loaded) {
       this.audio.play()?.catch(() => {
-        // Play failed (autoplay policy, etc.) - reset pending state
-        this.pending.playing = false;
+        // Play failed (autoplay policy) - ignore
       });
     } else {
-      this.pending.playing = true;
+      this.loadState.pendingPlay = true;
     }
   }
 
   stop(): void {
-    if (this.loaded) {
+    if (this.loadState.loaded) {
       this.audio.pause();
       this.audio.currentTime = 0;
     } else {
-      this.pending.playing = false;
-      this.pending.position = 0;
+      this.loadState.pendingPlay = false;
+      this.loadState.pendingSeek = 0;
     }
   }
 
   pause(): void {
-    if (this.loaded) {
+    if (this.loadState.loaded) {
       this.audio.pause();
     } else {
-      this.pending.playing = false;
+      this.loadState.pendingPlay = false;
     }
   }
 
   resume(): void {
-    if (this.loaded) {
+    if (this.loadState.loaded) {
       if (this.audio.paused) {
         this.audio.play()?.catch(() => {
-          // Play failed (autoplay policy, etc.) - reset pending state
-          this.pending.playing = false;
+          // Play failed (autoplay policy, etc.) - ignore
         });
       }
     } else {
-      this.pending.playing = true;
+      this.loadState.pendingPlay = true;
     }
   }
 
   seek(position: number): void {
-    if (this.loaded) {
+    if (this.loadState.loaded) {
       this.audio.currentTime = position;
     } else {
-      this.pending.position = position;
+      this.loadState.pendingSeek = position;
     }
   }
 
   tell(): number {
-    if (this.loaded) return this.audio.currentTime;
-    return this.pending.position;
+    if (this.loadState.loaded) return this.audio.currentTime;
+    return this.loadState.pendingSeek;
   }
 
   isPlaying(): boolean {
-    if (this.loaded) return !this.audio.paused && !this.audio.ended;
-    return this.pending.playing;
+    if (this.loadState.loaded) return !this.audio.paused && !this.audio.ended;
+    return this.loadState.pendingPlay;
   }
 
   isPaused(): boolean {
-    if (this.loaded) return this.audio.paused;
-    return !this.pending.playing;
+    if (this.loadState.loaded) return this.audio.paused;
+    return !this.loadState.pendingPlay;
   }
 
   isStopped(): boolean {
-    if (this.loaded) return this.audio.paused && this.audio.currentTime === 0;
-    return !this.pending.playing && this.pending.position === 0;
+    if (this.loadState.loaded) return this.audio.paused && this.audio.currentTime === 0;
+    return !this.loadState.pendingPlay && this.loadState.pendingSeek === 0;
   }
 
   /** Set volume (0-1). Applies global volume scaling. Prefer this over `source.audio.volume`. */
@@ -146,7 +148,7 @@ export class Source {
   }
 
   getDuration(): number {
-    if (this.loaded) return this.audio.duration;
+    if (this.loadState.loaded) return this.audio.duration;
     return 0;
   }
 }
