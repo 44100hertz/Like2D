@@ -105,35 +105,39 @@ export class Engine {
       
       this.deps.timer.update(dt);
       
-      const inputEvents = this.deps.input.update();
+      const isSleeping = this.deps.timer.isSleeping();
       
-      for (const action of inputEvents.pressed) {
-        this.emit({ type: 'actionpressed', action });
+      if (!isSleeping) {
+        const inputEvents = this.deps.input.update();
+        
+        for (const action of inputEvents.pressed) {
+          this.emit({ type: 'actionpressed', action });
+        }
+        for (const action of inputEvents.released) {
+          this.emit({ type: 'actionreleased', action });
+        }
+        for (const event of inputEvents.gamepadPressed) {
+          this.emit({
+            type: 'gamepadpressed',
+            gamepadIndex: event.gamepadIndex,
+            buttonIndex: event.buttonIndex,
+            buttonName: event.buttonName,
+            rawButtonIndex: event.rawButtonIndex,
+          });
+        }
+        for (const event of inputEvents.gamepadReleased) {
+          this.emit({
+            type: 'gamepadreleased',
+            gamepadIndex: event.gamepadIndex,
+            buttonIndex: event.buttonIndex,
+            buttonName: event.buttonName,
+            rawButtonIndex: event.rawButtonIndex,
+          });
+        }
+        
+        this.emit({ type: 'update', dt });
+        if (onUpdate) onUpdate(dt);
       }
-      for (const action of inputEvents.released) {
-        this.emit({ type: 'actionreleased', action });
-      }
-      for (const event of inputEvents.gamepadPressed) {
-        this.emit({
-          type: 'gamepadpressed',
-          gamepadIndex: event.gamepadIndex,
-          buttonIndex: event.buttonIndex,
-          buttonName: event.buttonName,
-          rawButtonIndex: event.rawButtonIndex,
-        });
-      }
-      for (const event of inputEvents.gamepadReleased) {
-        this.emit({
-          type: 'gamepadreleased',
-          gamepadIndex: event.gamepadIndex,
-          buttonIndex: event.buttonIndex,
-          buttonName: event.buttonName,
-          rawButtonIndex: event.rawButtonIndex,
-        });
-      }
-      
-      this.emit({ type: 'update', dt });
-      if (onUpdate) onUpdate(dt);
       
       this.deps.graphics.clear();
       this.emit({ type: 'draw' });
