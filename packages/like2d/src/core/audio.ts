@@ -45,25 +45,32 @@ export class Source {
 
     this.audio.volume = this.options.volume * audioRef.getVolume();
 
+    const onReady = () => {
+      if (this.loadState.loaded) return;
+      // Extract pending state before changing to loaded
+      const { pendingPlay, pendingSeek } = this.loadState;
+      this.loadState = { loaded: true };
+      this.audio.currentTime = pendingSeek;
+      if (pendingPlay) {
+        this.audio.play()?.catch(() => {
+          // Play failed (autoplay policy) - reset so user can retry
+        });
+      }
+    };
+
     this.ready = new Promise((resolve, reject) => {
       this.audio.oncanplaythrough = () => {
-        if (this.loadState.loaded) return;
-        this.loadState = { loaded: true };
-        this.applyPendingState();
+        onReady();
         resolve();
       };
       this.audio.onerror = () => reject(new Error(`Failed to load audio: ${path}`));
+      
+      // Handle audio that is already loaded (cached) when we attach the listener
+      if (this.audio.readyState >= 3) {
+        onReady();
+        resolve();
+      }
     });
-  }
-
-  private applyPendingState(): void {
-    if (this.loadState.loaded) return;
-    this.audio.currentTime = this.loadState.pendingSeek;
-    if (this.loadState.pendingPlay) {
-      this.audio.play()?.catch(() => {
-        // Play failed (autoplay policy) - reset so user can retry
-      });
-    }
   }
 
   isReady(): boolean {
