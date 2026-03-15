@@ -1,5 +1,29 @@
 # Like2D TODO
 
+## Canvas Size System (In Progress)
+
+Implementation of the canvas sizing system per CANVAS_DESIGN.md.
+
+### Implementation Tasks
+- [ ] Create `CanvasConfig` type with three modes: `fixed`, `scaled`, `native`
+- [ ] Create `CanvasManager` class in `packages/like2d/src/core/canvas-manager.ts`
+- [ ] Implement `fixed` mode with CSS scaling and letterboxing
+- [ ] Implement `pixelArt` two-step scaling (sharp integer scale, then linear)
+- [ ] Implement `scaled` mode with ctx.setTransform()
+- [ ] Implement `native` mode (no automatic scaling)
+- [ ] Add `setCanvasConfig()` to Engine class
+- [ ] Add `setCanvasConfig()` to SceneRunner class  
+- [ ] Remove width/height from Scene interface
+- [ ] Remove width/height/config parameters from SceneRunner constructor
+- [ ] Update mouse coordinate conversion for all modes
+- [ ] Update demos to use new API (set config in load())
+- [ ] Add ResizeObserver for responsive updates
+
+### Breaking Changes Required
+- SceneRunner constructor: `new SceneRunner(container)` only (no width/height)
+- Scene interface: remove `width` and `height` properties
+- Scenes must call `runner.setCanvasConfig()` in `load()`
+
 ## Publishing Preparation
 - [ ] Add JSR configuration (`jsr.json`)
 - [ ] Set up GitHub Actions for publishing
@@ -15,28 +39,6 @@ The current action system is designed for single-player use. We need a multiplay
 - Handles controller disconnect/reconnect with graceful player reassignment
 - Provides clean API for networked multiplayer (input prediction, reconciliation)
 - Consider: Should we have a `PlayerManager` that maps physical controllers to logical player slots?
-
-### Canvas Size and Resolution Handling
-Replace the current width/height init parameters with a runtime-configurable canvas sizing system.
-
-**Design**:
-```typescript
-type CanvasConfig = 
-  | { resize: 'fixed', size: Vector2, sharp: boolean }  // Fixed internal resolution
-  | { resize: 'scaled', size: Vector2 }                  // Aspect preserved, pixel-for-pixel with scale transform
-  | { resize: 'native' };                                // Full size, programmer handles everything
-```
-
-- `fixed`: Game renders at fixed internal resolution, canvas is scaled to fit container
-- `scaled`: Canvas resolution matches container pixel-for-pixel, content is scaled via transform before drawing, aspect ratio preserved
-- `native`: Canvas is always full sized pixel-for-pixel, no automatic handling
-
-**Changes**:
-- Remove width/height from init parameters
-- Add `setCanvasConfig(config: CanvasConfig)` method to Engine/SceneRunner
-- Remove `width`/`height` from Scene interface
-- Scenes should call `setCanvasConfig()` in their `load()` method if they need specific sizing
-- Default is `native` mode (backwards compatible behavior)
 
 ### Custom Startup Screen
 The startup screen currently displays simple text. Future versions should support:
