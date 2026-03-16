@@ -11,18 +11,18 @@ Implementation of the canvas sizing system per CANVAS_DESIGN.md.
 - [ ] Implement `pixelArt` two-step scaling (sharp integer scale, then linear)
 - [ ] Implement `scaled` mode with ctx.setTransform()
 - [ ] Implement `native` mode (no automatic scaling)
-- [ ] Add `setCanvasConfig()` to Engine class
-- [ ] Add `setCanvasConfig()` to SceneRunner class  
+- [ ] Add `setScaling()` to Engine class
+- [ ] Add `setScaling()` to SceneRunner class  
 - [ ] Remove width/height from Scene interface
 - [ ] Remove width/height/config parameters from SceneRunner constructor
 - [ ] Update mouse coordinate conversion for all modes
-- [ ] Update demos to use new API (set config in load())
+- [ ] Update demos to use new API (set scaling in load())
 - [ ] Add ResizeObserver for responsive updates
 
 ### Breaking Changes Required
 - SceneRunner constructor: `new SceneRunner(container)` only (no width/height)
 - Scene interface: remove `width` and `height` properties
-- Scenes must call `runner.setCanvasConfig()` in `load()`
+- Scenes must call `runner.setScaling()` in `load()`
 
 ## Publishing Preparation
 - [ ] Add JSR configuration (`jsr.json`)
