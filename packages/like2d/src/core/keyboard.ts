@@ -1,21 +1,13 @@
-export type KeyEvent = {
-  type: 'keydown' | 'keyup';
-  scancode: string;
-  keycode: string;
-};
-
 export class Keyboard {
   private pressedScancodes = new Set<string>();
-  private onEvent?: (event: KeyEvent) => void;
+  public onKeyEvent?: (scancode: string, keycode: string, type: 'keydown' | 'keyup') => void;
 
   // Event handler references for cleanup
   private keydownHandler: (e: globalThis.KeyboardEvent) => void;
   private keyupHandler: (e: globalThis.KeyboardEvent) => void;
   private blurHandler: () => void;
 
-  constructor(onEvent?: (event: KeyEvent) => void) {
-    this.onEvent = onEvent;
-
+  constructor() {
     // Bind event handlers
     this.keydownHandler = this.handleKeyDown.bind(this);
     this.keyupHandler = this.handleKeyUp.bind(this);
@@ -31,22 +23,14 @@ export class Keyboard {
     if (e.code) {
       this.pressedScancodes.add(e.code);
     }
-    this.onEvent?.({
-      type: 'keydown',
-      scancode: e.code,
-      keycode: e.key,
-    });
+    this.onKeyEvent?.(e.code, e.key, 'keydown');
   }
 
   private handleKeyUp(e: globalThis.KeyboardEvent): void {
     if (e.code) {
       this.pressedScancodes.delete(e.code);
     }
-    this.onEvent?.({
-      type: 'keyup',
-      scancode: e.code,
-      keycode: e.key,
-    });
+    this.onKeyEvent?.(e.code, e.key, 'keyup');
   }
 
   private handleBlur(): void {

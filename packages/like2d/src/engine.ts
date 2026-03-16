@@ -2,10 +2,10 @@ import type { Graphics } from './core/graphics';
 import type { Audio } from './core/audio';
 import type { Input } from './core/input';
 import type { Timer } from './core/timer';
-import type { Keyboard, KeyEvent } from './core/keyboard';
-import type { Mouse, MouseEvent } from './core/mouse';
+import type { Keyboard } from './core/keyboard';
+import type { Mouse } from './core/mouse';
 import type { Gamepad } from './core/gamepad';
-import type { Event, EventName, EventMap } from './core/events';
+import type { Like2DEvent, EventType } from './core/events';
 import type { CanvasConfig } from './core/canvas-config';
 import { CanvasManager } from './core/canvas-manager';
 
@@ -27,6 +27,7 @@ export class Engine {
   private lastTime = 0;
   private container: HTMLElement;
   private canvasManager: CanvasManager;
+  private onEvent: ((event: Like2DEvent) => void) | null = null;
 
   constructor(container: HTMLElement) {
     this.canvas = document.createElement('canvas');
@@ -40,6 +41,11 @@ export class Engine {
     this.container = container;
     this.container.appendChild(this.canvas);
     this.canvasManager = new CanvasManager(this.canvas, this.container, this.ctx, { mode: 'native' });
+
+    // Internal listener to forward to onEvent
+    this.canvasManager.onResize = (size, pixelSize, fullscreen) => {
+      this.dispatchEvent('resize', [size, pixelSize, fullscreen]);
+    };
   }
 
   setScaling(config: CanvasConfig): void {
@@ -61,18 +67,33 @@ export class Engine {
     }
   }
 
-  private dispatchEvent<T extends EventName>(type: T, data: Omit<EventMap[T], 'type' | 'timestamp'>): void {
-    const timestamp = this.deps?.timer.getTime() ?? 0;
-    this.canvas.dispatchEvent(new CustomEvent(type, { 
-      detail: { type, ...data, timestamp } as Event 
-    }));
+  private dispatchEvent<T extends EventType>(type: T, args: any): void {
+    if (this.onEvent) {
+      this.onEvent({ type, args, timestamp: performance.now() } as Like2DEvent);
+    }
   }
 
-  start(onUpdate?: (dt: number) => void, onDraw?: () => void) {
+  start(onEvent: (event: Like2DEvent) => void) {
     if (!this.deps) throw new Error('Engine dependencies not set. Call setDeps() before start().');
 
+    this.onEvent = onEvent;
     this.isRunning = true;
     this.lastTime = performance.now();
+
+    // Listeners for raw input
+    this.deps.keyboard.onKeyEvent = (scancode, keycode, type) => {
+      this.dispatchEvent(type === 'keydown' ? 'keypressed' : 'keyreleased', [scancode, keycode]);
+    };
+
+    this.deps.mouse.onMouseEvent = (clientX, clientY, button, type) => {
+      const [x, y] = this.transformMousePosition(clientX, clientY);
+      const b = (button ?? 0) + 1;
+      this.dispatchEvent(type === 'mousedown' ? 'mousepressed' : 'mousereleased', [x, y, b]);
+    };
+
+    this.deps.gamepad.onButtonEvent = (gpIndex, buttonIndex, buttonName, pressed) => {
+      this.dispatchEvent(pressed ? 'gamepadpressed' : 'gamepadreleased', [gpIndex, buttonIndex, buttonName]);
+    };
 
     const loop = () => {
       if (!this.isRunning) return;
@@ -84,20 +105,18 @@ export class Engine {
       if (!this.deps!.timer.isSleeping()) {
         this.deps!.timer.update(dt);
         const inputEvents = this.deps!.input.update();
-        inputEvents.pressed.forEach(action => this.dispatchEvent('like2d:actionpressed', { action }));
-        inputEvents.released.forEach(action => this.dispatchEvent('like2d:actionreleased', { action }));
-        this.dispatchEvent('like2d:update', { dt });
-        onUpdate?.(dt);
+        inputEvents.pressed.forEach(action => this.dispatchEvent('actionpressed', [action]));
+        inputEvents.released.forEach(action => this.dispatchEvent('actionreleased', [action]));
+        this.dispatchEvent('update', [dt]);
       }
 
       this.deps!.graphics.clear();
-      this.dispatchEvent('like2d:draw', {});
-      onDraw?.();
+      this.dispatchEvent('draw', [this.canvas]);
       this.canvasManager.present();
       requestAnimationFrame(loop);
     };
 
-    this.dispatchEvent('like2d:load', {});
+    this.dispatchEvent('load', []);
     requestAnimationFrame(loop);
   }
 
@@ -132,39 +151,5 @@ export class Engine {
     } else {
       document.exitFullscreen();
     }
-  }
-
-  onKey(callbacks: {
-    onKeyPressed?: (scancode: string, keycode: string) => void;
-    onKeyReleased?: (scancode: string, keycode: string) => void;
-  }): (event: KeyEvent) => void {
-    return (event: KeyEvent) => {
-      if (event.type === 'keydown') callbacks.onKeyPressed?.(event.scancode, event.keycode);
-      else callbacks.onKeyReleased?.(event.scancode, event.keycode);
-    };
-  }
-
-  onMouse(callbacks: {
-    onMousePressed?: (x: number, y: number, button: number) => void;
-    onMouseReleased?: (x: number, y: number, button: number) => void;
-  }): (event: MouseEvent) => void {
-    return (event: MouseEvent) => {
-      const [x, y] = this.transformMousePosition(event.clientX, event.clientY);
-      if (event.type === 'mousedown') callbacks.onMousePressed?.(x, y, (event.button ?? 0) + 1);
-      else if (event.type === 'mouseup') callbacks.onMouseReleased?.(x, y, (event.button ?? 0) + 1);
-    };
-  }
-
-  onGamepad(callbacks: {
-    onGamepadPressed?: (i: number, b: number, n: string) => void;
-    onGamepadReleased?: (i: number, b: number, n: string) => void;
-  }): {
-    onButtonPressed: (i: number, b: number, n: string) => void;
-    onButtonReleased: (i: number, b: number, n: string) => void;
-  } {
-    return {
-      onButtonPressed: (i, b, n) => callbacks.onGamepadPressed?.(i, b, n),
-      onButtonReleased: (i, b, n) => callbacks.onGamepadReleased?.(i, b, n)
-    };
   }
 }

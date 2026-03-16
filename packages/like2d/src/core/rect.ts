@@ -2,11 +2,7 @@ import type { Vector2 } from './vector2';
 
 export type Rect = [number, number, number, number];
 
-export namespace R {
-  export function create(x: number, y: number, w: number, h: number): Rect {
-    return [x, y, w, h];
-  }
-
+export namespace Rect {
   export function fromPoints(a: Vector2, b: Vector2): Rect {
     const minX = Math.min(a[0], b[0]);
     const minY = Math.min(a[1], b[1]);

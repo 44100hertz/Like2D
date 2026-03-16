@@ -9,6 +9,7 @@ import { Engine } from '../../engine';
 import type { Scene } from './scene';
 import type { CanvasConfig } from '../../core/canvas-config';
 import { StartupScene } from './startup-scene';
+import type { Like2DEvent } from '../../core/events';
 
 export { Graphics, ImageHandle } from '../../core/graphics';
 export { StartupScene };
@@ -18,12 +19,11 @@ export { Timer } from '../../core/timer';
 export { Keyboard } from '../../core/keyboard';
 export { Mouse } from '../../core/mouse';
 export { Gamepad, getGPName, GP } from '../../core/gamepad';
-export type { Event } from '../../core/events';
-export type { Scene, SceneEvent } from './scene';
+export type { Like2DEvent as Event } from '../../core/events';
+export type { Scene } from './scene';
 export type { Vector2 } from '../../core/vector2';
-export { V2 } from '../../core/vector2';
-export type { Rect } from '../../core/rect';
-export { R } from '../../core/rect';
+export { Vec2 } from '../../core/vector2';
+export { Rect } from '../../core/rect';
 export type { CanvasConfig } from '../../core/canvas-config';
 export { calcFixedScale } from '../../core/canvas-config';
 
@@ -42,52 +42,12 @@ export class SceneRunner {
   constructor(container: HTMLElement) {
     this.engine = new Engine(container);
     this.graphics = new Graphics(this.engine.getContext());
-
-    this.keyboard = new Keyboard(this.engine.onKey({
-      onKeyPressed: (scancode: string, keycode: string) => {
-        this.scene?.handleEvent?.({ type: 'keypressed', scancode, keycode, timestamp: performance.now() });
-      },
-      onKeyReleased: (scancode: string, keycode: string) => {
-        this.scene?.handleEvent?.({ type: 'keyreleased', scancode, keycode, timestamp: performance.now() });
-      }
-    }));
-
-    this.mouse = new Mouse(
-      this.engine.onMouse({
-        onMousePressed: (x: number, y: number, button: number) => {
-          this.scene?.handleEvent?.({ type: 'mousepressed', x, y, button, timestamp: performance.now() });
-        },
-        onMouseReleased: (x: number, y: number, button: number) => {
-          this.scene?.handleEvent?.({ type: 'mousereleased', x, y, button, timestamp: performance.now() });
-        }
-      }),
-      (cssX, cssY) => this.engine.transformMousePosition(cssX, cssY)
-    );
-
-    this.gamepad = new Gamepad(this.engine.onGamepad({
-      onGamepadPressed: (gamepadIndex: number, buttonIndex: number, buttonName: string) => {
-        this.scene?.handleEvent?.({ type: 'gamepadpressed', gamepadIndex, buttonIndex, buttonName, timestamp: performance.now() });
-      },
-      onGamepadReleased: (gamepadIndex: number, buttonIndex: number, buttonName: string) => {
-        this.scene?.handleEvent?.({ type: 'gamepadreleased', gamepadIndex, buttonIndex, buttonName, timestamp: performance.now() });
-      }
-    }));
-
+    this.keyboard = new Keyboard();
+    this.mouse = new Mouse((cssX, cssY) => this.engine.transformMousePosition(cssX, cssY));
+    this.gamepad = new Gamepad();
     this.input = new Input({ keyboard: this.keyboard, mouse: this.mouse, gamepad: this.gamepad });
     this.timer = new Timer();
     this.audio = new Audio();
-
-    // Listen for engine events
-    this.engine.getCanvas().addEventListener('like2d:load', ((e: CustomEvent) => {
-      this.scene?.load?.();
-      this.scene?.handleEvent?.(e.detail);
-    }) as EventListener);
-    this.engine.getCanvas().addEventListener('like2d:actionpressed', ((e: CustomEvent) => {
-      this.scene?.handleEvent?.(e.detail);
-    }) as EventListener);
-    this.engine.getCanvas().addEventListener('like2d:actionreleased', ((e: CustomEvent) => {
-      this.scene?.handleEvent?.(e.detail);
-    }) as EventListener);
   }
 
   setScaling(config: CanvasConfig): void {
@@ -96,19 +56,28 @@ export class SceneRunner {
 
   setScene(scene: Scene) {
     this.scene = scene;
+    this.scene.load?.();
   }
 
   async start(scene: Scene) {
     this.setScene(scene);
     this.engine.setDeps({ graphics: this.graphics, input: this.input, timer: this.timer, audio: this.audio, keyboard: this.keyboard, mouse: this.mouse, gamepad: this.gamepad });
     await this.gamepad.init();
-    this.engine.start(
-      (dt) => this.scene?.update(dt),
-      () => this.scene?.draw(this.engine.getCanvas())
-    );
+    
+    this.engine.start((event: Like2DEvent) => {
+      // 1. handleEvent runs first
+      this.scene?.handleEvent?.(event);
+
+      // 2. Direct handlers
+      const handler = this.scene?.[event.type as keyof Scene] as Function | undefined;
+      if (handler) {
+        handler.apply(this.scene, event.args);
+      }
+    });
   }
 
   dispose(): void {
+    this.engine.stop();
     this.engine.dispose();
     this.scene = null;
   }

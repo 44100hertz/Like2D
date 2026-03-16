@@ -1,78 +1,18 @@
-import type { Event } from '../../core/events';
-
-export type KeyPressedEvent = {
-  type: 'keypressed';
-  scancode: string;
-  keycode: string;
-  timestamp: number;
-};
-
-export type KeyReleasedEvent = {
-  type: 'keyreleased';
-  scancode: string;
-  keycode: string;
-  timestamp: number;
-};
-
-export type MousePressedEvent = {
-  type: 'mousepressed';
-  x: number;
-  y: number;
-  button: number;
-  timestamp: number;
-};
-
-export type MouseReleasedEvent = {
-  type: 'mousereleased';
-  x: number;
-  y: number;
-  button: number;
-  timestamp: number;
-};
-
-export type GamepadPressedEvent = {
-  type: 'gamepadpressed';
-  gamepadIndex: number;
-  buttonIndex: number;
-  buttonName: string;
-  timestamp: number;
-};
-
-export type GamepadReleasedEvent = {
-  type: 'gamepadreleased';
-  gamepadIndex: number;
-  buttonIndex: number;
-  buttonName: string;
-  timestamp: number;
-};
-
-export type ActionPressedEvent = {
-  type: 'like2d:actionpressed';
-  action: string;
-  timestamp: number;
-};
-
-export type ActionReleasedEvent = {
-  type: 'like2d:actionreleased';
-  action: string;
-  timestamp: number;
-};
-
-export type InputEvent =
-  | KeyPressedEvent
-  | KeyReleasedEvent
-  | MousePressedEvent
-  | MouseReleasedEvent
-  | GamepadPressedEvent
-  | GamepadReleasedEvent
-  | ActionPressedEvent
-  | ActionReleasedEvent;
-
-export type SceneEvent = Event | InputEvent;
+import type { Vector2 } from '../../core/vector2';
+import type { Like2DEvent } from '../../core/events';
 
 export type Scene = {
   load?(): void;
-  update(dt: number): void;
-  draw(canvas: HTMLCanvasElement): void;
-  handleEvent?(event: SceneEvent): void;
+  update?(dt: number): void;
+  draw?(canvas: HTMLCanvasElement): void;
+  resize?(size: Vector2, pixelSize: Vector2, fullscreen: boolean): void;
+  keypressed?(scancode: string, keycode: string): void;
+  keyreleased?(scancode: string, keycode: string): void;
+  mousepressed?(x: number, y: number, button: number): void;
+  mousereleased?(x: number, y: number, button: number): void;
+  gamepadpressed?(gamepadIndex: number, buttonIndex: number, buttonName: string): void;
+  gamepadreleased?(gamepadIndex: number, buttonIndex: number, buttonName: string): void;
+  actionpressed?(action: string): void;
+  actionreleased?(action: string): void;
+  handleEvent?(event: Like2DEvent): void;
 };

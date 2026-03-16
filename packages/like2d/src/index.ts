@@ -3,33 +3,52 @@
 // - import { like, graphics } from 'like2d/callback'  (Love2D-style callbacks)
 // - import { SceneRunner, Scene } from 'like2d/scene'  (Class-based scenes)
 
-// Re-export types that are commonly needed
+/**
+ * 2D vector as a tuple: [x, y]
+ */
 export type { Vector2 } from './core/vector2';
-export { V2 } from './core/vector2';
-export type { Rect } from './core/rect';
-export { R } from './core/rect';
-export type { Event } from './core/events';
-export type { Color, Quad, ShapeProps, DrawProps, PrintProps } from './core/graphics';
-export { ImageHandle } from './core/graphics';
-export type { Source, SourceOptions } from './core/audio';
-export type { Scene } from './adapters/scene/scene';
-export { getGPName, GP } from './core/gamepad';
 
-// Export input event types for power users
-export type { KeyEvent } from './core/keyboard';
-export type { MouseEvent } from './core/mouse';
-export type { GamepadEvent, GamepadButtonEvent, StickPosition } from './core/gamepad';
-export type { 
-  KeyPressedEvent, 
-  KeyReleasedEvent,
-  MousePressedEvent,
-  MouseReleasedEvent,
-  GamepadPressedEvent,
-  GamepadReleasedEvent,
-  ActionPressedEvent,
-  ActionReleasedEvent,
-  InputEvent 
-} from './adapters/scene/scene';
+/**
+ * 2D vector math and utility functions
+ */
+export { Vec2 } from './core/vector2';
+
+/**
+ * Rectangle math and utility functions.
+ * Rects are represented as [x, y, width, height] tuples.
+ */
+export { Rect } from './core/rect';
+
+/**
+ * Common event structure for all engine events.
+ */
+export type { Like2DEvent, EventType } from './core/events';
+
+/**
+ * Graphics types for drawing operations.
+ */
+export type { Color, Quad, ShapeProps, DrawProps, PrintProps } from './core/graphics';
+
+/**
+ * Handle to an image asset that may be loading in the background.
+ */
+export { ImageHandle } from './core/graphics';
+
+/**
+ * Audio source types for sound playback.
+ */
+export type { Source, SourceOptions } from './core/audio';
+
+/**
+ * Core Scene interface for class-based game architecture.
+ */
+export type { Scene } from './adapters/scene/scene';
+
+/**
+ * Gamepad utility functions and types.
+ */
+export { getGPName, GP } from './core/gamepad';
+export type { StickPosition } from './core/gamepad';
 
 // Note: For actual usage, import from specific adapters:
 // import { like, graphics } from 'like2d/callback';

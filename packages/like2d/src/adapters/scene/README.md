@@ -137,8 +137,8 @@ import {
   Keyboard,
   Mouse,
   Gamepad,
-  V2,
-  R
+  Vec2,
+  Rect
 } from 'like2d/scene';
 ```
 

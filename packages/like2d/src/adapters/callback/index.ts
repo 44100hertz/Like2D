@@ -7,12 +7,13 @@ import { Mouse } from '../../core/mouse';
 import { Gamepad } from '../../core/gamepad';
 import { Engine } from '../../engine';
 import type { CanvasConfig } from '../../core/canvas-config';
-import type { SceneEvent } from '../scene/scene';
+import type { Like2DEvent } from '../../core/events';
+import type { Vector2 } from '../../core/vector2';
 
 export { ImageHandle } from '../../core/graphics';
 export { getGPName, GP } from '../../core/gamepad';
-export { V2 } from '../../core/vector2';
-export { R } from '../../core/rect';
+export { Vec2 } from '../../core/vector2';
+export { Rect } from '../../core/rect';
 export { calcFixedScale } from '../../core/canvas-config';
 
 export let graphics: Graphics;
@@ -29,13 +30,16 @@ export const like = {
   load: undefined as (() => void) | undefined,
   update: undefined as ((dt: number) => void) | undefined,
   draw: undefined as ((canvas: HTMLCanvasElement) => void) | undefined,
+  resize: undefined as ((size: Vector2, pixelSize: Vector2, fullscreen: boolean) => void) | undefined,
   keypressed: undefined as ((scancode: string, keycode: string) => void) | undefined,
   keyreleased: undefined as ((scancode: string, keycode: string) => void) | undefined,
   mousepressed: undefined as ((x: number, y: number, button: number) => void) | undefined,
   mousereleased: undefined as ((x: number, y: number, button: number) => void) | undefined,
   gamepadpressed: undefined as ((i: number, b: number, n: string) => void) | undefined,
   gamepadreleased: undefined as ((i: number, b: number, n: string) => void) | undefined,
-  handleEvent: undefined as ((event: SceneEvent) => void) | undefined,
+  actionpressed: undefined as ((action: string) => void) | undefined,
+  actionreleased: undefined as ((action: string) => void) | undefined,
+  handleEvent: undefined as ((event: Like2DEvent) => void) | undefined,
 
   toggleFullscreen(): void {
     engine?.toggleFullscreen();
@@ -49,58 +53,43 @@ export const like = {
     engine = new Engine(container);
     graphics = new Graphics(engine.getContext());
 
-    keyboard = new Keyboard(engine.onKey({
-      onKeyPressed: (scancode: string, keycode: string) => like.keypressed?.(scancode, keycode),
-      onKeyReleased: (scancode: string, keycode: string) => like.keyreleased?.(scancode, keycode)
-    }));
-
-    mouse = new Mouse(
-      engine.onMouse({
-        onMousePressed: (x: number, y: number, button: number) => like.mousepressed?.(x, y, button),
-        onMouseReleased: (x: number, y: number, button: number) => like.mousereleased?.(x, y, button)
-      }),
-      (cssX, cssY) => engine!.transformMousePosition(cssX, cssY)
-    );
-
-    gamepad = new Gamepad(engine.onGamepad({
-      onGamepadPressed: (i: number, b: number, n: string) => like.gamepadpressed?.(i, b, n),
-      onGamepadReleased: (i: number, b: number, n: string) => like.gamepadreleased?.(i, b, n)
-    }));
+    keyboard = new Keyboard();
+    mouse = new Mouse((cssX, cssY) => engine!.transformMousePosition(cssX, cssY));
+    gamepad = new Gamepad();
 
     input = new Input({ keyboard, mouse, gamepad });
     engine.setDeps({ graphics, input, timer, audio, keyboard, mouse, gamepad });
 
-    // Listen for engine events
-    engine.getCanvas().addEventListener('like2d:load', ((e: CustomEvent) => {
-      like.load?.();
-      like.handleEvent?.(e.detail);
-    }) as EventListener);
-    engine.getCanvas().addEventListener('like2d:actionpressed', ((e: CustomEvent) => {
-      like.handleEvent?.(e.detail);
-    }) as EventListener);
-    engine.getCanvas().addEventListener('like2d:actionreleased', ((e: CustomEvent) => {
-      like.handleEvent?.(e.detail);
-    }) as EventListener);
-
     await gamepad.init();
-    engine.start(
-      (dt) => like.update?.(dt),
-      () => like.draw?.(engine!.getCanvas())
-    );
+    
+    engine.start((event: Like2DEvent) => {
+      // 1. handleEvent first
+      like.handleEvent?.(event);
+
+      // 2. Direct handlers
+      const handler = (like as any)[event.type];
+      if (handler) {
+        handler(...event.args);
+      }
+    });
   },
 
   dispose(): void {
+    engine?.stop();
     engine?.dispose();
     engine = null;
     this.load = undefined;
     this.update = undefined;
     this.draw = undefined;
+    this.resize = undefined;
     this.keypressed = undefined;
     this.keyreleased = undefined;
     this.mousepressed = undefined;
     this.mousereleased = undefined;
     this.gamepadpressed = undefined;
     this.gamepadreleased = undefined;
+    this.actionpressed = undefined;
+    this.actionreleased = undefined;
     this.handleEvent = undefined;
   }
 };

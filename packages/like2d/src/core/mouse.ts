@@ -1,19 +1,12 @@
 import type { Vector2 } from './vector2';
 
-export type MouseEvent = {
-  type: 'mousemove' | 'mousedown' | 'mouseup';
-  clientX: number;
-  clientY: number;
-  button?: number;
-};
-
 export type MousePositionTransform = (cssX: number, cssY: number) => Vector2;
 
 export class Mouse {
   private x = 0;
   private y = 0;
   private buttons = new Set<number>();
-  private onEvent?: (event: MouseEvent) => void;
+  public onMouseEvent?: (clientX: number, clientY: number, button: number | undefined, type: 'mousemove' | 'mousedown' | 'mouseup') => void;
   private transformFn?: MousePositionTransform;
 
   // Event handler references for cleanup
@@ -22,8 +15,7 @@ export class Mouse {
   private mouseupHandler: (e: globalThis.MouseEvent) => void;
   private blurHandler: () => void;
 
-  constructor(onEvent?: (event: MouseEvent) => void, transformFn?: MousePositionTransform) {
-    this.onEvent = onEvent;
+  constructor(transformFn?: MousePositionTransform) {
     this.transformFn = transformFn;
 
     // Bind event handlers
@@ -49,33 +41,17 @@ export class Mouse {
     this.x = e.clientX;
     this.y = e.clientY;
 
-    this.onEvent?.({
-      type: 'mousemove',
-      clientX: e.clientX,
-      clientY: e.clientY,
-    });
+    this.onMouseEvent?.(e.clientX, e.clientY, undefined, 'mousemove');
   }
 
   private handleMouseDown(e: globalThis.MouseEvent): void {
     this.buttons.add(e.button + 1);
-
-    this.onEvent?.({
-      type: 'mousedown',
-      clientX: e.clientX,
-      clientY: e.clientY,
-      button: e.button,
-    });
+    this.onMouseEvent?.(e.clientX, e.clientY, e.button, 'mousedown');
   }
 
   private handleMouseUp(e: globalThis.MouseEvent): void {
     this.buttons.delete(e.button + 1);
-
-    this.onEvent?.({
-      type: 'mouseup',
-      clientX: e.clientX,
-      clientY: e.clientY,
-      button: e.button,
-    });
+    this.onMouseEvent?.(e.clientX, e.clientY, e.button, 'mouseup');
   }
 
   private handleBlur(): void {

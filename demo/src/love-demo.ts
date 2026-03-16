@@ -1,6 +1,5 @@
-import { love, graphics, audio, timer, keyboard, mouse, gamepad, input, ImageHandle, getGPName, R, V2 } from "like2d/callback";
-import type { Source } from 'like2d';
-import type { SceneEvent } from 'like2d/scene';
+import { love, graphics, audio, timer, keyboard, mouse, gamepad, input, ImageHandle, getGPName, Vec2 } from "like2d/callback";
+import type { Source, Like2DEvent } from 'like2d';
 
 // Example demonstrating Like2D with Love2D-style callback API
 // This uses the traditional load/update/draw callback pattern directly
@@ -53,25 +52,25 @@ love.update = (dt: number) => {
   // Update rotation
   rotation += dt;
   
-  // Smooth player movement using V2 operations
+  // Smooth player movement using Vec2 operations
   let moveDelta: [number, number] = [0, 0];
-  if (input.isDown('move_left')) moveDelta = V2.add(moveDelta, [-1, 0]);
-  if (input.isDown('move_right')) moveDelta = V2.add(moveDelta, [1, 0]);
-  if (input.isDown('move_up')) moveDelta = V2.add(moveDelta, [0, -1]);
-  if (input.isDown('move_down')) moveDelta = V2.add(moveDelta, [0, 1]);
+  if (input.isDown('move_left')) moveDelta = Vec2.add(moveDelta, [-1, 0]);
+  if (input.isDown('move_right')) moveDelta = Vec2.add(moveDelta, [1, 0]);
+  if (input.isDown('move_up')) moveDelta = Vec2.add(moveDelta, [0, -1]);
+  if (input.isDown('move_down')) moveDelta = Vec2.add(moveDelta, [0, 1]);
   
   // Apply movement with speed scaling
-  player.pos = V2.add(player.pos, V2.mul(moveDelta, player.speed * dt));
+  player.pos = Vec2.add(player.pos, Vec2.mul(moveDelta, player.speed * dt));
   
-  // Keep player in bounds using V2.clamp
+  // Keep player in bounds using Vec2.clamp
   const canvasSize = graphics.getCanvasSize();
-  player.pos = V2.clamp(player.pos, [15, 15], V2.sub(canvasSize, [15, 15]));
+  player.pos = Vec2.clamp(player.pos, [15, 15], Vec2.sub(canvasSize, [15, 15]));
 };
 
 // Love2D-style draw callback - called every frame
 love.draw = (_canvas) => {
   const canvasSize = graphics.getCanvasSize();
-  const center = V2.mul(canvasSize, 0.5);
+  const center = Vec2.mul(canvasSize, 0.5);
   const [canvasWidth, canvasHeight] = canvasSize;
   
   // Draw title
@@ -99,10 +98,10 @@ love.draw = (_canvas) => {
   }
   
   // Draw filled red rectangle
-  graphics.rectangle('fill', 'red', R.create(50, 100, 100, 80));
+  graphics.rectangle('fill', 'red', [50, 100, 100, 80]);
   
   // Draw outlined rectangle
-  graphics.rectangle('line', 'lime', R.create(50, 100, 100, 80));
+  graphics.rectangle('line', 'lime', [50, 100, 100, 80]);
   
   // Draw filled blue circle
   graphics.circle('fill', 'blue', center, 50);
@@ -220,16 +219,16 @@ love.draw = (_canvas) => {
   const left = input.isDown('move_left');
   const right = input.isDown('move_right');
   
-  graphics.rectangle(up ? 'fill' : 'line', up ? 'lime' : 'gray', R.create(170, keyY - 5, 25, 25));
+  graphics.rectangle(up ? 'fill' : 'line', up ? 'lime' : 'gray', [170, keyY - 5, 25, 25]);
   graphics.print(up ? 'lime' : 'lightgreen', '↑', [175, keyY]);
   
-  graphics.rectangle(left ? 'fill' : 'line', left ? 'lime' : 'gray', R.create(135, keyY + 20, 25, 25));
+  graphics.rectangle(left ? 'fill' : 'line', left ? 'lime' : 'gray', [135, keyY + 20, 25, 25]);
   graphics.print(left ? 'lime' : 'lightgreen', '←', [140, keyY + 25]);
   
-  graphics.rectangle(down ? 'fill' : 'line', down ? 'lime' : 'gray', R.create(170, keyY + 20, 25, 25));
+  graphics.rectangle(down ? 'fill' : 'line', down ? 'lime' : 'gray', [170, keyY + 20, 25, 25]);
   graphics.print(down ? 'lime' : 'lightgreen', '↓', [175, keyY + 25]);
   
-  graphics.rectangle(right ? 'fill' : 'line', right ? 'lime' : 'gray', R.create(205, keyY + 20, 25, 25));
+  graphics.rectangle(right ? 'fill' : 'line', right ? 'lime' : 'gray', [205, keyY + 20, 25, 25]);
   graphics.print(right ? 'lime' : 'lightgreen', '→', [210, keyY + 25]);
   
   // Show active keys list
@@ -358,12 +357,13 @@ love.gamepadreleased = (gamepadIndex: number, buttonIndex: number, buttonName: s
 };
 
 // Handle action events (actionpressed, actionreleased)
-love.handleEvent = async (event: SceneEvent) => {
+love.handleEvent = async (event: Like2DEvent) => {
   switch (event.type) {
-    case 'like2d:actionpressed': {
-      console.log('Action pressed:', event.action);
+    case 'actionpressed': {
+      const action = event.args[0];
+      console.log('Action pressed:', action);
 
-      switch (event.action) {
+      switch (action) {
         case 'jump':
           console.log('Jump action triggered!');
           break;
@@ -402,8 +402,8 @@ love.handleEvent = async (event: SceneEvent) => {
       }
       break;
     }
-    case 'like2d:actionreleased': {
-      console.log('Action released:', event.action);
+    case 'actionreleased': {
+      console.log('Action released:', event.args[0]);
       break;
     }
   }
