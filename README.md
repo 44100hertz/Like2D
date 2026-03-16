@@ -1,7 +1,7 @@
 # LÏKE2D
 
 <p align="center">
-  <img src="packages/like2d/assets/logo.svg" alt="Like2D Logo" width="150">
+  <img src="packages/like2d/assets/logo-banner.svg" alt="Like2D Logo" width="400">
 </p>
 
 Want to make a 2D browser game? Well like, do it!
@@ -31,4 +31,6 @@ The code base is intentionally kept as small and simple as possible, so you can 
 
 ## Ready to go?
 
-[Read more and get started](https://github.com/44100hertz/Like2D/tree/master/packages/like2d)
+Check out the [Like2D Starter](https://github.com/44100hertz/Like2D-starter) template to get up and running quickly!
+
+[Read the full documentation](https://github.com/44100hertz/Like2D/tree/master/packages/like2d)
