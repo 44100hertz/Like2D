@@ -1,6 +1,6 @@
 # Like2D TODO
 
-## V2.3.0
+## V2.4.0
 
 ### 1. Rename 'fixed' mode to 'pixel' mode ✅
 - [x] Simplified CanvasMode to `{ pixelResolution: Vector2 | null, fullscreen: boolean }`
