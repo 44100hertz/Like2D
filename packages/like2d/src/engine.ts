@@ -6,6 +6,8 @@ import type { Keyboard } from './core/keyboard';
 import type { Mouse } from './core/mouse';
 import type { Gamepad } from './core/gamepad';
 import type { Event } from './core/events';
+import type { CanvasConfig } from './core/canvas-config';
+import { CanvasManager } from './core/canvas-manager';
 
 export type EngineDeps = {
   graphics: Graphics;
@@ -27,6 +29,7 @@ export class Engine {
   private lastTime = 0;
   private eventCallbacks: EventCallback[] = [];
   private container: HTMLElement;
+  private canvasManager: CanvasManager;
 
   constructor(container: HTMLElement) {
     this.canvas = document.createElement('canvas');
@@ -41,6 +44,16 @@ export class Engine {
 
     this.container = container;
     this.container.appendChild(this.canvas);
+    
+    // Initialize canvas manager with default native mode
+    this.canvasManager = new CanvasManager(this.canvas, this.container, this.ctx, { mode: 'native' });
+  }
+
+  /**
+   * Set canvas scaling configuration
+   */
+  setScaling(config: CanvasConfig): void {
+    this.canvasManager.setConfig(config);
   }
 
   setDeps(deps: EngineDeps): void {
@@ -57,6 +70,7 @@ export class Engine {
       this.deps.gamepad.dispose();
     }
 
+    this.canvasManager.dispose();
     this.eventCallbacks = [];
 
     if (this.canvas.parentNode === this.container) {

@@ -7,6 +7,7 @@ import { Mouse } from '../../core/mouse';
 import { Gamepad } from '../../core/gamepad';
 import { Engine } from '../../engine';
 import type { Event } from '../../core/events';
+import type { CanvasConfig } from '../../core/canvas-config';
 
 // Re-export types and utilities
 export { ImageHandle } from '../../core/graphics';
@@ -43,14 +44,17 @@ export const like = {
     engine?.toggleFullscreen();
   },
 
+  setScaling(config: CanvasConfig): void {
+    engine?.setScaling(config);
+  },
+
   async init(
     container: HTMLElement,
-    options: { width?: number; height?: number; showStartupScreen?: boolean; startupText?: string } = {}
+    options: { showStartupScreen?: boolean; startupText?: string } = {}
   ) {
-    const { width = 800, height = 600, showStartupScreen = true, startupText = 'Click to Start' } = options;
+    const { showStartupScreen = true, startupText = 'Click to Start' } = options;
 
     engine = new Engine(container);
-    engine.setSize(width, height);
 
     const ctx = engine.getContext();
     const canvas = engine.getCanvas();

@@ -8,6 +8,7 @@ import { Gamepad } from '../../core/gamepad';
 import { Engine } from '../../engine';
 import type { Event } from '../../core/events';
 import type { Scene } from './scene';
+import type { CanvasConfig } from '../../core/canvas-config';
 
 export { Graphics, ImageHandle } from '../../core/graphics';
 export { Audio } from '../../core/audio';
@@ -22,11 +23,12 @@ export type { Vector2 } from '../../core/vector2';
 export { V2 } from '../../core/vector2';
 export type { Rect } from '../../core/rect';
 export { R } from '../../core/rect';
+export type { CanvasConfig } from '../../core/canvas-config';
 
 export class SceneRunner {
   private engine: Engine;
   private currentScene: Scene | null = null;
-  
+
   // Expose the instances so the Scene can use them
   readonly graphics: Graphics;
   readonly audio: Audio;
@@ -36,9 +38,8 @@ export class SceneRunner {
   readonly mouse: Mouse;
   readonly gamepad: Gamepad;
 
-  constructor(container: HTMLElement, width = 800, height = 600) {
+  constructor(container: HTMLElement) {
     this.engine = new Engine(container);
-    this.engine.setSize(width, height);
 
     const ctx = this.engine.getContext();
     const canvas = this.engine.getCanvas();
@@ -110,11 +111,15 @@ export class SceneRunner {
     });
   }
 
+  /**
+   * Set canvas scaling configuration
+   */
+  setScaling(config: CanvasConfig): void {
+    this.engine.setScaling(config);
+  }
+
   setScene(scene: Scene) {
     this.currentScene = scene;
-    if (scene.width && scene.height) {
-      this.engine.setSize(scene.width, scene.height);
-    }
   }
 
   async start(

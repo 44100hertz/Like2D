@@ -7,7 +7,7 @@ import type { Source } from 'like2d';
 
 // Initialize and start with SceneRunner
 const container = document.getElementById('scene-container')!;
-const runner = new SceneRunner(container, 800, 600);
+const runner = new SceneRunner(container);
 
 // Get references to the runner's instances
 const { graphics, audio, timer, input, keyboard, mouse, gamepad } = runner;
@@ -26,10 +26,8 @@ const player = {
 };
 
 const demoScene: Scene = {
-  width: 800,
-  height: 600,
-
   load: () => {
+    runner.setScaling({ mode: 'fixed', width: 800, height: 600 });
     // Start loading assets - they return immediately
     pepperImage = graphics.newImage('pepper.png');
     audioSource = audio.newSource('./test.ogg');
