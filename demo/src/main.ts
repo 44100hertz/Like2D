@@ -111,7 +111,7 @@ const demoScene: Scene = {
         }
         break;
       }
-      case 'actionpressed': {
+      case 'like2d:actionpressed': {
         console.log('Action pressed:', event.action);
 
         switch (event.action) {
@@ -153,7 +153,7 @@ const demoScene: Scene = {
         }
         break;
       }
-      case 'actionreleased': {
+      case 'like2d:actionreleased': {
         console.log('Action released:', event.action);
         break;
       }

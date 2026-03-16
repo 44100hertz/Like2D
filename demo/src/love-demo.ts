@@ -360,7 +360,7 @@ love.gamepadreleased = (gamepadIndex: number, buttonIndex: number, buttonName: s
 // Handle action events (actionpressed, actionreleased)
 love.handleEvent = async (event: SceneEvent) => {
   switch (event.type) {
-    case 'actionpressed': {
+    case 'like2d:actionpressed': {
       console.log('Action pressed:', event.action);
 
       switch (event.action) {
@@ -402,7 +402,7 @@ love.handleEvent = async (event: SceneEvent) => {
       }
       break;
     }
-    case 'actionreleased': {
+    case 'like2d:actionreleased': {
       console.log('Action released:', event.action);
       break;
     }

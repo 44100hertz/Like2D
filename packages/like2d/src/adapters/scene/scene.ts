@@ -47,13 +47,13 @@ export type GamepadReleasedEvent = {
 };
 
 export type ActionPressedEvent = {
-  type: 'actionpressed';
+  type: 'like2d:actionpressed';
   action: string;
   timestamp: number;
 };
 
 export type ActionReleasedEvent = {
-  type: 'actionreleased';
+  type: 'like2d:actionreleased';
   action: string;
   timestamp: number;
 };
