@@ -42,7 +42,6 @@ export class SceneRunner {
     this.engine = new Engine(container);
 
     const ctx = this.engine.getContext();
-    const canvas = this.engine.getCanvas();
 
     this.graphics = new Graphics(ctx);
     this.keyboard = new Keyboard((event) => {
@@ -60,23 +59,26 @@ export class SceneRunner {
         });
       }
     });
-    this.mouse = new Mouse(canvas, (event) => {
-      if (event.type === 'mousedown') {
-        const rect = canvas.getBoundingClientRect();
-        this.engine.emit({
-          type: 'mousepressed',
-          position: [event.clientX - rect.left, event.clientY - rect.top],
-          button: (event.button ?? 0) + 1,
-        });
-      } else if (event.type === 'mouseup') {
-        const rect = canvas.getBoundingClientRect();
-        this.engine.emit({
-          type: 'mousereleased',
-          position: [event.clientX - rect.left, event.clientY - rect.top],
-          button: (event.button ?? 0) + 1,
-        });
-      }
-    });
+    this.mouse = new Mouse(
+      (event) => {
+        if (event.type === 'mousedown') {
+          const position = this.engine.transformMousePosition(event.clientX, event.clientY);
+          this.engine.emit({
+            type: 'mousepressed',
+            position,
+            button: (event.button ?? 0) + 1,
+          });
+        } else if (event.type === 'mouseup') {
+          const position = this.engine.transformMousePosition(event.clientX, event.clientY);
+          this.engine.emit({
+            type: 'mousereleased',
+            position,
+            button: (event.button ?? 0) + 1,
+          });
+        }
+      },
+      (cssX, cssY) => this.engine.transformMousePosition(cssX, cssY)
+    );
     this.gamepad = new Gamepad();
     this.input = new Input({ keyboard: this.keyboard, mouse: this.mouse, gamepad: this.gamepad });
     this.timer = new Timer();

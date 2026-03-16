@@ -2,11 +2,21 @@
 
 ## Bugs 🐛
 
-### Pixel Art Canvas Stretching
-The pixel art canvas is getting stretched. The target canvas should maintain the same aspect ratio as the input canvas to prevent distortion.
+### Pixel Art Canvas Stretching ✅ FIXED
+The pixel art canvas was getting stretched due to component-wise min() clamping. Fixed by using proportional scale calculation in `canvas-manager.ts:109`.
 
-### Mouse Position in Fixed Modes
-The mouse position is incorrect in all fixed modes (both regular and pixel art). The reported coordinates don't properly map to the scaled/letterboxed game canvas.
+### Mouse Position in Fixed Modes ✅ FIXED
+Mouse coordinates were in CSS pixels instead of canvas resolution. Fixed by:
+- Refactored Mouse class to track raw CSS coordinates with optional transform function
+- Added `engine.transformMousePosition()` that handles all modes (fixed, scaled, native, pixel art)
+- Added `canvas-manager.getDisplayCanvas()` for pixel art mode
+- Fixed fullscreen mode to use `document.fullscreenElement.clientWidth/Height` instead of `window.screen`
+
+### Scaled Mode Transform Reset ✅ FIXED
+In scaled mode, calling `ctx.setTransform()` directly would lose the automatic scaling. Fixed by:
+- Added `graphics.resetTransform()` that preserves scaled mode transform
+- CanvasManager stores base transform in `ctx.__baseTransform`
+- Added documentation warning against direct ctx manipulation
 
 ## Canvas Size System ✅
 

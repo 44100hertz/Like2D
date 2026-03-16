@@ -50,8 +50,8 @@ export class CanvasManager {
 
   private applyConfig(): void {
     const containerSize: Vector2 = document.fullscreenElement
-      ? [window.screen.width, window.screen.height]
-      : [this.container.getBoundingClientRect().width, this.container.getBoundingClientRect().height];
+      ? [document.fullscreenElement.clientWidth, document.fullscreenElement.clientHeight]
+      : [this.container.clientWidth, this.container.clientHeight];
 
     switch (this.config.mode) {
       case 'fixed':
@@ -88,7 +88,6 @@ export class CanvasManager {
 
     if (pixelArt && scale > 1) {
       const intScale = Math.floor(scale);
-      const cssScale = scale / intScale;
 
       if (!this.pixelArtCanvas) {
         this.pixelArtCanvas = document.createElement('canvas');
@@ -104,7 +103,7 @@ export class CanvasManager {
       this.canvas.style.display = 'none';
 
       const pac = this.pixelArtCanvas;
-      const displaySize = V2.min(V2.mul(pacSize, cssScale), csize);
+      const displaySize = V2.mul(gameSize, scale);
 
       pac.style.width = `${displaySize[0]}px`;
       pac.style.height = `${displaySize[1]}px`;
@@ -167,8 +166,11 @@ export class CanvasManager {
       const scaledGame = V2.mul(gameSize, scale);
       const offset = V2.mul(V2.sub([this.canvas.width, this.canvas.height], scaledGame), 0.5);
       this.ctx.setTransform(scale, 0, 0, scale, offset[0], offset[1]);
+      // Store base transform for graphics.resetTransform()
+      (this.ctx as any).__baseTransform = { scale, offsetX: offset[0], offsetY: offset[1] };
     } else {
       this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      delete (this.ctx as any).__baseTransform;
     }
   }
 
@@ -193,5 +195,74 @@ export class CanvasManager {
       0, 0, this.canvas.width, this.canvas.height,
       0, 0, this.pixelArtCanvas.width, this.pixelArtCanvas.height
     );
+  }
+
+  /**
+   * Get the canvas element that's currently being displayed.
+   * In pixel art mode, this returns the pixel art canvas (not the main canvas).
+   */
+  getDisplayCanvas(): HTMLCanvasElement {
+    if (this.isPixelArtMode(this.config) && this.pixelArtCanvas) {
+      return this.pixelArtCanvas;
+    }
+    return this.canvas;
+  }
+
+  /**
+   * Transform mouse coordinates from CSS pixels to game/internal resolution.
+   * Accounts for scaling, letterboxing, and different canvas modes.
+   */
+  transformMousePosition(cssX: number, cssY: number): Vector2 {
+    const targetCanvas = this.getDisplayCanvas();
+    const rect = targetCanvas.getBoundingClientRect();
+    
+    // Get position relative to the canvas element
+    const relativeX = cssX - rect.left;
+    const relativeY = cssY - rect.top;
+    
+    switch (this.config.mode) {
+      case 'fixed': {
+        // Fixed mode: direct scaling from CSS pixels to internal resolution
+        const scaleX = targetCanvas.width / rect.width;
+        const scaleY = targetCanvas.height / rect.height;
+        return [
+          relativeX * scaleX,
+          relativeY * scaleY
+        ];
+      }
+      
+      case 'scaled': {
+        const { size: gameSize } = this.config as { mode: 'scaled'; size: Vector2 };
+        const pixelRatio = window.devicePixelRatio || 1;
+        const containerSize: Vector2 = document.fullscreenElement
+          ? [document.fullscreenElement.clientWidth, document.fullscreenElement.clientHeight]
+          : [this.container.clientWidth, this.container.clientHeight];
+        
+        // Calculate the same scale factor used in applyScaledOrNativeMode
+        const canvasSize = V2.mul(containerSize, pixelRatio);
+        const scale = Math.min(canvasSize[0] / gameSize[0], canvasSize[1] / gameSize[1]);
+        const scaledGame = V2.mul(gameSize, scale);
+        const offset = V2.mul(V2.sub(canvasSize, scaledGame), 0.5);
+        
+        // Convert CSS pixels to canvas pixels, then subtract offset and divide by scale
+        const canvasX = relativeX * pixelRatio;
+        const canvasY = relativeY * pixelRatio;
+        
+        return [
+          (canvasX - offset[0]) / scale,
+          (canvasY - offset[1]) / scale
+        ];
+      }
+      
+      case 'native':
+      default: {
+        // Native mode: direct pixel mapping
+        const pixelRatio = window.devicePixelRatio || 1;
+        return [
+          relativeX * pixelRatio,
+          relativeY * pixelRatio
+        ];
+      }
+    }
   }
 }

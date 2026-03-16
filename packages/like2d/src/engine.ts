@@ -214,6 +214,14 @@ export class Engine {
     return this.ctx;
   }
 
+  /**
+   * Transform mouse coordinates from CSS pixels to game/canvas coordinates.
+   * Handles all modes: fixed, scaled, native, and pixel art.
+   */
+  transformMousePosition(cssX: number, cssY: number): [number, number] {
+    return this.canvasManager.transformMousePosition(cssX, cssY);
+  }
+
   toggleFullscreen(): void {
     if (!document.fullscreenElement) {
       this.container.requestFullscreen().catch(err => {

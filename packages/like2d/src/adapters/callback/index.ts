@@ -58,9 +58,8 @@ export const like = {
     engine = new Engine(container);
 
     const ctx = engine.getContext();
-    const canvas = engine.getCanvas();
 
-    // Initialize graphics and mouse with canvas reference
+    // Initialize graphics and mouse
     graphics = new Graphics(ctx);
     keyboard = new Keyboard((event) => {
       if (event.type === 'keydown') {
@@ -77,23 +76,26 @@ export const like = {
         });
       }
     });
-    mouse = new Mouse(canvas, (event) => {
-      if (event.type === 'mousedown') {
-        const rect = canvas.getBoundingClientRect();
-        engine?.emit({
-          type: 'mousepressed',
-          position: [event.clientX - rect.left, event.clientY - rect.top],
-          button: (event.button ?? 0) + 1,
-        });
-      } else if (event.type === 'mouseup') {
-        const rect = canvas.getBoundingClientRect();
-        engine?.emit({
-          type: 'mousereleased',
-          position: [event.clientX - rect.left, event.clientY - rect.top],
-          button: (event.button ?? 0) + 1,
-        });
-      }
-    });
+    mouse = new Mouse(
+      (event) => {
+        if (event.type === 'mousedown') {
+          const position = engine?.transformMousePosition(event.clientX, event.clientY) ?? [0, 0];
+          engine?.emit({
+            type: 'mousepressed',
+            position,
+            button: (event.button ?? 0) + 1,
+          });
+        } else if (event.type === 'mouseup') {
+          const position = engine?.transformMousePosition(event.clientX, event.clientY) ?? [0, 0];
+          engine?.emit({
+            type: 'mousereleased',
+            position,
+            button: (event.button ?? 0) + 1,
+          });
+        }
+      },
+      (cssX, cssY) => engine?.transformMousePosition(cssX, cssY) ?? [cssX, cssY]
+    );
     input = new Input({ keyboard, mouse, gamepad });
 
     engine.setDeps({ graphics, input, timer, audio, keyboard, mouse, gamepad });

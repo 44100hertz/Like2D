@@ -7,12 +7,14 @@ export type MouseEvent = {
   button?: number;
 };
 
+export type MousePositionTransform = (cssX: number, cssY: number) => Vector2;
+
 export class Mouse {
   private x = 0;
   private y = 0;
   private buttons = new Set<number>();
-  private canvas: HTMLCanvasElement;
   private onEvent?: (event: MouseEvent) => void;
+  private transformFn?: MousePositionTransform;
 
   // Event handler references for cleanup
   private mousemoveHandler: (e: globalThis.MouseEvent) => void;
@@ -20,9 +22,9 @@ export class Mouse {
   private mouseupHandler: (e: globalThis.MouseEvent) => void;
   private blurHandler: () => void;
 
-  constructor(canvas: HTMLCanvasElement, onEvent?: (event: MouseEvent) => void) {
-    this.canvas = canvas;
+  constructor(onEvent?: (event: MouseEvent) => void, transformFn?: MousePositionTransform) {
     this.onEvent = onEvent;
+    this.transformFn = transformFn;
 
     // Bind event handlers
     this.mousemoveHandler = this.handleMouseMove.bind(this);
@@ -37,10 +39,15 @@ export class Mouse {
     window.addEventListener('blur', this.blurHandler);
   }
 
+  setTransform(transformFn: MousePositionTransform | undefined): void {
+    this.transformFn = transformFn;
+  }
+
   private handleMouseMove(e: globalThis.MouseEvent): void {
-    const rect = this.canvas.getBoundingClientRect();
-    this.x = e.clientX - rect.left;
-    this.y = e.clientY - rect.top;
+    // Store raw CSS coordinates - transformation to game coordinates
+    // should be done by the consumer using engine.transformMousePosition()
+    this.x = e.clientX;
+    this.y = e.clientY;
 
     this.onEvent?.({
       type: 'mousemove',
@@ -84,6 +91,9 @@ export class Mouse {
   }
 
   getPosition(): Vector2 {
+    if (this.transformFn) {
+      return this.transformFn(this.x, this.y);
+    }
     return [this.x, this.y];
   }
 

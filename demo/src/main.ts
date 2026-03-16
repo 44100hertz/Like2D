@@ -27,7 +27,7 @@ const player = {
 
 // Scaling mode cycling
 const scalingModes: CanvasConfig[] = [
-  { mode: 'fixed', size: [480, 320], pixelArt: true },  // Default: Pixel art mode
+  { mode: 'fixed', size: [320, 320], pixelArt: true },  // Default: Pixel art mode
   { mode: 'fixed', size: [800, 300] },  // Wide fixed
   { mode: 'fixed', size: [240, 320] },  // Portrait fixed
   { mode: 'scaled', size: [800, 600] }, // Scaled

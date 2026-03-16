@@ -99,6 +99,21 @@ export class Graphics {
     ctx.font = this.defaultFont;
   }
 
+  /**
+   * Reset the transform to the base state.
+   * In scaled mode, this preserves the automatic scaling/letterboxing.
+   * Using ctx.setTransform() directly will lose the scaled mode transform - use this instead.
+   */
+  resetTransform(): void {
+    if (!this.ctx) return;
+    const base = (this.ctx as any).__baseTransform;
+    if (base) {
+      this.ctx.setTransform(base.scale, 0, 0, base.scale, base.offsetX, base.offsetY);
+    } else {
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+  }
+
   private applyColor(color?: Color): string {
     return parseColor(color ?? [1, 1, 1, 1]);
   }
