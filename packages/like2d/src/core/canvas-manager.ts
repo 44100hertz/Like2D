@@ -1,8 +1,5 @@
 import type { CanvasConfig } from './canvas-config';
-import { V2, type Vector2 } from './vector2';
-import type { ResizeEvent } from './events';
-
-export type { ResizeEvent };
+import { Vec2, type Vector2 } from './vector2';
 
 function setCanvasSize(canvas: HTMLCanvasElement, size: Vector2): void {
   canvas.width = size[0];
@@ -25,7 +22,11 @@ export class CanvasManager {
   private resizeObserver: ResizeObserver | null = null;
   private pixelArtCanvas: HTMLCanvasElement | null = null;
   private pixelArtCtx: CanvasRenderingContext2D | null = null;
-  private wasFullscreen = false;
+
+  private onWindowResize = () => this.applyConfig();
+  private onFullscreenChange = () => this.applyConfig();
+
+  public onResize: ((size: Vector2, pixelSize: Vector2, fullscreen: boolean) => void) | null = null;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -36,10 +37,19 @@ export class CanvasManager {
     this.resizeObserver = new ResizeObserver(() => this.applyConfig());
     this.resizeObserver.observe(this.container);
 
-    window.addEventListener('resize', () => this.applyConfig());
-    document.addEventListener('fullscreenchange', () => this.applyConfig());
+    window.addEventListener('resize', this.onWindowResize);
+    document.addEventListener('fullscreenchange', this.onFullscreenChange);
+    this.listenForPixelRatioChanges();
 
     this.applyConfig();
+  }
+
+  private listenForPixelRatioChanges(): void {
+    const media = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+    media.addEventListener('change', () => {
+      this.applyConfig();
+      this.listenForPixelRatioChanges();
+    }, { once: true });
   }
 
   setConfig(config: CanvasConfig): void {
@@ -49,10 +59,6 @@ export class CanvasManager {
 
   getConfig(): CanvasConfig {
     return { ...this.config };
-  }
-
-  private isPixelArtMode(): boolean {
-    return this.config.mode === 'fixed' && !!(this.config as { pixelArt?: boolean }).pixelArt;
   }
 
   private applyConfig(): void {
@@ -79,34 +85,31 @@ export class CanvasManager {
     const displayCanvas = this.pixelArtCanvas ?? this.canvas;
     const isFullscreen = !!document.fullscreenElement;
 
-    const resizeEvent: Omit<ResizeEvent, 'timestamp'> = {
-      type: 'like2d:resize',
-      size: containerSize,
-      pixelSize: [displayCanvas.width, displayCanvas.height],
-      wasFullscreen: this.wasFullscreen,
-      fullscreen: isFullscreen,
-    };
-    this.canvas.dispatchEvent(new CustomEvent('like2d:resize', { detail: resizeEvent }));
-
-    this.wasFullscreen = isFullscreen;
+    this.onResize?.(
+      containerSize,
+      [displayCanvas.width, displayCanvas.height] as Vector2,
+      isFullscreen
+    );
   }
 
   private applyFixedMode(csize: Vector2): void {
     const { size: gameSize, pixelArt } = this.config as { mode: 'fixed'; size: Vector2; pixelArt?: boolean };
+    const pixelRatio = window.devicePixelRatio || 1;
     const scale = Math.min(csize[0] / gameSize[0], csize[1] / gameSize[1]);
 
-    if (pixelArt && scale > 1) {
-      const intScale = Math.floor(scale);
+    if (pixelArt) {
+      const physicalScale = scale * pixelRatio;
+      const intScale = Math.max(1, Math.floor(physicalScale));
 
       this.pixelArtCanvas = document.createElement('canvas');
       this.pixelArtCtx = this.pixelArtCanvas.getContext('2d');
 
-      setCanvasSize(this.pixelArtCanvas, V2.mul(gameSize, intScale));
+      setCanvasSize(this.pixelArtCanvas, Vec2.mul(gameSize, intScale));
       setCanvasSize(this.canvas, gameSize);
       this.canvas.style.display = 'none';
 
       const pac = this.pixelArtCanvas;
-      setCanvasDisplaySize(pac, V2.mul(gameSize, scale));
+      setCanvasDisplaySize(pac, Vec2.mul(gameSize, scale));
       pac.style.maxWidth = '100%';
       pac.style.maxHeight = '100%';
       pac.style.imageRendering = 'auto';
@@ -115,7 +118,7 @@ export class CanvasManager {
     } else {
       setCanvasSize(this.canvas, gameSize);
       this.canvas.style.display = 'block';
-      setCanvasDisplaySize(this.canvas, V2.mul(gameSize, scale));
+      setCanvasDisplaySize(this.canvas, Vec2.mul(gameSize, scale));
       this.canvas.style.imageRendering = pixelArt ? 'pixelated' : 'auto';
       this.ctx.imageSmoothingEnabled = !pixelArt;
       centerElement(this.canvas);
@@ -124,9 +127,9 @@ export class CanvasManager {
 
   private applyNativeMode(csize: Vector2): void {
     const pixelRatio = window.devicePixelRatio || 1;
-    const canvasSize = V2.mul(csize, pixelRatio);
+    const canvasSize = Vec2.mul(csize, pixelRatio);
 
-    setCanvasSize(this.canvas, V2.floor(canvasSize));
+    setCanvasSize(this.canvas, Vec2.floor(canvasSize));
     setCanvasDisplaySize(this.canvas, csize);
 
     this.canvas.style.position = 'absolute';
@@ -142,13 +145,15 @@ export class CanvasManager {
 
   dispose(): void {
     this.resizeObserver?.disconnect();
+    window.removeEventListener('resize', this.onWindowResize);
+    document.removeEventListener('fullscreenchange', this.onFullscreenChange);
     this.pixelArtCanvas?.remove();
     this.pixelArtCanvas = null;
     this.pixelArtCtx = null;
   }
 
   present(): void {
-    if (!this.isPixelArtMode() || !this.pixelArtCanvas || !this.pixelArtCtx) {
+    if (!this.pixelArtCtx || !this.pixelArtCanvas) {
       return;
     }
 
@@ -172,12 +177,12 @@ export class CanvasManager {
     switch (this.config.mode) {
       case 'fixed': {
         const scale: Vector2 = [displayCanvas.width / rect.width, displayCanvas.height / rect.height];
-        return V2.mul(relative, scale);
+        return Vec2.mul(relative, scale);
       }
 
       case 'native':
       default: {
-        return V2.mul(relative, window.devicePixelRatio || 1);
+        return Vec2.mul(relative, window.devicePixelRatio || 1);
       }
     }
   }
