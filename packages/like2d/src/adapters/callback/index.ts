@@ -6,7 +6,7 @@ import { Keyboard } from '../../core/keyboard';
 import { Mouse } from '../../core/mouse';
 import { Gamepad } from '../../core/gamepad';
 import { Engine } from '../../engine';
-import type { CanvasConfig } from '../../core/canvas-config';
+import type { CanvasMode, PartialCanvasMode } from '../../core/canvas-config';
 import type { Like2DEvent } from '../../core/events';
 import type { Vector2 } from '../../core/vector2';
 
@@ -15,6 +15,7 @@ export { getGPName, GP } from '../../core/gamepad';
 export { Vec2 } from '../../core/vector2';
 export { Rect } from '../../core/rect';
 export { calcFixedScale } from '../../core/canvas-config';
+export type { CanvasMode, PartialCanvasMode } from '../../core/canvas-config';
 
 export let graphics: Graphics;
 export const audio = new Audio();
@@ -41,12 +42,12 @@ export const like = {
   actionreleased: undefined as ((action: string) => void) | undefined,
   handleEvent: undefined as ((event: Like2DEvent) => void) | undefined,
 
-  toggleFullscreen(): void {
-    engine?.toggleFullscreen();
+  setMode(mode: PartialCanvasMode): void {
+    engine?.setMode(mode);
   },
 
-  setScaling(config: CanvasConfig): void {
-    engine?.setScaling(config);
+  getMode(): CanvasMode | undefined {
+    return engine?.getMode();
   },
 
   async init(container: HTMLElement) {

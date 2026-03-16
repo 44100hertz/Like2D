@@ -26,7 +26,7 @@ It's almost like: imagine if Vanilla gamedev was good.
 
 ## Open-Source and compact
 
-LIKE is under the GPLv2, so you're free to modify it as you see fit.
+LIKE is under the MIT license, so you're free to modify it as you see fit.
 The code base is intentionally kept as small and simple as possible, so you can work on it too.
 
 ## Ready to go?

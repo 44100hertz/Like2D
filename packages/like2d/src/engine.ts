@@ -6,7 +6,7 @@ import type { Keyboard } from './core/keyboard';
 import type { Mouse } from './core/mouse';
 import type { Gamepad } from './core/gamepad';
 import type { Like2DEvent, EventType } from './core/events';
-import type { CanvasConfig } from './core/canvas-config';
+import type { CanvasMode, PartialCanvasMode } from './core/canvas-config';
 import { CanvasManager } from './core/canvas-manager';
 
 export type EngineDeps = {
@@ -40,16 +40,43 @@ export class Engine {
 
     this.container = container;
     this.container.appendChild(this.canvas);
-    this.canvasManager = new CanvasManager(this.canvas, this.container, this.ctx, { mode: 'native' });
+    this.canvasManager = new CanvasManager(this.canvas, this.container, this.ctx, { type: 'native', fullscreen: false });
 
     // Internal listener to forward to onEvent
     this.canvasManager.onResize = (size, pixelSize, fullscreen) => {
       this.dispatchEvent('resize', [size, pixelSize, fullscreen]);
     };
+
+    // Listen for fullscreen changes to update mode
+    document.addEventListener('fullscreenchange', () => this.handleFullscreenChange());
   }
 
-  setScaling(config: CanvasConfig): void {
-    this.canvasManager.setConfig(config);
+  private handleFullscreenChange(): void {
+    const mode = this.canvasManager.getMode();
+    const isFullscreen = !!document.fullscreenElement;
+    if (mode.fullscreen !== isFullscreen) {
+      this.canvasManager.setMode({ ...mode, fullscreen: isFullscreen });
+    }
+  }
+
+  setMode(mode: PartialCanvasMode): void {
+    const currentMode = this.canvasManager.getMode();
+    const mergedMode = { ...currentMode, ...mode };
+    const needsFullscreenChange = mode.fullscreen !== undefined && mode.fullscreen !== currentMode.fullscreen;
+    
+    if (needsFullscreenChange) {
+      if (mergedMode.fullscreen) {
+        this.container.requestFullscreen().catch(console.error);
+      } else {
+        document.exitFullscreen();
+      }
+    }
+    
+    this.canvasManager.setMode(mode);
+  }
+
+  getMode(): CanvasMode {
+    return this.canvasManager.getMode();
   }
 
   setDeps(deps: EngineDeps): void {
@@ -145,11 +172,4 @@ export class Engine {
     return this.canvasManager.transformMousePosition(cssX, cssY);
   }
 
-  toggleFullscreen(): void {
-    if (!document.fullscreenElement) {
-      this.container.requestFullscreen().catch(console.error);
-    } else {
-      document.exitFullscreen();
-    }
-  }
 }

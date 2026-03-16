@@ -1,4 +1,4 @@
-import { SceneRunner, type Scene, Vec2, getGPName, ImageHandle, type CanvasConfig, StartupScene } from "like2d/scene";
+import { SceneRunner, type Scene, Vec2, getGPName, ImageHandle, type CanvasMode, StartupScene } from "like2d/scene";
 import type { Source } from 'like2d';
 
 // Example demonstrating Like2D graphics API with Scene-based architecture
@@ -26,18 +26,18 @@ const player = {
 };
 
 // Scaling mode cycling
-const scalingModes: CanvasConfig[] = [
-  { mode: 'fixed', size: [320, 320], pixelArt: true },  // Default: Pixel art mode
-  { mode: 'fixed', size: [800, 300] },  // Wide fixed
-  { mode: 'fixed', size: [240, 320] },  // Portrait fixed
-  { mode: 'native' },                          // Native
+const scalingModes: CanvasMode[] = [
+  { type: 'fixed', size: [320, 320], pixelArt: true },  // Default: Pixel art mode
+  { type: 'fixed', size: [800, 300] },  // Wide fixed
+  { type: 'fixed', size: [240, 320] },  // Portrait fixed
+  { type: 'native' },                          // Native
 ];
 let currentScalingIndex = 0;
 let scalingModeName = 'Fixed 480x320 (Pixel Art)';
 
 const demoScene: Scene = {
   load: () => {
-    runner.setScaling(scalingModes[0]);
+    runner.setMode(scalingModes[0]);
     // Start loading assets - they return immediately
     pepperImage = graphics.newImage('pepper.png');
     audioSource = audio.newSource('./test.ogg');
@@ -91,7 +91,7 @@ const demoScene: Scene = {
         if (scancode === 'KeyZ') {
           currentScalingIndex = (currentScalingIndex + 1) % scalingModes.length;
           const newConfig = scalingModes[currentScalingIndex];
-          runner.setScaling(newConfig);
+          runner.setMode(newConfig);
           
           // Update display name
           switch (currentScalingIndex) {
@@ -441,11 +441,10 @@ const demoScene: Scene = {
   },
 };
 
-// Wire up fullscreen button
 const fullscreenBtn = document.getElementById('scene-fullscreen');
 if (fullscreenBtn) {
   fullscreenBtn.addEventListener('click', () => {
-    runner['engine'].toggleFullscreen();
+    runner.setMode({ fullscreen: true });
   });
 }
 

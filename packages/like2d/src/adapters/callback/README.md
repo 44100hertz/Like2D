@@ -34,7 +34,8 @@ like.keypressed = (scancode, keycode) => {
 
 // Start the game
 const container = document.getElementById('game-container');
-await like.init(container, 800, 600);
+await like.init(container);
+like.setMode({ type: 'fixed', size: [800, 600] });
 ```
 
 ## Available Callbacks
@@ -77,17 +78,21 @@ love.draw = () => { ... };
 
 ## API Methods
 
-### like.init(container, width?, height?)
+### like.init(container)
 
-Initialize and start the game loop.
+Initialize and start the game loop. The canvas is created and attached to the container.
 
-- `container` - HTMLElement to attach the canvas to
-- `width` - Canvas width (default: 800)
-- `height` - Canvas height (default: 600)
+### like.setMode(mode)
 
-### like.toggleFullscreen()
+Set the canvas display mode. Mode is partial - only specified fields are updated.
 
-Toggle fullscreen mode for the canvas.
+```typescript
+// Set resolution
+like.setMode({ type: 'fixed', size: [800, 600] });
+
+// Toggle fullscreen (preserves other settings)
+like.setMode({ fullscreen: true });
+```
 
 ## When to Use This Adapter
 

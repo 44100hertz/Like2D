@@ -33,7 +33,7 @@ Ideal for small games, jams, or prototyping.
 import { love, graphics, input } from 'like2d/callback';
 
 love.load = () => {
-  love.setScaling({ mode: 'fixed', size: [800, 600] });
+  love.setMode({ type: 'fixed', size: [800, 600] });
   input.map('jump', ['Space', 'ButtonBottom']);
 };
 

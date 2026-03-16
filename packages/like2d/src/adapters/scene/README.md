@@ -17,9 +17,6 @@ import { SceneRunner, Scene, graphics } from 'like2d/scene';
 import type { Event } from 'like2d/scene';
 
 class MyScene implements Scene {
-  width = 800;
-  height = 600;
-
   load() {
     console.log('Scene loaded!');
   }
@@ -34,13 +31,14 @@ class MyScene implements Scene {
 
   handleEvent(event: Event) {
     if (event.type === 'keypressed') {
-      console.log('Key pressed:', event.keycode);
+      console.log('Key pressed:', event.args[1]);
     }
   }
 }
 
 // Create runner and start
-const runner = new SceneRunner(document.body, 800, 600);
+const runner = new SceneRunner(document.body);
+runner.setMode({ type: 'fixed', size: [800, 600] });
 await runner.start(new MyScene());
 ```
 
@@ -48,8 +46,6 @@ await runner.start(new MyScene());
 
 ```typescript
 type Scene = {
-  width: number;
-  height: number;
   load?(): void;
   update(dt: number): void;
   draw(): void;
@@ -57,20 +53,7 @@ type Scene = {
 };
 ```
 
-### Required Properties
-
-- `width` - Canvas width in pixels
-- `height` - Canvas height in pixels
-
-### Optional Methods
-
-- `load()` - Called once when the scene is set
-- `handleEvent(event)` - Called for all input events
-
-### Required Methods
-
-- `update(dt)` - Called every frame with delta time
-- `draw()` - Called every frame to render
+Canvas size is controlled via `runner.setMode()`, not scene properties.
 
 ## Events
 
@@ -104,23 +87,7 @@ Available event types:
 
 ## SceneRunner API
 
-### Constructor
-
-```typescript
-new SceneRunner(container: HTMLElement, width?: number, height?: number)
-```
-
-Creates a new runner with its own canvas and engine instance.
-
-### Methods
-
-#### setScene(scene: Scene)
-
-Switch to a new scene. The old scene is immediately replaced and `load()` is called on the new scene.
-
-#### async start(scene: Scene)
-
-Set the scene and start the game loop. Returns a Promise that resolves when the scene is loaded.
+The runner manages the canvas, engine loop, and scene lifecycle. Create it with a container element, optionally call `setMode()` to configure the canvas, then `start()` with your initial scene.
 
 ## Exported Classes
 
@@ -157,25 +124,18 @@ For a simpler Love2D-style callback pattern, consider the [Callback Adapter](../
 
 ```typescript
 class MenuScene implements Scene {
-  width = 800;
-  height = 600;
-  
   draw() {
     graphics.print('Press SPACE to start', [350, 300]);
   }
   
   handleEvent(event: Event) {
-    if (event.type === 'keypressed' && event.keycode === ' ') {
-      // Switch to game scene
+    if (event.type === 'keypressed' && event.args[1] === ' ') {
       runner.setScene(new GameScene());
     }
   }
 }
 
 class GameScene implements Scene {
-  width = 800;
-  height = 600;
-  
   update(dt: number) {
     // Game logic
   }
@@ -186,5 +146,6 @@ class GameScene implements Scene {
 }
 
 const runner = new SceneRunner(document.body);
+runner.setMode({ type: 'fixed', size: [800, 600] });
 await runner.start(new MenuScene());
 ```

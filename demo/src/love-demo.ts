@@ -20,7 +20,7 @@ const player = {
 
 // Love2D-style load callback - called once at startup
 love.load = () => {
-  love.setScaling({ mode: 'fixed', size: [800, 600] });
+  love.setMode({ type: 'fixed', size: [800, 600] });
   // Start loading assets - they return immediately
   pepperImage = graphics.newImage('pepper.png');
   audioSource = audio.newSource('./test.ogg');
@@ -413,10 +413,9 @@ love.handleEvent = async (event: Like2DEvent) => {
 const container = document.getElementById('love-container')!;
 await love.init(container);
 
-// Setup fullscreen button
 const fullscreenBtn = document.getElementById('love-fullscreen');
 if (fullscreenBtn) {
   fullscreenBtn.addEventListener('click', () => {
-    love.toggleFullscreen();
+    love.setMode({ fullscreen: true });
   });
 }

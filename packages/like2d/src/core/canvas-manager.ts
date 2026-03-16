@@ -1,4 +1,4 @@
-import type { CanvasConfig } from './canvas-config';
+import type { CanvasMode, PartialCanvasMode } from './canvas-config';
 import { Vec2, type Vector2 } from './vector2';
 
 function setCanvasSize(canvas: HTMLCanvasElement, size: Vector2): void {
@@ -24,7 +24,6 @@ export class CanvasManager {
   private pixelArtCtx: CanvasRenderingContext2D | null = null;
 
   private onWindowResize = () => this.applyConfig();
-  private onFullscreenChange = () => this.applyConfig();
 
   public onResize: ((size: Vector2, pixelSize: Vector2, fullscreen: boolean) => void) | null = null;
 
@@ -32,13 +31,12 @@ export class CanvasManager {
     private canvas: HTMLCanvasElement,
     private container: HTMLElement,
     private ctx: CanvasRenderingContext2D,
-    private config: CanvasConfig = { mode: 'native' }
+    private config: CanvasMode = { type: 'native', fullscreen: false }
   ) {
     this.resizeObserver = new ResizeObserver(() => this.applyConfig());
     this.resizeObserver.observe(this.container);
 
     window.addEventListener('resize', this.onWindowResize);
-    document.addEventListener('fullscreenchange', this.onFullscreenChange);
     this.listenForPixelRatioChanges();
 
     this.applyConfig();
@@ -52,12 +50,12 @@ export class CanvasManager {
     }, { once: true });
   }
 
-  setConfig(config: CanvasConfig): void {
-    this.config = config;
+  setMode(mode: PartialCanvasMode): void {
+    this.config = { ...this.config, ...mode } as CanvasMode;
     this.applyConfig();
   }
 
-  getConfig(): CanvasConfig {
+  getMode(): CanvasMode {
     return { ...this.config };
   }
 
@@ -73,7 +71,7 @@ export class CanvasManager {
       this.pixelArtCtx = null;
     }
 
-    switch (this.config.mode) {
+    switch (this.config.type) {
       case 'fixed':
         this.applyFixedMode(containerSize);
         break;
@@ -83,17 +81,16 @@ export class CanvasManager {
     }
 
     const displayCanvas = this.pixelArtCanvas ?? this.canvas;
-    const isFullscreen = !!document.fullscreenElement;
 
     this.onResize?.(
       containerSize,
       [displayCanvas.width, displayCanvas.height] as Vector2,
-      isFullscreen
+      this.config.fullscreen ?? false
     );
   }
 
   private applyFixedMode(csize: Vector2): void {
-    const { size: gameSize, pixelArt } = this.config as { mode: 'fixed'; size: Vector2; pixelArt?: boolean };
+    const { size: gameSize, pixelArt } = this.config as { type: 'fixed'; size: Vector2; pixelArt?: boolean };
     const pixelRatio = window.devicePixelRatio || 1;
     const scale = Math.min(csize[0] / gameSize[0], csize[1] / gameSize[1]);
 
@@ -146,7 +143,6 @@ export class CanvasManager {
   dispose(): void {
     this.resizeObserver?.disconnect();
     window.removeEventListener('resize', this.onWindowResize);
-    document.removeEventListener('fullscreenchange', this.onFullscreenChange);
     this.pixelArtCanvas?.remove();
     this.pixelArtCanvas = null;
     this.pixelArtCtx = null;
@@ -174,10 +170,10 @@ export class CanvasManager {
     const rect = displayCanvas.getBoundingClientRect();
     const relative: Vector2 = [cssX - rect.left, cssY - rect.top];
 
-    switch (this.config.mode) {
+    switch (this.config.type) {
       case 'fixed': {
         // In fixed mode: CSS position (as fraction of CSS size) × game size = game position
-        const { size: gameSize } = this.config as { mode: 'fixed'; size: Vector2 };
+        const { size: gameSize } = this.config as { type: 'fixed'; size: Vector2 };
         return Vec2.mul(relative, [gameSize[0] / rect.width, gameSize[1] / rect.height]);
       }
 

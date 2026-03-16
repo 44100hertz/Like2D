@@ -1,10 +1,14 @@
 import type { Vector2 } from './vector2';
 
-export type CanvasMode = 'fixed' | 'native';
+export type CanvasModeType = 'fixed' | 'native';
 
-export type CanvasConfig =
-  | { mode: 'fixed'; size: Vector2; pixelArt?: boolean }
-  | { mode: 'native' };
+export type CanvasMode =
+  | { type: 'fixed'; size: Vector2; pixelArt?: boolean; fullscreen?: boolean }
+  | { type: 'native'; fullscreen?: boolean };
+
+export type PartialCanvasMode =
+  | { type?: 'fixed'; size?: Vector2; pixelArt?: boolean; fullscreen?: boolean }
+  | { type?: 'native'; fullscreen?: boolean };
 
 /**
  * Calculate the scale and offset for rendering fixed-size content to a target canvas.

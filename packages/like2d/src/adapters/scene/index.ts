@@ -7,7 +7,7 @@ import { Mouse } from '../../core/mouse';
 import { Gamepad } from '../../core/gamepad';
 import { Engine } from '../../engine';
 import type { Scene } from './scene';
-import type { CanvasConfig } from '../../core/canvas-config';
+import type { CanvasMode, PartialCanvasMode } from '../../core/canvas-config';
 import { StartupScene } from './startup-scene';
 import type { Like2DEvent } from '../../core/events';
 
@@ -24,7 +24,7 @@ export type { Scene } from './scene';
 export type { Vector2 } from '../../core/vector2';
 export { Vec2 } from '../../core/vector2';
 export { Rect } from '../../core/rect';
-export type { CanvasConfig } from '../../core/canvas-config';
+export type { CanvasMode, PartialCanvasMode } from '../../core/canvas-config';
 export { calcFixedScale } from '../../core/canvas-config';
 
 export class SceneRunner {
@@ -50,12 +50,12 @@ export class SceneRunner {
     this.audio = new Audio();
   }
 
-  setScaling(config: CanvasConfig): void {
-    this.engine.setScaling(config);
+  setMode(mode: PartialCanvasMode): void {
+    this.engine.setMode(mode);
   }
 
-  toggleFullscreen(): void {
-    this.engine.toggleFullscreen();
+  getMode(): CanvasMode {
+    return this.engine.getMode();
   }
 
   setScene(scene: Scene) {
