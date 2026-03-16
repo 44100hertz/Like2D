@@ -70,5 +70,6 @@ Background color, canvas sizing, clipping, and render target management.
 
 ## See Also
 
-- [vector2.md](./vector2.md) - Vector2 type and V2 namespace
-- [rect.md](./rect.md) - Rect type and R namespace
+- [api-style.md](./api-style.md) - API design conventions
+- [assets.md](./assets.md) - Fire-and-forget asset loading
+- [input.md](./input.md) - Input mapping system

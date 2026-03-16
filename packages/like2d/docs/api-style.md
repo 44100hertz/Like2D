@@ -39,12 +39,12 @@ type Vector2 = [number, number];
 // Rect is a four-item array: [x, y, width, height]
 type Rect = [number, number, number, number];
 
-// Use the V2 module for vector operations
-import { V2 } from './like/vector2.ts';
+// Use the Vec2 module for vector operations
+import { Vec2 } from 'like2d';
 
 const position: Vector2 = [100, 200];
 const velocity: Vector2 = [10, 5];
-const newPos = V2.add(position, velocity);  // [110, 205]
+const newPos = Vec2.add(position, velocity);  // [110, 205]
 ```
 
 ## Global Singleton
