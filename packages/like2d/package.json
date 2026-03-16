@@ -1,6 +1,6 @@
 {
   "name": "like2d",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A web-native game framework inspired by Love2D",
   "type": "module",
   "main": "./dist/index.js",
@@ -18,10 +18,6 @@
     "./scene": {
       "import": "./dist/adapters/scene/index.js",
       "types": "./dist/adapters/scene/index.d.ts"
-    },
-    "./core/*": {
-      "import": "./dist/core/*.js",
-      "types": "./dist/core/*.d.ts"
     }
   },
   "files": [
@@ -33,7 +29,8 @@
     "build": "tsc && cp src/gamecontrollerdb.txt dist/",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'No linting configured'",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "vitest run"
   },
   "keywords": [
     "game",

@@ -1,58 +1,90 @@
-# LÏKE2D Framework 
+# LÏKE2D
 
-You've reached the more detailed docs for this framework.
-For now, the source code is the best API docs we have. 
+A web-native 2D game framework inspired by [LÖVE](https://love2d.org/), built for simplicity and the modern web.
 
-## Features of LIKE
+## What it is
 
-**Stateless Canvas API**
+Like2D is a thin, performant wrapper around the browser's Canvas and Web Audio APIs. It provides:
+- **Stateless Graphics:** No more `ctx.save()` and `ctx.restore()` for colors and transforms.
+- **Fire-and-forget Assets:** Synchronous handles for images and audio that load in the background.
+- **Unified Input:** Normalized keyboard, mouse, and gamepad support with action mapping.
+- **Scaling Modes:** Built-in support for "fixed" resolution with pixel-perfect stretching.
+- **Flexible Patterns:** Use Love2D-style global callbacks or class-based scenes.
 
-JS canvas has state to keep track of like color and line width.
-LIKE abstracts that away so it's easy to reason about.
+## Installation
 
-**Fire-and-forget asset loading**
-
-Loading sound and images in Vanilla JS is clunky and can interrupt your game loop.
-LIKE has synchronous asset handles and abstracts away the clunkiness.
-
-**Zero boilerplate, physical game input**
-
-LIKE does the input boilerplate for you.
- - Keeping track of what's held/pressed.
- - Controller mapping by physical location. Not every A is in the same spot.
- - Mapping inputs into actions for easy remapping.
-
-**Declarative event system**
-
-Don't bother juggling stateful listeners.
-LIKE keeps event handling simple by running it all through a single callback.
-
-**Build it how you want it**
-
-It's not an engine, it's a framework.
-For new developers, this means making simple games easily: no engine, no problem!
-For others, get to work faster making your own specialized tooling, engine, and more,
-all without banging your head on browser APIs.
-
-## Getting started
-
-TODO: fill this in.
-
-Then run:
 ```bash
-pnpm install
-pnpm run dev
+npm install like2d
+# or
+pnpm add like2d
 ```
 
-## For LOVE developers
+## Quick Start
 
-LIKE is not compatible with LOVE.
+### Callback Pattern (Love2D-style)
 
-To summarize the differences:
- - We don't keep track of color etc. as state (via setColor, etc.), so it gets passed in each draw call.
- - We use objects for optional arguments, and avoid function overloading.
- - We make use of tuples for passing around colors, coordinates, and rects.
- - In LOVE, Callbacks such as `love.keypressed` needed to be wrapped in order to make Scenes. This pattern is part of LIKE.
- - 2d Canvas so, no shaders.
- - No built-in physics.
+Ideal for small games, jams, or prototyping.
 
+```typescript
+import { love, graphics, input } from 'like2d/callback';
+
+love.load = () => {
+  love.setScaling({ mode: 'fixed', size: [800, 600] });
+  input.map('jump', ['Space', 'ButtonBottom']);
+};
+
+love.update = (dt) => {
+  if (input.justPressed('jump')) {
+    console.log('Jump!');
+  }
+};
+
+love.draw = () => {
+  graphics.clear([0.1, 0.1, 0.1, 1]);
+  graphics.circle('fill', 'dodgerblue', [400, 300], 50);
+  graphics.print('white', 'Hello Like2D!', [20, 20]);
+};
+
+love.init(document.body);
+```
+
+### Scene Pattern (Class-based)
+
+Ideal for larger projects with menus, levels, and explicit state management.
+
+```typescript
+import { SceneRunner, type Scene, Vec2 } from 'like2d/scene';
+
+class MyScene implements Scene {
+  load() {
+    console.log('Scene loaded!');
+  }
+
+  update(dt: number) {
+    // update logic
+  }
+
+  draw(canvas: HTMLCanvasElement) {
+    // draw logic
+  }
+}
+
+const runner = new SceneRunner(document.body);
+await runner.start(new MyScene());
+```
+
+## API Overview
+
+Like2D exports pure library functions for math and geometry that work with native arrays.
+
+- **Vec2:** Vector operations using `[number, number]` tuples.
+- **Rect:** Rectangle operations using `[x, y, w, h]` tuples.
+- **Graphics:** Stateless drawing commands.
+- **Audio:** Simple source/playback management.
+- **Input:** Action-based input mapping.
+
+See the [PHILOSOPHY.md](./docs/PHILOSOPHY.md) for the principles behind the design.
+
+## License
+
+MIT

@@ -1,0 +1,38 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Typecheck
+        run: pnpm --filter like2d typecheck
+      
+      - name: Build
+        run: pnpm --filter like2d build
+      
+      - name: Run tests
+        run: pnpm --filter like2d test
+      
+      - name: Publish to JSR
+        run: npx jsr publish --project @like2d/like2d
+        working-directory: packages/like2d
