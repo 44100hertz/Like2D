@@ -209,7 +209,7 @@ export class CanvasManager {
     switch (this.config.mode) {
       case 'fixed': {
         const scale: Vector2 = [targetCanvas.width / rect.width, targetCanvas.height / rect.height];
-        return [relative[0] * scale[0], relative[1] * scale[1]];
+        return V2.mul(relative, scale);
       }
 
       case 'scaled': {

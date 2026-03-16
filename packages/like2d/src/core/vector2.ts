@@ -9,12 +9,18 @@ export namespace V2 {
     return [a[0] - b[0], a[1] - b[1]];
   }
 
-  export function mul(v: Vector2, s: number): Vector2 {
-    return [v[0] * s, v[1] * s];
+  export function mul(v: Vector2, other: Vector2 | number): Vector2 {
+    if (typeof other === 'number') {
+      return [v[0] * other, v[1] * other];
+    }
+    return [v[0] * other[0], v[1] * other[1]];
   }
 
-  export function div(v: Vector2, s: number): Vector2 {
-    return [v[0] / s, v[1] / s];
+  export function div(v: Vector2, other: Vector2 | number): Vector2 {
+    if (typeof other === 'number') {
+      return [v[0] / other, v[1] / other];
+    }
+    return [v[0] / other[0], v[1] / other[1]];
   }
 
   export function dot(a: Vector2, b: Vector2): number {
