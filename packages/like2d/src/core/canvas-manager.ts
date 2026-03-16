@@ -1,10 +1,15 @@
 import type { CanvasConfig } from './canvas-config';
 import { V2, type Vector2 } from './vector2';
+import type { ResizeEvent } from './events';
+
+export type ResizeCallback = (event: Omit<ResizeEvent, 'timestamp'>) => void;
 
 export class CanvasManager {
   private resizeObserver: ResizeObserver | null = null;
   private pixelArtCanvas: HTMLCanvasElement | null = null;
   private pixelArtCtx: CanvasRenderingContext2D | null = null;
+  private emitResize: ResizeCallback | null = null;
+  private wasFullscreen = false;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -12,13 +17,24 @@ export class CanvasManager {
     private ctx: CanvasRenderingContext2D,
     private config: CanvasConfig = { mode: 'native' }
   ) {
-    this.setupResizeObserver();
+    this.resizeObserver = new ResizeObserver(() => this.applyConfig());
+    this.resizeObserver.observe(this.container);
+
+    window.addEventListener('resize', () => this.applyConfig());
+    document.addEventListener('fullscreenchange', () => this.applyConfig());
+
     this.applyConfig();
+  }
+
+  setResizeCallback(callback: ResizeCallback): void {
+    this.emitResize = callback;
   }
 
   setConfig(config: CanvasConfig): void {
     if (this.isPixelArtMode(this.config) && !this.isPixelArtMode(config)) {
-      this.removePixelArtCanvas();
+      if (this.pixelArtCanvas?.parentElement) {
+        this.pixelArtCanvas.parentElement.removeChild(this.pixelArtCanvas);
+      }
     }
     this.config = config;
     this.applyConfig();
@@ -32,23 +48,7 @@ export class CanvasManager {
     return config.mode === 'fixed' && !!(config as { pixelArt?: boolean }).pixelArt;
   }
 
-  private removePixelArtCanvas(): void {
-    if (this.pixelArtCanvas?.parentElement) {
-      this.pixelArtCanvas.parentElement.removeChild(this.pixelArtCanvas);
-    }
-  }
-
-  private setupResizeObserver(): void {
-    this.resizeObserver = new ResizeObserver(() => this.applyConfig());
-    this.resizeObserver.observe(this.container);
-  }
-
-  private getScale(container: Vector2, game: Vector2): number {
-    return Math.min(container[0] / game[0], container[1] / game[1]);
-  }
-
   private applyConfig(): void {
-    // Use screen size when in fullscreen, otherwise use container size
     const containerSize: Vector2 = document.fullscreenElement
       ? [window.screen.width, window.screen.height]
       : [this.container.getBoundingClientRect().width, this.container.getBoundingClientRect().height];
@@ -64,11 +64,27 @@ export class CanvasManager {
         this.applyScaledOrNativeMode('native', containerSize);
         break;
     }
+
+    const pixelSize: Vector2 = this.isPixelArtMode(this.config) && this.pixelArtCanvas
+      ? [this.pixelArtCanvas.width, this.pixelArtCanvas.height]
+      : [this.canvas.width, this.canvas.height];
+
+    const isFullscreen = !!document.fullscreenElement;
+
+    this.emitResize?.({
+      type: 'resize',
+      size: containerSize,
+      pixelSize,
+      wasFullscreen: this.wasFullscreen,
+      fullscreen: isFullscreen,
+    });
+
+    this.wasFullscreen = isFullscreen;
   }
 
   private applyFixedMode(csize: Vector2): void {
     const { size: gameSize, pixelArt } = this.config as { mode: 'fixed'; size: Vector2; pixelArt?: boolean };
-    const scale = this.getScale(csize, gameSize);
+    const scale = Math.min(csize[0] / gameSize[0], csize[1] / gameSize[1]);
 
     if (pixelArt && scale > 1) {
       const intScale = Math.floor(scale);
@@ -88,23 +104,25 @@ export class CanvasManager {
       this.canvas.style.display = 'none';
 
       const pac = this.pixelArtCanvas;
-      let displaySize = V2.mul(pacSize, cssScale);
-      
-      // Ensure it fits within container (prevents overflow/cropping)
-      displaySize = V2.min(displaySize, csize);
-      
+      const displaySize = V2.min(V2.mul(pacSize, cssScale), csize);
+
       pac.style.width = `${displaySize[0]}px`;
       pac.style.height = `${displaySize[1]}px`;
       pac.style.maxWidth = '100%';
       pac.style.maxHeight = '100%';
       pac.style.imageRendering = 'auto';
-      this.centerElement(pac);
+      pac.style.position = 'absolute';
+      pac.style.left = '50%';
+      pac.style.top = '50%';
+      pac.style.transform = 'translate(-50%, -50%)';
 
       if (pac.parentElement !== this.container) {
         this.container.appendChild(pac);
       }
     } else {
-      this.removePixelArtCanvas();
+      if (this.pixelArtCanvas?.parentElement) {
+        this.pixelArtCanvas.parentElement.removeChild(this.pixelArtCanvas);
+      }
       this.canvas.width = gameSize[0];
       this.canvas.height = gameSize[1];
       this.canvas.style.display = 'block';
@@ -113,13 +131,18 @@ export class CanvasManager {
       this.canvas.style.height = `${displaySize[1]}px`;
       this.canvas.style.imageRendering = pixelArt ? 'pixelated' : 'auto';
       this.ctx.imageSmoothingEnabled = !pixelArt;
-      this.centerElement(this.canvas);
+      this.canvas.style.position = 'absolute';
+      this.canvas.style.left = '50%';
+      this.canvas.style.top = '50%';
+      this.canvas.style.transform = 'translate(-50%, -50%)';
     }
   }
 
   private applyScaledOrNativeMode(mode: 'scaled' | 'native', csize: Vector2): void {
-    this.removePixelArtCanvas();
-    
+    if (this.pixelArtCanvas?.parentElement) {
+      this.pixelArtCanvas.parentElement.removeChild(this.pixelArtCanvas);
+    }
+
     const pixelRatio = window.devicePixelRatio || 1;
     const gameSize: Vector2 = mode === 'scaled'
       ? (this.config as { size: Vector2 }).size
@@ -149,18 +172,14 @@ export class CanvasManager {
     }
   }
 
-  private centerElement(el: HTMLElement): void {
-    el.style.position = 'absolute';
-    el.style.left = '50%';
-    el.style.top = '50%';
-    el.style.transform = 'translate(-50%, -50%)';
-  }
-
   dispose(): void {
     this.resizeObserver?.disconnect();
-    this.removePixelArtCanvas();
+    if (this.pixelArtCanvas?.parentElement) {
+      this.pixelArtCanvas.parentElement.removeChild(this.pixelArtCanvas);
+    }
     this.pixelArtCanvas = null;
     this.pixelArtCtx = null;
+    this.emitResize = null;
   }
 
   present(): void {

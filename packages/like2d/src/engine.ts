@@ -47,6 +47,11 @@ export class Engine {
     
     // Initialize canvas manager with default native mode
     this.canvasManager = new CanvasManager(this.canvas, this.container, this.ctx, { mode: 'native' });
+    
+    // Set up resize callback to emit events through the engine
+    this.canvasManager.setResizeCallback((event) => {
+      this.emit(event);
+    });
   }
 
   /**

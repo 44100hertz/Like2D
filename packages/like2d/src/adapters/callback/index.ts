@@ -38,6 +38,7 @@ export const like = {
   mousereleased: undefined as ((x: number, y: number, button: number) => void) | undefined,
   gamepadpressed: undefined as ((gamepadIndex: number, buttonIndex: number, buttonName: string) => void) | undefined,
   gamepadreleased: undefined as ((gamepadIndex: number, buttonIndex: number, buttonName: string) => void) | undefined,
+  resize: undefined as ((size: [number, number], pixelSize: [number, number], wasFullscreen: boolean, fullscreen: boolean) => void) | undefined,
   handleEvent: undefined as ((event: Event) => void) | undefined,
 
   toggleFullscreen(): void {
@@ -129,6 +130,9 @@ export const like = {
         case 'gamepadreleased':
           this.gamepadreleased?.(event.gamepadIndex, event.buttonIndex, event.buttonName);
           break;
+        case 'resize':
+          this.resize?.(event.size, event.pixelSize, event.wasFullscreen, event.fullscreen);
+          break;
         default:
           // All other events (including custom events) go to handleEvent
           this.handleEvent?.(event);
@@ -152,6 +156,7 @@ export const like = {
     this.mousereleased = undefined;
     this.gamepadpressed = undefined;
     this.gamepadreleased = undefined;
+    this.resize = undefined;
     this.handleEvent = undefined;
   }
 };

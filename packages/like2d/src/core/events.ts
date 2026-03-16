@@ -67,6 +67,14 @@ export type GamepadReleasedEvent = BaseEvent & {
   buttonName: string;
 };
 
+export type ResizeEvent = BaseEvent & {
+  type: 'resize';
+  size: Vector2;
+  pixelSize: Vector2;
+  wasFullscreen: boolean;
+  fullscreen: boolean;
+};
+
 export type Event =
   | LoadEvent
   | UpdateEvent
@@ -79,4 +87,5 @@ export type Event =
   | ActionReleasedEvent
   | GamepadPressedEvent
   | GamepadReleasedEvent
+  | ResizeEvent
   | BaseEvent;
