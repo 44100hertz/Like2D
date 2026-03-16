@@ -56,20 +56,21 @@ export class CanvasManager {
     return { ...this.config };
   }
 
-  private isPixelArtMode(config: CanvasConfig): boolean {
-    return config.mode === 'fixed' && !!(config as { pixelArt?: boolean }).pixelArt;
-  }
-
-  private removePixelArtCanvas(): void {
-    if (this.pixelArtCanvas?.parentElement) {
-      this.pixelArtCanvas.parentElement.removeChild(this.pixelArtCanvas);
-    }
+  private isPixelArtMode(): boolean {
+    return this.config.mode === 'fixed' && !!(this.config as { pixelArt?: boolean }).pixelArt;
   }
 
   private applyConfig(): void {
     const containerSize: Vector2 = document.fullscreenElement
       ? [document.fullscreenElement.clientWidth, document.fullscreenElement.clientHeight]
       : [this.container.clientWidth, this.container.clientHeight];
+
+    // Always clean up pixel art canvas first
+    if (this.pixelArtCanvas) {
+      this.pixelArtCanvas.remove();
+      this.pixelArtCanvas = null;
+      this.pixelArtCtx = null;
+    }
 
     switch (this.config.mode) {
       case 'fixed':
@@ -83,10 +84,7 @@ export class CanvasManager {
         break;
     }
 
-    const displayCanvas = this.isPixelArtMode(this.config) && this.pixelArtCanvas
-      ? this.pixelArtCanvas
-      : this.canvas;
-
+    const displayCanvas = this.pixelArtCanvas ?? this.canvas;
     const isFullscreen = !!document.fullscreenElement;
 
     this.emitResize?.({
@@ -107,10 +105,8 @@ export class CanvasManager {
     if (pixelArt && scale > 1) {
       const intScale = Math.floor(scale);
 
-      if (!this.pixelArtCanvas) {
-        this.pixelArtCanvas = document.createElement('canvas');
-        this.pixelArtCtx = this.pixelArtCanvas.getContext('2d');
-      }
+      this.pixelArtCanvas = document.createElement('canvas');
+      this.pixelArtCtx = this.pixelArtCanvas.getContext('2d');
 
       setCanvasSize(this.pixelArtCanvas, V2.mul(gameSize, intScale));
       setCanvasSize(this.canvas, gameSize);
@@ -122,12 +118,8 @@ export class CanvasManager {
       pac.style.maxHeight = '100%';
       pac.style.imageRendering = 'auto';
       centerElement(pac);
-
-      if (pac.parentElement !== this.container) {
-        this.container.appendChild(pac);
-      }
+      this.container.appendChild(pac);
     } else {
-      this.removePixelArtCanvas();
       setCanvasSize(this.canvas, gameSize);
       this.canvas.style.display = 'block';
       setCanvasDisplaySize(this.canvas, V2.mul(gameSize, scale));
@@ -138,8 +130,6 @@ export class CanvasManager {
   }
 
   private applyScaledOrNativeMode(mode: 'scaled' | 'native', csize: Vector2): void {
-    this.removePixelArtCanvas();
-
     const pixelRatio = window.devicePixelRatio || 1;
     const gameSize: Vector2 = mode === 'scaled'
       ? (this.config as { size: Vector2 }).size
@@ -169,14 +159,14 @@ export class CanvasManager {
 
   dispose(): void {
     this.resizeObserver?.disconnect();
-    this.removePixelArtCanvas();
+    this.pixelArtCanvas?.remove();
     this.pixelArtCanvas = null;
     this.pixelArtCtx = null;
     this.emitResize = null;
   }
 
   present(): void {
-    if (!this.isPixelArtMode(this.config) || !this.pixelArtCanvas || !this.pixelArtCtx) {
+    if (!this.isPixelArtMode() || !this.pixelArtCanvas || !this.pixelArtCtx) {
       return;
     }
 
@@ -189,9 +179,7 @@ export class CanvasManager {
   }
 
   getDisplayCanvas(): HTMLCanvasElement {
-    return this.isPixelArtMode(this.config) && this.pixelArtCanvas
-      ? this.pixelArtCanvas
-      : this.canvas;
+    return this.pixelArtCanvas ?? this.canvas;
   }
 
   transformMousePosition(cssX: number, cssY: number): Vector2 {
@@ -206,7 +194,6 @@ export class CanvasManager {
       }
 
       case 'scaled': {
-        // Reverse the transform applied in applyScaledOrNativeMode
         const invTransform = this.ctx.getTransform().invertSelf();
         const canvasPos = V2.mul(relative, window.devicePixelRatio || 1);
         return [
