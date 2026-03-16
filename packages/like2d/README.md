@@ -34,6 +34,10 @@ pnpm add like2d
 
 ## Quick Start
 
+[Like2D Starter Template](https://github.com/44100hertz/Like2D-starter)
+
+## Usage Examples
+
 ### Callback Pattern (Love2D-style)
 
 Ideal for small games, jams, or prototyping.
@@ -97,10 +101,6 @@ import { Vec2, Rect } from 'like2d/math';                  // Pure math function
 ```
 
 See the [PHILOSOPHY.md](./docs/PHILOSOPHY.md) for the principles behind the design.
-
-## Quick Start Template
-
-Get started quickly with the [Like2D Starter](https://github.com/44100hertz/Like2D-starter) template!
 
 ## License
 
