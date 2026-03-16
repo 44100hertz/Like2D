@@ -30,7 +30,6 @@ const scalingModes: CanvasConfig[] = [
   { mode: 'fixed', size: [320, 320], pixelArt: true },  // Default: Pixel art mode
   { mode: 'fixed', size: [800, 300] },  // Wide fixed
   { mode: 'fixed', size: [240, 320] },  // Portrait fixed
-  { mode: 'scaled', size: [800, 600] }, // Scaled
   { mode: 'native' },                          // Native
 ];
 let currentScalingIndex = 0;
@@ -105,9 +104,6 @@ const demoScene: Scene = {
               scalingModeName = 'Fixed 240x320 (Portrait)';
               break;
             case 3:
-              scalingModeName = 'Scaled 800x600';
-              break;
-            case 4:
               scalingModeName = 'Native (No Scaling)';
               break;
           }
@@ -233,11 +229,12 @@ const demoScene: Scene = {
     graphics.polygon('line', 'orange', [[430, 100], [460, 150], [430, 200], [400, 150]]);
     
     // Demo coordinate transformations
-    graphics.push();
-    graphics.translate([center[0], center[1]]);
-    graphics.rotate(rotation);
+    const ctx = graphics.getContext();
+    ctx.save();
+    ctx.translate(center[0], center[1]);
+    ctx.rotate(rotation);
     graphics.rectangle('fill', 'dodgerblue', R.create(-40, -40, 80, 80));
-    graphics.pop();
+    ctx.restore();
     
     // Draw images if loaded (draw() skips silently if not ready)
     if (pepperImage) {
@@ -251,19 +248,19 @@ const demoScene: Scene = {
     if (pepperImage && pepperImage.isReady()) {
       const [imgWidth, imgHeight] = pepperImage.size;
       
-      graphics.push();
-      graphics.translate([120, 250]);
-      graphics.rotate(rotation * 0.5);
+      ctx.save();
+      ctx.translate(120, 250);
+      ctx.rotate(rotation * 0.5);
       graphics.draw(pepperImage, [0, 0], { 
         scale: 0.3, 
         origin: [imgWidth / 2, imgHeight / 2] 
       });
-      graphics.pop();
+      ctx.restore();
       
       // Draw image quad (sub-region) - just the center portion
-      graphics.push();
-      graphics.translate([280, 250]);
-      graphics.rotate(-rotation * 0.3);
+      ctx.save();
+      ctx.translate(280, 250);
+      ctx.rotate(-rotation * 0.3);
       graphics.draw(
         pepperImage,
         [0, 0],
@@ -277,7 +274,7 @@ const demoScene: Scene = {
           scale: 0.8
         }
       );
-      graphics.pop();
+      ctx.restore();
       
       // Image info
       graphics.print('lightgray', `Image: ${imgWidth}x${imgHeight}`, [20, 80], { 

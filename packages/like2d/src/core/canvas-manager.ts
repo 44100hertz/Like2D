@@ -76,11 +76,8 @@ export class CanvasManager {
       case 'fixed':
         this.applyFixedMode(containerSize);
         break;
-      case 'scaled':
-        this.applyScaledOrNativeMode('scaled', containerSize);
-        break;
       case 'native':
-        this.applyScaledOrNativeMode('native', containerSize);
+        this.applyNativeMode(containerSize);
         break;
     }
 
@@ -129,13 +126,10 @@ export class CanvasManager {
     }
   }
 
-  private applyScaledOrNativeMode(mode: 'scaled' | 'native', csize: Vector2): void {
+  private applyNativeMode(csize: Vector2): void {
     const pixelRatio = window.devicePixelRatio || 1;
-    const gameSize: Vector2 = mode === 'scaled'
-      ? (this.config as { size: Vector2 }).size
-      : csize;
-
     const canvasSize = V2.mul(csize, pixelRatio);
+
     setCanvasSize(this.canvas, V2.floor(canvasSize));
     setCanvasDisplaySize(this.canvas, csize);
 
@@ -147,14 +141,7 @@ export class CanvasManager {
     this.canvas.style.display = 'block';
     this.canvas.style.imageRendering = 'auto';
 
-    if (mode === 'scaled') {
-      const scale = Math.min(this.canvas.width / gameSize[0], this.canvas.height / gameSize[1]);
-      const scaledGame = V2.mul(gameSize, scale);
-      const offset = V2.mul(V2.sub([this.canvas.width, this.canvas.height], scaledGame), 0.5);
-      this.ctx.setTransform(scale, 0, 0, scale, offset[0], offset[1]);
-    } else {
-      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-    }
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
   dispose(): void {
@@ -191,15 +178,6 @@ export class CanvasManager {
       case 'fixed': {
         const scale: Vector2 = [displayCanvas.width / rect.width, displayCanvas.height / rect.height];
         return V2.mul(relative, scale);
-      }
-
-      case 'scaled': {
-        const invTransform = this.ctx.getTransform().invertSelf();
-        const canvasPos = V2.mul(relative, window.devicePixelRatio || 1);
-        return [
-          invTransform.a * canvasPos[0] + invTransform.c * canvasPos[1] + invTransform.e,
-          invTransform.b * canvasPos[0] + invTransform.d * canvasPos[1] + invTransform.f,
-        ];
       }
 
       case 'native':

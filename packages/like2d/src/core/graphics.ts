@@ -99,21 +99,6 @@ export class Graphics {
     ctx.font = this.defaultFont;
   }
 
-  /**
-   * Reset the transform to the base state.
-   * In scaled mode, this preserves the automatic scaling/letterboxing.
-   * Using ctx.setTransform() directly will lose the scaled mode transform - use this instead.
-   */
-  resetTransform(): void {
-    if (!this.ctx) return;
-    const base = (this.ctx as any).__baseTransform;
-    if (base) {
-      this.ctx.setTransform(base.scale, 0, 0, base.scale, base.offsetX, base.offsetY);
-    } else {
-      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-    }
-  }
-
   private applyColor(color?: Color): string {
     return parseColor(color ?? [1, 1, 1, 1]);
   }
@@ -299,41 +284,19 @@ export class Graphics {
     this.ctx.restore();
   }
 
-  push(): void {
-    if (!this.ctx) return;
-    this.ctx.save();
-  }
-
-  pop(): void {
-    if (!this.ctx) return;
-    this.ctx.restore();
-  }
-
-  translate(delta: Vector2): void {
-    if (!this.ctx) return;
-    const [x, y] = delta;
-    this.ctx.translate(x, y);
-  }
-
-  rotate(angle: number): void {
-    if (!this.ctx) return;
-    this.ctx.rotate(angle);
-  }
-
-  scale(s: number | Vector2): void {
-    if (!this.ctx) return;
-    if (typeof s === 'number') {
-      this.ctx.scale(s, s);
-    } else {
-      const [sx, sy] = s;
-      this.ctx.scale(sx, sy);
-    }
-  }
-
   getCanvasSize(): Vector2 {
     const width = this.ctx?.canvas.width ?? 800;
     const height = this.ctx?.canvas.height ?? 600;
     return [width, height];
+  }
+
+  /**
+   * Get the current canvas rendering context.
+   * Use this to access raw canvas API methods like ctx.save(), ctx.restore(),
+   * ctx.translate(), ctx.rotate(), ctx.scale(), ctx.setTransform(), etc.
+   */
+  getContext(): CanvasRenderingContext2D {
+    return this.ctx;
   }
 
   newCanvas(size: Vector2): Canvas {

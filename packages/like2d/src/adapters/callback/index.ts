@@ -14,6 +14,7 @@ export { ImageHandle } from '../../core/graphics';
 export { getGPName, GP } from '../../core/gamepad';
 export { V2 } from '../../core/vector2';
 export { R } from '../../core/rect';
+export { calcFixedScale } from '../../core/canvas-config';
 
 // Singleton instances for Love2D-style API (initialized in init())
 export let graphics: Graphics;

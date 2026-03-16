@@ -24,6 +24,7 @@ export { V2 } from '../../core/vector2';
 export type { Rect } from '../../core/rect';
 export { R } from '../../core/rect';
 export type { CanvasConfig } from '../../core/canvas-config';
+export { calcFixedScale } from '../../core/canvas-config';
 
 export class SceneRunner {
   private engine: Engine;

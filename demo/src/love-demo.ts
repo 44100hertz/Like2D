@@ -120,11 +120,12 @@ love.draw = () => {
   graphics.polygon('line', 'orange', [[600, 100], [650, 150], [600, 200], [550, 150]]);
   
   // Demo coordinate transformations
-  graphics.push();
-  graphics.translate([center[0], 300]);
-  graphics.rotate(rotation);
+  const ctx = graphics.getContext();
+  ctx.save();
+  ctx.translate(center[0], 300);
+  ctx.rotate(rotation);
   graphics.rectangle('fill', 'dodgerblue', R.create(-40, -40, 80, 80));
-  graphics.pop();
+  ctx.restore();
   
   // Draw images if loaded (draw() skips silently if not ready)
   if (pepperImage) {
@@ -138,19 +139,19 @@ love.draw = () => {
   if (pepperImage && pepperImage.isReady()) {
     const [imgWidth, imgHeight] = pepperImage.size;
     
-    graphics.push();
-    graphics.translate([200, 400]);
-    graphics.rotate(rotation * 0.5);
+    ctx.save();
+    ctx.translate(200, 400);
+    ctx.rotate(rotation * 0.5);
     graphics.draw(pepperImage, [0, 0], { 
       scale: 0.4, 
       origin: [imgWidth / 2, imgHeight / 2] 
     });
-    graphics.pop();
+    ctx.restore();
     
     // Draw image quad (sub-region) - just the center portion
-    graphics.push();
-    graphics.translate([400, 400]);
-    graphics.rotate(-rotation * 0.3);
+    ctx.save();
+    ctx.translate(400, 400);
+    ctx.rotate(-rotation * 0.3);
     graphics.draw(
       pepperImage,
       [0, 0],
@@ -164,7 +165,7 @@ love.draw = () => {
         scale: 1.2
       }
     );
-    graphics.pop();
+    ctx.restore();
     
     // Image info
     graphics.print('lightgray', `Image: ${imgWidth}x${imgHeight}`, [20, 80], { 

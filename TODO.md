@@ -1,6 +1,47 @@
 # Like2D TODO
 
-## Bugs 🐛
+## Active Work
+
+### 1. Startup Screen as Scene (Scene Adapter)
+Move the built-in startup screen from engine.ts into a reusable scene class in the scene adapter:
+- Create `StartupScene` class that accepts:
+  - `nextScene: Scene` - the scene to load after click
+  - `draw?: (ctx: CanvasRenderingContext2D) => void` - optional custom draw function
+- Update demo/src/main.ts to use this feature
+- For callback adapter: add note "pause until click - future consideration"
+
+### 4. Graphics Simplification ✅ COMPLETED
+- Removed transform wrapper methods (`push`, `pop`, `translate`, `rotate`, `scale`, `resetTransform`) from Graphics class
+- Added `graphics.getContext()` method for direct canvas API access
+- Users should use `ctx.save()`, `ctx.restore()`, `ctx.setTransform()` directly
+- `ctx.__baseTransform` hack was removed with scaled mode
+
+### 6. Cut "scaled" Mode, Add Helper ✅ COMPLETED
+- Removed "scaled" mode from CanvasConfig (keep only "fixed" and "native")
+- Added helper function `calcFixedScale()` in `canvas-config.ts` for fixed-to-native rendering
+
+### BUG: Browser Zoom with Pixel Art Mode
+Browser zooming does not update the pixel canvas resolution. When the user zooms the browser (Ctrl +/-), the pixel art canvas needs to recalculate its internal resolution based on the new pixel ratio, but currently it only responds to container resize events, not zoom events.
+
+### 7. Event System: Native Events Pilot
+**Status:** Concept documented in `NATIVE_EVENTS.md`, ready for branch `pilot/native-events`  
+**Goal:** Replace custom event emitter with native DOM CustomEvents + thin wrappers
+**Decision:** Keep explicit callback pattern for adapters, use native events under the hood
+
+### 8. Package.json Exports & Naming (Later)
+Remove wildcard exports (`core/*`) from package.json:
+- Keep only: `.`, `./callback`, `./scene`
+- Root index.ts re-exports pure libraries (`Vec2`, `Rect`, etc.) - this is fine
+- Users who want internals must type `like2d/core/...` explicitly
+- "Core" in the path acts as the gate into internals
+
+**Naming changes:**
+- `V2` → `Vec2` (V2 sounds like "version 2")
+- `R` → `Rect` (R conflicts with Ramda library convention)
+
+---
+
+## Completed ✅
 
 ### Pixel Art Canvas Stretching ✅ FIXED
 The pixel art canvas was getting stretched due to component-wise min() clamping. Fixed by using proportional scale calculation in `canvas-manager.ts:109`.
@@ -20,10 +61,11 @@ In scaled mode, calling `ctx.setTransform()` directly would lose the automatic s
 
 ## Canvas Size System ✅
 
-Implementation complete. Canvas sizing system with three modes:
+Implementation complete. Canvas sizing system with two modes:
 - **fixed**: Fixed internal resolution, CSS-scaled to fit container
-- **scaled**: Canvas matches container, content scaled via ctx.transform
 - **native**: Full control, programmer handles everything
+
+Use `calcFixedScale()` helper to implement scaled rendering in native mode.
 
 All modes preserve aspect ratio with letterboxing (no stretch/crop).
 
