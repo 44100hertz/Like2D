@@ -62,7 +62,7 @@ export class Engine {
   }
 
   private dispatchEvent<T extends EventName>(type: T, data: Omit<EventMap[T], 'type' | 'timestamp'>): void {
-    const timestamp = this.deps?.timer.getTime() ?? performance.now();
+    const timestamp = this.deps?.timer.getTime() ?? 0;
     this.canvas.dispatchEvent(new CustomEvent(type, { 
       detail: { type, ...data, timestamp } as Event 
     }));
@@ -81,9 +81,8 @@ export class Engine {
       const dt = (currentTime - this.lastTime) / 1000;
       this.lastTime = currentTime;
 
-      this.deps!.timer.update(dt);
-
       if (!this.deps!.timer.isSleeping()) {
+        this.deps!.timer.update(dt);
         const inputEvents = this.deps!.input.update();
         inputEvents.pressed.forEach(action => this.dispatchEvent('like2d:actionpressed', { action }));
         inputEvents.released.forEach(action => this.dispatchEvent('like2d:actionreleased', { action }));
