@@ -4,6 +4,23 @@ import type { ResizeEvent } from './events';
 
 export type ResizeCallback = (event: Omit<ResizeEvent, 'timestamp'>) => void;
 
+function setCanvasSize(canvas: HTMLCanvasElement, size: Vector2): void {
+  canvas.width = size[0];
+  canvas.height = size[1];
+}
+
+function setCanvasDisplaySize(canvas: HTMLCanvasElement, size: Vector2): void {
+  canvas.style.width = `${size[0]}px`;
+  canvas.style.height = `${size[1]}px`;
+}
+
+function centerElement(el: HTMLElement): void {
+  el.style.position = 'absolute';
+  el.style.left = '50%';
+  el.style.top = '50%';
+  el.style.transform = 'translate(-50%, -50%)';
+}
+
 export class CanvasManager {
   private resizeObserver: ResizeObserver | null = null;
   private pixelArtCanvas: HTMLCanvasElement | null = null;
@@ -94,26 +111,16 @@ export class CanvasManager {
         this.pixelArtCtx = this.pixelArtCanvas.getContext('2d');
       }
 
-      const pacSize = V2.mul(gameSize, intScale);
-      this.pixelArtCanvas.width = pacSize[0];
-      this.pixelArtCanvas.height = pacSize[1];
-
-      this.canvas.width = gameSize[0];
-      this.canvas.height = gameSize[1];
+      setCanvasSize(this.pixelArtCanvas, V2.mul(gameSize, intScale));
+      setCanvasSize(this.canvas, gameSize);
       this.canvas.style.display = 'none';
 
       const pac = this.pixelArtCanvas;
-      const displaySize = V2.mul(gameSize, scale);
-
-      pac.style.width = `${displaySize[0]}px`;
-      pac.style.height = `${displaySize[1]}px`;
+      setCanvasDisplaySize(pac, V2.mul(gameSize, scale));
       pac.style.maxWidth = '100%';
       pac.style.maxHeight = '100%';
       pac.style.imageRendering = 'auto';
-      pac.style.position = 'absolute';
-      pac.style.left = '50%';
-      pac.style.top = '50%';
-      pac.style.transform = 'translate(-50%, -50%)';
+      centerElement(pac);
 
       if (pac.parentElement !== this.container) {
         this.container.appendChild(pac);
@@ -122,18 +129,12 @@ export class CanvasManager {
       if (this.pixelArtCanvas?.parentElement) {
         this.pixelArtCanvas.parentElement.removeChild(this.pixelArtCanvas);
       }
-      this.canvas.width = gameSize[0];
-      this.canvas.height = gameSize[1];
+      setCanvasSize(this.canvas, gameSize);
       this.canvas.style.display = 'block';
-      const displaySize = V2.mul(gameSize, scale);
-      this.canvas.style.width = `${displaySize[0]}px`;
-      this.canvas.style.height = `${displaySize[1]}px`;
+      setCanvasDisplaySize(this.canvas, V2.mul(gameSize, scale));
       this.canvas.style.imageRendering = pixelArt ? 'pixelated' : 'auto';
       this.ctx.imageSmoothingEnabled = !pixelArt;
-      this.canvas.style.position = 'absolute';
-      this.canvas.style.left = '50%';
-      this.canvas.style.top = '50%';
-      this.canvas.style.transform = 'translate(-50%, -50%)';
+      centerElement(this.canvas);
     }
   }
 
@@ -148,10 +149,8 @@ export class CanvasManager {
       : csize;
 
     const canvasSize = V2.mul(csize, pixelRatio);
-    this.canvas.width = Math.floor(canvasSize[0]);
-    this.canvas.height = Math.floor(canvasSize[1]);
-    this.canvas.style.width = `${csize[0]}px`;
-    this.canvas.style.height = `${csize[1]}px`;
+    setCanvasSize(this.canvas, V2.floor(canvasSize));
+    setCanvasDisplaySize(this.canvas, csize);
 
     this.canvas.style.position = 'absolute';
     this.canvas.style.left = '0';
@@ -166,7 +165,6 @@ export class CanvasManager {
       const scaledGame = V2.mul(gameSize, scale);
       const offset = V2.mul(V2.sub([this.canvas.width, this.canvas.height], scaledGame), 0.5);
       this.ctx.setTransform(scale, 0, 0, scale, offset[0], offset[1]);
-      // Store base transform for graphics.resetTransform()
       (this.ctx as any).__baseTransform = { scale, offsetX: offset[0], offsetY: offset[1] };
     } else {
       this.ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -197,71 +195,41 @@ export class CanvasManager {
     );
   }
 
-  /**
-   * Get the canvas element that's currently being displayed.
-   * In pixel art mode, this returns the pixel art canvas (not the main canvas).
-   */
   getDisplayCanvas(): HTMLCanvasElement {
-    if (this.isPixelArtMode(this.config) && this.pixelArtCanvas) {
-      return this.pixelArtCanvas;
-    }
-    return this.canvas;
+    return this.isPixelArtMode(this.config) && this.pixelArtCanvas
+      ? this.pixelArtCanvas
+      : this.canvas;
   }
 
-  /**
-   * Transform mouse coordinates from CSS pixels to game/internal resolution.
-   * Accounts for scaling, letterboxing, and different canvas modes.
-   */
   transformMousePosition(cssX: number, cssY: number): Vector2 {
     const targetCanvas = this.getDisplayCanvas();
     const rect = targetCanvas.getBoundingClientRect();
-    
-    // Get position relative to the canvas element
-    const relativeX = cssX - rect.left;
-    const relativeY = cssY - rect.top;
-    
+    const relative: Vector2 = [cssX - rect.left, cssY - rect.top];
+
     switch (this.config.mode) {
       case 'fixed': {
-        // Fixed mode: direct scaling from CSS pixels to internal resolution
-        const scaleX = targetCanvas.width / rect.width;
-        const scaleY = targetCanvas.height / rect.height;
-        return [
-          relativeX * scaleX,
-          relativeY * scaleY
-        ];
+        const scale: Vector2 = [targetCanvas.width / rect.width, targetCanvas.height / rect.height];
+        return [relative[0] * scale[0], relative[1] * scale[1]];
       }
-      
+
       case 'scaled': {
         const { size: gameSize } = this.config as { mode: 'scaled'; size: Vector2 };
         const pixelRatio = window.devicePixelRatio || 1;
         const containerSize: Vector2 = document.fullscreenElement
           ? [document.fullscreenElement.clientWidth, document.fullscreenElement.clientHeight]
           : [this.container.clientWidth, this.container.clientHeight];
-        
-        // Calculate the same scale factor used in applyScaledOrNativeMode
+
         const canvasSize = V2.mul(containerSize, pixelRatio);
         const scale = Math.min(canvasSize[0] / gameSize[0], canvasSize[1] / gameSize[1]);
-        const scaledGame = V2.mul(gameSize, scale);
-        const offset = V2.mul(V2.sub(canvasSize, scaledGame), 0.5);
-        
-        // Convert CSS pixels to canvas pixels, then subtract offset and divide by scale
-        const canvasX = relativeX * pixelRatio;
-        const canvasY = relativeY * pixelRatio;
-        
-        return [
-          (canvasX - offset[0]) / scale,
-          (canvasY - offset[1]) / scale
-        ];
+        const offset = V2.mul(V2.sub(canvasSize, V2.mul(gameSize, scale)), 0.5);
+
+        return V2.div(V2.sub(V2.mul(relative, pixelRatio), offset), scale);
       }
-      
+
       case 'native':
       default: {
-        // Native mode: direct pixel mapping
         const pixelRatio = window.devicePixelRatio || 1;
-        return [
-          relativeX * pixelRatio,
-          relativeY * pixelRatio
-        ];
+        return V2.mul(relative, pixelRatio);
       }
     }
   }
