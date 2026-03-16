@@ -1,5 +1,9 @@
 # LÏKE2D
 
+<p align="center">
+  <img src="./assets/logo-banner.svg" alt="Like2D Logo" width="400">
+</p>
+
 A web-native 2D game framework inspired by [LÖVE](https://love2d.org/), built for simplicity and the modern web.
 
 ## What it is
@@ -84,6 +88,10 @@ Like2D exports pure library functions for math and geometry that work with nativ
 - **Input:** Action-based input mapping.
 
 See the [PHILOSOPHY.md](./docs/PHILOSOPHY.md) for the principles behind the design.
+
+## Quick Start Template
+
+Get started quickly with the [Like2D Starter](https://github.com/44100hertz/Like2D-starter) template!
 
 ## License
 
