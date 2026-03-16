@@ -1,5 +1,6 @@
 import { love, graphics, audio, timer, keyboard, mouse, gamepad, input, ImageHandle, getGPName, R, V2 } from "like2d/callback";
-import type { Source, Event } from 'like2d';
+import type { Source } from 'like2d';
+import type { SceneEvent } from 'like2d/scene';
 
 // Example demonstrating Like2D with Love2D-style callback API
 // This uses the traditional load/update/draw callback pattern directly
@@ -68,7 +69,7 @@ love.update = (dt: number) => {
 };
 
 // Love2D-style draw callback - called every frame
-love.draw = (canvas) => {
+love.draw = (_canvas) => {
   const canvasSize = graphics.getCanvasSize();
   const center = V2.mul(canvasSize, 0.5);
   const [canvasWidth, canvasHeight] = canvasSize;
@@ -357,7 +358,7 @@ love.gamepadreleased = (gamepadIndex: number, buttonIndex: number, buttonName: s
 };
 
 // Handle action events (actionpressed, actionreleased)
-love.handleEvent = async (event: Event) => {
+love.handleEvent = async (event: SceneEvent) => {
   switch (event.type) {
     case 'actionpressed': {
       console.log('Action pressed:', event.action);

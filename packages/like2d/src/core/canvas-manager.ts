@@ -2,7 +2,7 @@ import type { CanvasConfig } from './canvas-config';
 import { V2, type Vector2 } from './vector2';
 import type { ResizeEvent } from './events';
 
-export type ResizeCallback = (event: Omit<ResizeEvent, 'timestamp'>) => void;
+export type { ResizeEvent };
 
 function setCanvasSize(canvas: HTMLCanvasElement, size: Vector2): void {
   canvas.width = size[0];
@@ -25,7 +25,6 @@ export class CanvasManager {
   private resizeObserver: ResizeObserver | null = null;
   private pixelArtCanvas: HTMLCanvasElement | null = null;
   private pixelArtCtx: CanvasRenderingContext2D | null = null;
-  private emitResize: ResizeCallback | null = null;
   private wasFullscreen = false;
 
   constructor(
@@ -41,10 +40,6 @@ export class CanvasManager {
     document.addEventListener('fullscreenchange', () => this.applyConfig());
 
     this.applyConfig();
-  }
-
-  setResizeCallback(callback: ResizeCallback): void {
-    this.emitResize = callback;
   }
 
   setConfig(config: CanvasConfig): void {
@@ -84,13 +79,14 @@ export class CanvasManager {
     const displayCanvas = this.pixelArtCanvas ?? this.canvas;
     const isFullscreen = !!document.fullscreenElement;
 
-    this.emitResize?.({
-      type: 'resize',
+    const resizeEvent: Omit<ResizeEvent, 'timestamp'> = {
+      type: 'like2d:resize',
       size: containerSize,
       pixelSize: [displayCanvas.width, displayCanvas.height],
       wasFullscreen: this.wasFullscreen,
       fullscreen: isFullscreen,
-    });
+    };
+    this.canvas.dispatchEvent(new CustomEvent('like2d:resize', { detail: resizeEvent }));
 
     this.wasFullscreen = isFullscreen;
   }
@@ -149,7 +145,6 @@ export class CanvasManager {
     this.pixelArtCanvas?.remove();
     this.pixelArtCanvas = null;
     this.pixelArtCtx = null;
-    this.emitResize = null;
   }
 
   present(): void {

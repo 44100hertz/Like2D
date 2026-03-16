@@ -60,13 +60,8 @@ export class Input {
     return this.actionStateTracker.justReleased(action);
   }
 
-  update(): { 
-    pressed: string[]; 
-    released: string[]; 
-    gamepadPressed: Array<{ gamepadIndex: number; buttonIndex: number; buttonName: string }>; 
-    gamepadReleased: Array<{ gamepadIndex: number; buttonIndex: number; buttonName: string }>;
-  } {
-    const { pressed: gamepadPressed, released: gamepadReleased } = this.gamepad.update();
+  update(): { pressed: string[]; released: string[] } {
+    this.gamepad.update();
 
     const activeActions = new Set<string>();
 
@@ -78,12 +73,7 @@ export class Input {
 
     const { justPressed, justReleased } = this.actionStateTracker.update(activeActions);
 
-    return { 
-      pressed: justPressed, 
-      released: justReleased,
-      gamepadPressed,
-      gamepadReleased,
-    };
+    return { pressed: justPressed, released: justReleased };
   }
 
   private parseInput(input: string): InputBinding {

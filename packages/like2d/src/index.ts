@@ -19,6 +19,17 @@ export { getGPName, GP } from './core/gamepad';
 export type { KeyEvent } from './core/keyboard';
 export type { MouseEvent } from './core/mouse';
 export type { GamepadEvent, GamepadButtonEvent, StickPosition } from './core/gamepad';
+export type { 
+  KeyPressedEvent, 
+  KeyReleasedEvent,
+  MousePressedEvent,
+  MouseReleasedEvent,
+  GamepadPressedEvent,
+  GamepadReleasedEvent,
+  ActionPressedEvent,
+  ActionReleasedEvent,
+  InputEvent 
+} from './adapters/scene/scene';
 
 // Note: For actual usage, import from specific adapters:
 // import { like, graphics } from 'like2d/callback';

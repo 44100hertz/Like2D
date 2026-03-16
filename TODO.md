@@ -23,10 +23,20 @@ Move the built-in startup screen from engine.ts into a reusable scene class in t
 ### BUG: Browser Zoom with Pixel Art Mode
 Browser zooming does not update the pixel canvas resolution. When the user zooms the browser (Ctrl +/-), the pixel art canvas needs to recalculate its internal resolution based on the new pixel ratio, but currently it only responds to container resize events, not zoom events.
 
-### 7. Event System: Native Events Pilot
-**Status:** Concept documented in `NATIVE_EVENTS.md`, ready for branch `pilot/native-events`  
-**Goal:** Replace custom event emitter with native DOM CustomEvents + thin wrappers
-**Decision:** Keep explicit callback pattern for adapters, use native events under the hood
+### 7. Event System: Native Events Pilot ✅ COMPLETED
+**Status:** Implemented - native DOM CustomEvents now used throughout  
+**Changes:**
+- Replaced custom `EventEmitter` with native `CustomEvent` dispatch on canvas element
+- Event names now prefixed with `like2d:` (e.g., `like2d:update`, `like2d:draw`)
+- Adapters listen directly to canvas via `addEventListener` - no more callback arrays
+- CanvasManager dispatches `like2d:resize` events natively
+- ~70 lines of custom event code removed, replaced with ~40 lines of thin wrappers
+
+**Benefits:**
+- DevTools shows all events, can breakpoint on dispatch
+- Native features: `{ once: true }`, `{ passive: true }`, capture/bubble
+- Zero custom event infrastructure to maintain
+- Better tree-shaking potential
 
 ### 8. Package.json Exports & Naming (Later)
 Remove wildcard exports (`core/*`) from package.json:
@@ -90,3 +100,17 @@ The startup screen currently displays simple text. Future versions should suppor
 - Custom background images for the startup screen
 - Custom styling/fonts
 - Animation/transitions
+
+### Camera System with Mouse Transform
+Tenuous idea for camera systems with automatic mouse coordinate transformation:
+```typescript
+graphics.setCamera(translate, rotate, scale);
+const worldPos = mouse.getWorldPosition(); // Applies inverse transform
+```
+**Research needed:** Study existing Love2D camera libraries (e.g., gamera, STALKER-X, hump.camera) to understand:
+- Most popular API patterns
+- Common features (follow targets, smooth movement, bounds, zoom)
+- Whether users prefer camera-as-separate-object vs graphics-integrated
+- Trade-offs between simplicity and flexibility
+
+Decision: Only implement if a clear " winner" pattern emerges from the ecosystem.

@@ -2,10 +2,10 @@ import type { Graphics } from './core/graphics';
 import type { Audio } from './core/audio';
 import type { Input } from './core/input';
 import type { Timer } from './core/timer';
-import type { Keyboard } from './core/keyboard';
-import type { Mouse } from './core/mouse';
+import type { Keyboard, KeyEvent } from './core/keyboard';
+import type { Mouse, MouseEvent } from './core/mouse';
 import type { Gamepad } from './core/gamepad';
-import type { Event } from './core/events';
+import type { Event, EventName, EventMap } from './core/events';
 import type { CanvasConfig } from './core/canvas-config';
 import { CanvasManager } from './core/canvas-manager';
 
@@ -19,15 +19,12 @@ export type EngineDeps = {
   gamepad: Gamepad;
 };
 
-export type EventCallback = (event: Event) => void;
-
 export class Engine {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private deps: EngineDeps | null = null;
   private isRunning = false;
   private lastTime = 0;
-  private eventCallbacks: EventCallback[] = [];
   private container: HTMLElement;
   private canvasManager: CanvasManager;
 
@@ -37,26 +34,14 @@ export class Engine {
     this.canvas.style.display = 'block';
 
     const ctx = this.canvas.getContext('2d');
-    if (!ctx) {
-      throw new Error('Failed to get 2D context');
-    }
+    if (!ctx) throw new Error('Failed to get 2D context');
     this.ctx = ctx;
 
     this.container = container;
     this.container.appendChild(this.canvas);
-    
-    // Initialize canvas manager with default native mode
     this.canvasManager = new CanvasManager(this.canvas, this.container, this.ctx, { mode: 'native' });
-    
-    // Set up resize callback to emit events through the engine
-    this.canvasManager.setResizeCallback((event) => {
-      this.emit(event);
-    });
   }
 
-  /**
-   * Set canvas scaling configuration
-   */
   setScaling(config: CanvasConfig): void {
     this.canvasManager.setConfig(config);
   }
@@ -67,40 +52,22 @@ export class Engine {
 
   dispose(): void {
     this.isRunning = false;
-
-    // Dispose all input modules to remove their listeners
-    if (this.deps) {
-      this.deps.keyboard.dispose();
-      this.deps.mouse.dispose();
-      this.deps.gamepad.dispose();
-    }
-
+    this.deps?.keyboard.dispose();
+    this.deps?.mouse.dispose();
+    this.deps?.gamepad.dispose();
     this.canvasManager.dispose();
-    this.eventCallbacks = [];
-
     if (this.canvas.parentNode === this.container) {
       this.container.removeChild(this.canvas);
     }
   }
 
-  onEvent(callback: EventCallback): () => void {
-    this.eventCallbacks.push(callback);
-    return () => {
-      const idx = this.eventCallbacks.indexOf(callback);
-      if (idx !== -1) this.eventCallbacks.splice(idx, 1);
-    };
-  }
-
-  emit(event: Omit<Event, 'timestamp'>): void {
+  private dispatchEvent<T extends EventName>(type: T, data: Omit<EventMap[T], 'type' | 'timestamp'>): void {
     const timestamp = this.deps?.timer.getTime() ?? performance.now();
-    const fullEvent = { ...event, timestamp } as Event;
-    for (const callback of this.eventCallbacks) {
-      callback(fullEvent);
-    }
+    this.canvas.dispatchEvent(new CustomEvent(type, { 
+      detail: { type, ...data, timestamp } as Event 
+    }));
   }
 
-  // Note: Browsers block audio autoplay until user interaction.
-  // A startup/click-to-start screen should be shown before calling start().
   start(
     onUpdate?: (dt: number) => void,
     onDraw?: () => void,
@@ -108,9 +75,7 @@ export class Engine {
   ) {
     const { showStartupScreen = false, startupText = 'Click to Start' } = options;
 
-    if (!this.deps) {
-      throw new Error('Engine dependencies not set. Call setDeps() before start().');
-    }
+    if (!this.deps) throw new Error('Engine dependencies not set. Call setDeps() before start().');
 
     const doStart = () => {
       this.isRunning = true;
@@ -125,55 +90,26 @@ export class Engine {
 
         this.deps!.timer.update(dt);
 
-        const isSleeping = this.deps!.timer.isSleeping();
-
-        if (!isSleeping) {
+        if (!this.deps!.timer.isSleeping()) {
           const inputEvents = this.deps!.input.update();
-
-          for (const action of inputEvents.pressed) {
-            this.emit({ type: 'actionpressed', action });
-          }
-          for (const action of inputEvents.released) {
-            this.emit({ type: 'actionreleased', action });
-          }
-          for (const event of inputEvents.gamepadPressed) {
-            this.emit({
-              type: 'gamepadpressed',
-              gamepadIndex: event.gamepadIndex,
-              buttonIndex: event.buttonIndex,
-              buttonName: event.buttonName,
-            });
-          }
-          for (const event of inputEvents.gamepadReleased) {
-            this.emit({
-              type: 'gamepadreleased',
-              gamepadIndex: event.gamepadIndex,
-              buttonIndex: event.buttonIndex,
-              buttonName: event.buttonName,
-            });
-          }
-
-          this.emit({ type: 'update', dt });
-          if (onUpdate) onUpdate(dt);
+          inputEvents.pressed.forEach(action => this.dispatchEvent('like2d:actionpressed', { action }));
+          inputEvents.released.forEach(action => this.dispatchEvent('like2d:actionreleased', { action }));
+          this.dispatchEvent('like2d:update', { dt });
+          onUpdate?.(dt);
         }
 
         this.deps!.graphics.clear();
-        this.emit({ type: 'draw' });
-        if (onDraw) onDraw();
-        
-        // Present frame (handles two-step pixel art scaling if enabled)
+        this.dispatchEvent('like2d:draw', {});
+        onDraw?.();
         this.canvasManager.present();
-
         requestAnimationFrame(loop);
       };
 
-      this.emit({ type: 'load' });
-
+      this.dispatchEvent('like2d:load', {});
       requestAnimationFrame(loop);
     };
 
     if (showStartupScreen) {
-      // Draw startup screen
       this.ctx.fillStyle = '#000';
       this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
       this.ctx.fillStyle = '#fff';
@@ -182,7 +118,6 @@ export class Engine {
       this.ctx.textBaseline = 'middle';
       this.ctx.fillText(startupText, this.canvas.width / 2, this.canvas.height / 2);
 
-      // Wait for click to start
       const onClick = () => {
         this.canvas.removeEventListener('click', onClick);
         doStart();
@@ -214,21 +149,49 @@ export class Engine {
     return this.ctx;
   }
 
-  /**
-   * Transform mouse coordinates from CSS pixels to game/canvas coordinates.
-   * Handles all modes: fixed, native, and pixel art.
-   */
   transformMousePosition(cssX: number, cssY: number): [number, number] {
     return this.canvasManager.transformMousePosition(cssX, cssY);
   }
 
   toggleFullscreen(): void {
     if (!document.fullscreenElement) {
-      this.container.requestFullscreen().catch(err => {
-        console.error('Error attempting to enable fullscreen:', err);
-      });
+      this.container.requestFullscreen().catch(console.error);
     } else {
       document.exitFullscreen();
     }
+  }
+
+  onKey(callbacks: {
+    onKeyPressed?: (scancode: string, keycode: string) => void;
+    onKeyReleased?: (scancode: string, keycode: string) => void;
+  }): (event: KeyEvent) => void {
+    return (event: KeyEvent) => {
+      if (event.type === 'keydown') callbacks.onKeyPressed?.(event.scancode, event.keycode);
+      else callbacks.onKeyReleased?.(event.scancode, event.keycode);
+    };
+  }
+
+  onMouse(callbacks: {
+    onMousePressed?: (x: number, y: number, button: number) => void;
+    onMouseReleased?: (x: number, y: number, button: number) => void;
+  }): (event: MouseEvent) => void {
+    return (event: MouseEvent) => {
+      const [x, y] = this.transformMousePosition(event.clientX, event.clientY);
+      if (event.type === 'mousedown') callbacks.onMousePressed?.(x, y, (event.button ?? 0) + 1);
+      else if (event.type === 'mouseup') callbacks.onMouseReleased?.(x, y, (event.button ?? 0) + 1);
+    };
+  }
+
+  onGamepad(callbacks: {
+    onGamepadPressed?: (i: number, b: number, n: string) => void;
+    onGamepadReleased?: (i: number, b: number, n: string) => void;
+  }): {
+    onButtonPressed: (i: number, b: number, n: string) => void;
+    onButtonReleased: (i: number, b: number, n: string) => void;
+  } {
+    return {
+      onButtonPressed: (i, b, n) => callbacks.onGamepadPressed?.(i, b, n),
+      onButtonReleased: (i, b, n) => callbacks.onGamepadReleased?.(i, b, n)
+    };
   }
 }

@@ -1,91 +1,68 @@
+// Only engine-dispatched events (lifecycle + actions)
+// Input events are now native DOM types passed directly to callbacks
+
 import type { Vector2 } from './vector2';
 
+export const EVENT_NAMES = [
+  'like2d:load',
+  'like2d:update',
+  'like2d:draw',
+  'like2d:actionpressed',
+  'like2d:actionreleased',
+] as const;
+
+export type EventName = typeof EVENT_NAMES[number];
+
 export type BaseEvent = {
-  type: string;
+  type: EventName;
   timestamp: number;
-  [key: string]: any;
 };
 
+// Engine-dispatched events only
 export type LoadEvent = BaseEvent & {
-  type: 'load';
+  type: 'like2d:load';
 };
 
 export type UpdateEvent = BaseEvent & {
-  type: 'update';
+  type: 'like2d:update';
   dt: number;
 };
 
 export type DrawEvent = BaseEvent & {
-  type: 'draw';
-};
-
-export type KeyPressedEvent = BaseEvent & {
-  type: 'keypressed';
-  scancode: string;
-  keycode: string;
-};
-
-export type KeyReleasedEvent = BaseEvent & {
-  type: 'keyreleased';
-  scancode: string;
-  keycode: string;
-};
-
-export type MousePressedEvent = BaseEvent & {
-  type: 'mousepressed';
-  position: Vector2;
-  button: number;
-};
-
-export type MouseReleasedEvent = BaseEvent & {
-  type: 'mousereleased';
-  position: Vector2;
-  button: number;
+  type: 'like2d:draw';
 };
 
 export type ActionPressedEvent = BaseEvent & {
-  type: 'actionpressed';
+  type: 'like2d:actionpressed';
   action: string;
 };
 
 export type ActionReleasedEvent = BaseEvent & {
-  type: 'actionreleased';
+  type: 'like2d:actionreleased';
   action: string;
 };
 
-export type GamepadPressedEvent = BaseEvent & {
-  type: 'gamepadpressed';
-  gamepadIndex: number;
-  buttonIndex: number;
-  buttonName: string;
-};
-
-export type GamepadReleasedEvent = BaseEvent & {
-  type: 'gamepadreleased';
-  gamepadIndex: number;
-  buttonIndex: number;
-  buttonName: string;
-};
-
-export type ResizeEvent = BaseEvent & {
-  type: 'resize';
+export type ResizeEvent = {
+  type: 'like2d:resize';
   size: Vector2;
   pixelSize: Vector2;
   wasFullscreen: boolean;
   fullscreen: boolean;
 };
 
+// Union of all engine events
 export type Event =
   | LoadEvent
   | UpdateEvent
   | DrawEvent
-  | KeyPressedEvent
-  | KeyReleasedEvent
-  | MousePressedEvent
-  | MouseReleasedEvent
   | ActionPressedEvent
-  | ActionReleasedEvent
-  | GamepadPressedEvent
-  | GamepadReleasedEvent
-  | ResizeEvent
-  | BaseEvent;
+  | ActionReleasedEvent;
+
+// Type mapping for engine events only
+export type EventMap = {
+  'like2d:load': LoadEvent;
+  'like2d:update': UpdateEvent;
+  'like2d:draw': DrawEvent;
+  'like2d:actionpressed': ActionPressedEvent;
+  'like2d:actionreleased': ActionReleasedEvent;
+};

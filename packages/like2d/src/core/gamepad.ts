@@ -36,19 +36,32 @@ function applyRadialDeadzone(x: number, y: number, deadzone: number = AXIS_DEADZ
   return { x: x * scale, y: y * scale };
 }
 
+export type ButtonCallback = (gamepadIndex: number, buttonIndex: number, buttonName: string) => void;
+
 export class Gamepad {
   private buttonTrackers = new Map<number, InputStateTracker<number>>();
   private connectedGamepads = new Map<number, globalThis.Gamepad>();
   private buttonMappings = new Map<number, ButtonMapping>();
-  private onEvent?: (event: GamepadEvent) => void;
+  private onButtonPressed?: ButtonCallback;
+  private onButtonReleased?: ButtonCallback;
+  private onConnected?: (gamepad: globalThis.Gamepad) => void;
+  private onDisconnected?: (gamepadIndex: number) => void;
 
   // Event handler references for cleanup
   private gamepadConnectedHandler: (e: globalThis.GamepadEvent) => void;
   private gamepadDisconnectedHandler: (e: globalThis.GamepadEvent) => void;
   private blurHandler: () => void;
 
-  constructor(onEvent?: (event: GamepadEvent) => void) {
-    this.onEvent = onEvent;
+  constructor(callbacks?: {
+    onButtonPressed?: ButtonCallback;
+    onButtonReleased?: ButtonCallback;
+    onConnected?: (gamepad: globalThis.Gamepad) => void;
+    onDisconnected?: (gamepadIndex: number) => void;
+  }) {
+    this.onButtonPressed = callbacks?.onButtonPressed;
+    this.onButtonReleased = callbacks?.onButtonReleased;
+    this.onConnected = callbacks?.onConnected;
+    this.onDisconnected = callbacks?.onDisconnected;
 
     // Bind event handlers
     this.gamepadConnectedHandler = this.handleGamepadConnected.bind(this);
@@ -63,24 +76,30 @@ export class Gamepad {
 
   private handleGamepadConnected(e: globalThis.GamepadEvent): void {
     this.onGamepadConnectedInternal(e.gamepad);
-    this.onEvent?.({
-      type: 'connected',
-      gamepad: e.gamepad,
-    });
+    this.onConnected?.(e.gamepad);
   }
 
   private handleGamepadDisconnected(e: globalThis.GamepadEvent): void {
     this.onGamepadDisconnectedInternal(e.gamepad.index);
-    this.onEvent?.({
-      type: 'disconnected',
-      gamepad: e.gamepad,
-    });
+    this.onDisconnected?.(e.gamepad.index);
   }
 
   private handleBlur(): void {
     for (const tracker of this.buttonTrackers.values()) {
       tracker.clear();
     }
+  }
+
+  setCallbacks(callbacks: {
+    onButtonPressed?: ButtonCallback;
+    onButtonReleased?: ButtonCallback;
+    onConnected?: (gamepad: globalThis.Gamepad) => void;
+    onDisconnected?: (gamepadIndex: number) => void;
+  }): void {
+    this.onButtonPressed = callbacks.onButtonPressed;
+    this.onButtonReleased = callbacks.onButtonReleased;
+    this.onConnected = callbacks.onConnected;
+    this.onDisconnected = callbacks.onDisconnected;
   }
 
   dispose(): void {
@@ -116,10 +135,8 @@ export class Gamepad {
     this.buttonMappings.delete(gamepadIndex);
   }
 
-  update(): { pressed: GamepadButtonEvent[]; released: GamepadButtonEvent[] } {
+  update(): void {
     const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-    const pressed: GamepadButtonEvent[] = [];
-    const released: GamepadButtonEvent[] = [];
 
     for (let i = 0; i < gamepads.length; i++) {
       const gamepad = gamepads[i];
@@ -153,23 +170,13 @@ export class Gamepad {
         const changes = tracker.update(pressedButtons);
         
         for (const buttonIndex of changes.justPressed) {
-          pressed.push({ 
-            gamepadIndex: i, 
-            buttonIndex, 
-            buttonName: getGPName(buttonIndex),
-          });
+          this.onButtonPressed?.(i, buttonIndex, getGPName(buttonIndex));
         }
         for (const buttonIndex of changes.justReleased) {
-          released.push({ 
-            gamepadIndex: i, 
-            buttonIndex, 
-            buttonName: getGPName(buttonIndex),
-          });
+          this.onButtonReleased?.(i, buttonIndex, getGPName(buttonIndex));
         }
       }
     }
-
-    return { pressed, released };
   }
 
   isConnected(gamepadIndex: number): boolean {

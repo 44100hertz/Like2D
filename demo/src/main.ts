@@ -1,4 +1,4 @@
-import { SceneRunner, Scene, Event, V2, R, getGPName, ImageHandle, type CanvasConfig } from "like2d/scene";
+import { SceneRunner, Scene, type SceneEvent, V2, R, getGPName, ImageHandle, type CanvasConfig } from "like2d/scene";
 import type { Source } from 'like2d';
 
 // Example demonstrating Like2D graphics API with Scene-based architecture
@@ -83,7 +83,7 @@ const demoScene: Scene = {
     player.pos = V2.clamp(player.pos, [15, 15], V2.sub(canvasSize, [15, 15]));
   },
 
-  handleEvent: async (event: Event) => {
+  handleEvent: async (event: SceneEvent) => {
     switch (event.type) {
       case 'keypressed': {
         // Cycle scaling modes with Z key
@@ -172,7 +172,7 @@ const demoScene: Scene = {
     }
   },
 
-  draw: (canvas) => {
+  draw: (_canvas) => {
     const canvasSize = graphics.getCanvasSize();
     const center = V2.mul(canvasSize, 0.5);
     const [canvasWidth, canvasHeight] = canvasSize;
