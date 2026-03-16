@@ -176,13 +176,18 @@ export class CanvasManager {
 
     switch (this.config.mode) {
       case 'fixed': {
-        const scale: Vector2 = [displayCanvas.width / rect.width, displayCanvas.height / rect.height];
-        return Vec2.mul(relative, scale);
+        // In fixed mode: CSS position (as fraction of CSS size) × game size = game position
+        const { size: gameSize } = this.config as { mode: 'fixed'; size: Vector2 };
+        return Vec2.mul(relative, [gameSize[0] / rect.width, gameSize[1] / rect.height]);
       }
 
       case 'native':
       default: {
-        return Vec2.mul(relative, window.devicePixelRatio || 1);
+        // In native mode, canvas fills the container completely at position 0,0
+        // Mouse coordinates should be relative to the canvas, accounting for the fact
+        // that the canvas internal pixel size != CSS size
+        const pixelRatio = window.devicePixelRatio || 1;
+        return Vec2.mul(relative, pixelRatio);
       }
     }
   }

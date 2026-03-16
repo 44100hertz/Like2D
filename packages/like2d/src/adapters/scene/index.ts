@@ -54,6 +54,10 @@ export class SceneRunner {
     this.engine.setScaling(config);
   }
 
+  toggleFullscreen(): void {
+    this.engine.toggleFullscreen();
+  }
+
   setScene(scene: Scene) {
     this.scene = scene;
     this.scene.load?.();
