@@ -1,8 +1,35 @@
 # LÏKE2D
 
-<p align="center">
-  <img src="./assets/logo-banner.svg" alt="Like2D Logo" width="400">
-</p>
+<svg width="300mm" height="105mm" version="1.1" viewBox="0 0 300 105" xmlns="http://www.w3.org/2000/svg">
+ <rect x="10" y="11.23" width="280" height="83.544" fill="#e48080" stroke="#000" stroke-linejoin="round" stroke-width="2"/>
+ <g fill="none" stroke="#000" stroke-linejoin="round">
+  <rect x="97.484" y="11.23" width="52.516" height="46.237"/>
+  <rect x="150" y="11.23" width="35.011" height="46.237"/>
+  <rect x="185.01" y="11.23" width="52.516" height="46.237"/>
+  <rect x="237.53" y="11.23" width="52.516" height="46.237"/>
+ </g>
+ <g>
+  <rect x="132.49" y="11.23" width="17.505" height="27.461"/>
+  <rect x="150" y="29.302" width="8.7527" height="18.776"/>
+  <rect x="176.26" y="29.302" width="8.7527" height="18.776"/>
+ </g>
+ <rect x="150" y="11.23" width="17.505" height="8.6845" fill="none" stroke="#000" stroke-linejoin="round"/>
+ <rect x="167.51" y="11.23" width="17.505" height="8.6845" fill="none" stroke="#000" stroke-linejoin="round"/>
+ <g>
+  <path d="m237.53 38.691-17.505-9.3882 17.505-18.073z"/>
+  <rect x="202.88" y="48.079" width="16.772" height="9.3882"/>
+  <rect x="272.54" y="20.266" width="16.772" height="9.3882"/>
+  <rect x="272.54" y="38.691" width="16.772" height="9.3882"/>
+  <path d="m202.52 29.302 0.36685-18.073h17.139z"/>
+ </g>
+ <path d="m64.078 1.0042-33.375 33.375-0.01743 0.0174a23.612 23.612 0 0 0 0 33.392 23.612 23.612 0 0 0 30.012 2.8022 23.612 23.612 0 0 1 7e-3 0.57034 23.612 23.612 0 0 1-23.612 23.612h53.97a23.612 23.612 0 0 1-23.611-23.612 23.612 23.612 0 0 1 7e-3 -0.57034 23.612 23.612 0 0 0 30.012-2.8029 23.612 23.612 0 0 0-6.88e-4 -33.392z" fill="#80c3e4" stroke="#000" stroke-linejoin="round"/>
+ <g fill="none" stroke="#000" stroke-width=".5">
+  <circle transform="rotate(135)" cx="-20.988" cy="-93.243" r="23.612"/>
+  <circle transform="rotate(135)" cx="2.6238" cy="-69.632" r="23.612"/>
+  <circle cx="91.062" cy="71.161" r="23.612"/>
+  <circle cx="37.093" cy="71.161" r="23.612"/>
+ </g>
+</svg>
 
 A web-native 2D game framework inspired by [LÖVE](https://love2d.org/), built for simplicity and the modern web.
 
@@ -36,11 +63,7 @@ pnpm add like2d
 
 [Like2D Starter Template](https://github.com/44100hertz/Like2D-starter)
 
-## Usage Examples
-
-### Callback Pattern (Love2D-style)
-
-Ideal for small games, jams, or prototyping.
+## Usage Example
 
 ```typescript
 import { createLike } from 'like2d';
@@ -67,91 +90,30 @@ like.draw = () => {
 await like.start();
 ```
 
-### Scene Pattern (Class-based)
+## For Love2D Developers
 
-Ideal for larger projects with menus, levels, and explicit state management.
+LIKE's API is not the same as LOVE, but similar in spirit. Notable differences:
+ - Graphics have less state, there is no setColor getColor etc.
+ - Our APIs are, in general, a bit different. You'll have to learn some.
+ - You manage your own state; like is not global, but you can share it around for similar results. This allows multiple LIKE instances per webpage.
+ - We use Vector2 and Rect tuples (as in `[number, number]`) instead of loose coordinates.
+ - Theres an actions system -- `input.map` / `actionpressed` and `actionreleased` callbacks.
+ - Some things are missing either due to browser limitations or smaller scope.
 
-```typescript
-import { type Scene, StartupScene } from 'like2d';
-import type { Like } from 'like2d';
+## Feedback welcome
 
-class MyScene implements Scene {
-  load(like: Like) {
-    console.log('Scene loaded!');
-  }
+Before you report a bug:
+ 1. Make sure you're on the latest release.
+ 2. If the issue exists already, just comment on that one.
+ 3. See if it happens in other web browsers.
 
-  update(like: Like, dt: number) {
-    // update logic
-  }
+Before you request a feature:
+ 1. ask: Would it make sense as a core feature, or should it be an external library?
+ 2. See if the feature exists already.
+ 3. Think about the demand for it overall. Make your case why game developers want it.
+ 4. Consider just making a PR yourself, or sending a prompt/spec that an AI can hack on.
 
-  draw(like: Like) {
-    like.gfx.clear([0.1, 0.1, 0.1, 1]);
-    like.gfx.print('white', 'Hello Like2D!', [20, 20]);
-  }
-}
-
-const like = createLike(document.body);
-like.setScene(new StartupScene(new MyScene()));
-await like.start();
-```
-
-## Module Overview
-
-Everything imports from `'like2d'`:
-
-```typescript
-import { 
-  createLike,      // Main entry point
-  type Scene,      // Scene interface
-  StartupScene,    // Built-in startup/loading scene
-  Vec2, Rect,      // Math utilities
-  type Like        // Core type
-} from 'like2d';
-```
-
-### Scene Pattern (Class-based)
-
-Ideal for larger projects with menus, levels, and explicit state management.
-
-```typescript
-import { type Scene, StartupScene } from 'like2d';
-import type { Like } from 'like2d';
-
-class MyScene implements Scene {
-  load(like: Like) {
-    console.log('Scene loaded!');
-  }
-
-  update(like: Like, dt: number) {
-    // update logic
-  }
-
-  draw(like: Like) {
-    like.gfx.clear([0.1, 0.1, 0.1, 1]);
-    like.gfx.print('white', 'Hello Like2D!', [20, 20]);
-  }
-}
-
-const like = createLike(document.body);
-like.setScene(new StartupScene(new MyScene()));
-await like.start();
-```
-
-## Module Overview
-
-Everything imports from `'like2d'`:
-
-```typescript
-import { 
-  createLike,      // Main entry point
-  type Scene,      // Scene interface
-  StartupScene,    // Built-in startup/loading scene
-  Vec2, Rect,      // Math utilities
-  type Like        // Core type
-} from 'like2d';
-```
-
-See the [PHILOSOPHY.md](../../docs/PHILOSOPHY.md) for the principles behind the design.
+[Then, put your feedback on GitHub.](https://github.com/44100hertz/Like2D/issues)
 
 ## License
 
