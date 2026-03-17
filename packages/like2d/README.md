@@ -100,7 +100,7 @@ import { SceneRunner, type Scene } from 'like2d/scene';    // Class-based scenes
 import { Vec2, Rect } from 'like2d/math';                  // Pure math functions
 ```
 
-See the [PHILOSOPHY.md](./docs/PHILOSOPHY.md) for the principles behind the design.
+See the [PHILOSOPHY.md](../../docs/PHILOSOPHY.md) for the principles behind the design.
 
 ## License
 
