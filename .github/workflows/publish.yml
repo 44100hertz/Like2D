@@ -35,7 +35,7 @@ jobs:
         run: pnpm --filter like2d test
       
       - name: Publish to NPM
-        run: npm publish
+        run: npm publish --provenance --access public
         working-directory: like
       
       - name: Publish to JSR
