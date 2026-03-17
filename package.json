@@ -5,18 +5,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter demo dev",
+    "dev": "pnpm --filter feature-test dev",
     "dev:website": "pnpm --filter website dev",
     "build": "pnpm -r build",
-    "build:lib": "pnpm --filter like2d build",
-    "build:demo": "pnpm --filter demo build",
+    "build:lib": "pnpm --filter like build",
     "build:website": "pnpm --filter website build",
-    "preview": "pnpm --filter demo preview",
     "preview:website": "pnpm --filter website preview",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
-    "publish:lib": "pnpm build:lib && pnpm --filter like2d publish",
-    "update-gamepad-db": "curl -o packages/like2d/src/gamecontrollerdb.txt https://raw.githubusercontent.com/gabomdq/SDL_GameControllerDB/master/gamecontrollerdb.txt",
+    "publish:lib": "pnpm build:lib && pnpm --filter like publish",
+    "update-gamepad-db": "curl -o like/src/gamecontrollerdb.txt https://raw.githubusercontent.com/gabomdq/SDL_GameControllerDB/master/gamecontrollerdb.txt",
     "clean": "pnpm -r exec rm -rf dist node_modules/.cache"
   },
   "devDependencies": {

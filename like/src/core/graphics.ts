@@ -300,6 +300,28 @@ export function points(s: GraphicsState, color: Color, pts: Vector2[]): void {
   pts.forEach(([x, y]) => ctx.fillRect(x, y, 1, 1));
 }
 
+export function push(s: GraphicsState): void {
+  s.currentCtx.save();
+}
+
+export function pop(s: GraphicsState): void {
+  s.currentCtx.restore();
+}
+
+export function translate(s: GraphicsState, offset: Vector2): void {
+  const [x, y] = offset;
+  s.currentCtx.translate(x, y);
+}
+
+export function rotate(s: GraphicsState, angle: number): void {
+  s.currentCtx.rotate(angle);
+}
+
+export function scale(s: GraphicsState, factor: number | Vector2): void {
+  const [sx, sy] = typeof factor === 'number' ? [factor, factor] : factor;
+  s.currentCtx.scale(sx, sy);
+}
+
 
 
 type Bind<F> = F extends (s: GraphicsState, ...args: infer A) => infer R ? (...args: A) => R : never;
@@ -312,6 +334,7 @@ const graphicsFns = {
   clear, rectangle, circle, line, print,
   draw: drawImage, getCanvasSize, newCanvas, setCanvas,
   clip, polygon, points, newImage,
+  push, pop, translate, rotate, scale,
 } as const;
 
 export function bindGraphics(s: GraphicsState): BoundGraphics {

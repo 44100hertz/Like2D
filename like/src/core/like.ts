@@ -7,6 +7,7 @@ import type { Gamepad } from './gamepad';
 import type { Vector2 } from './vector2';
 import type { CanvasMode, PartialCanvasMode } from './canvas-config';
 import type { BoundGraphics } from './graphics';
+import type { Scene } from '../scene';
 
 /**
  * The Like interface provides access to all core systems and APIs
@@ -53,6 +54,11 @@ export interface Like {
    * @returns The canvas size as a Vector2 [width, height]
    */
   getCanvasSize(): Vector2;
+  
+  /**
+   * Set the active scene. Pass null to revert to global callbacks.
+   */
+  setScene(scene: Scene | null): void;
 }
 
 // Re-export core types that are commonly used with Like

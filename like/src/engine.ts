@@ -8,9 +8,8 @@ import { newState, bindGraphics } from './core/graphics';
 import type { Like2DEvent, EventType } from './core/events';
 import type { PartialCanvasMode } from './core/canvas-config';
 import type { Like } from './core/like';
+import type { Scene } from './scene';
 import { CanvasManager } from './core/canvas-manager';
-
-export type { CanvasMode, PartialCanvasMode } from './core/canvas-config';
 
 export class Engine {
   private canvas: HTMLCanvasElement;
@@ -19,9 +18,9 @@ export class Engine {
   private lastTime = 0;
   private container: HTMLElement;
   private canvasManager: CanvasManager;
-  private onEvent: ((event: Like2DEvent) => void) | null = null;
+  private handleEvent: ((event: Like2DEvent) => void) | null = null;
+  private currentScene: Scene | null = null;
 
-  // Public Like object with all systems - initialized in constructor
   readonly like: Like;
 
   constructor(container: HTMLElement) {
@@ -37,20 +36,16 @@ export class Engine {
     this.container.appendChild(this.canvas);
     this.canvasManager = new CanvasManager(this.canvas, this.container, this.ctx, { pixelResolution: null, fullscreen: false });
 
-    // Create graphics state and bind it
     const gfxState = newState(this.ctx);
     const gfx = bindGraphics(gfxState);
 
-    // Create all subsystems
     const audio = new Audio();
     const timer = new Timer();
     const keyboard = new Keyboard();
     const mouse = new Mouse((cssX, cssY) => this.canvasManager.transformMousePosition(cssX, cssY));
     const gamepad = new Gamepad();
-
     const input = new Input({ keyboard, mouse, gamepad });
 
-    // Create the Like object with all systems
     this.like = {
       audio,
       timer,
@@ -62,96 +57,92 @@ export class Engine {
       setMode: (m) => this.setMode(m),
       getMode: () => this.canvasManager.getMode(),
       getCanvasSize: () => [this.canvas.width, this.canvas.height],
+      setScene: (scene) => {
+        this.currentScene = scene;
+        scene?.load?.(this.like);
+      },
     };
 
-    // Set up input event handlers
     keyboard.onKeyEvent = (scancode, keycode, type) => {
-      this.dispatchEvent(type === 'keydown' ? 'keypressed' : 'keyreleased', [scancode, keycode]);
+      this.dispatch(type === 'keydown' ? 'keypressed' : 'keyreleased', [scancode, keycode]);
     };
 
     mouse.onMouseEvent = (clientX, clientY, button, type) => {
       const [x, y] = this.canvasManager.transformMousePosition(clientX, clientY);
-      const b = (button ?? 0) + 1;
-      this.dispatchEvent(type === 'mousedown' ? 'mousepressed' : 'mousereleased', [x, y, b]);
+      this.dispatch(type === 'mousedown' ? 'mousepressed' : 'mousereleased', [x, y, (button ?? 0) + 1]);
     };
 
     gamepad.onButtonEvent = (gpIndex, buttonIndex, buttonName, pressed) => {
-      this.dispatchEvent(pressed ? 'gamepadpressed' : 'gamepadreleased', [gpIndex, buttonIndex, buttonName]);
+      this.dispatch(pressed ? 'gamepadpressed' : 'gamepadreleased', [gpIndex, buttonIndex, buttonName]);
     };
 
-    // Internal listener to forward resize events
     this.canvasManager.onResize = (size, pixelSize, fullscreen) => {
-      this.dispatchEvent('resize', [size, pixelSize, fullscreen]);
+      this.dispatch('resize', [size, pixelSize, fullscreen]);
     };
 
-    // Listen for fullscreen changes to update mode
-    document.addEventListener('fullscreenchange', () => this.handleFullscreenChange());
+    document.addEventListener('fullscreenchange', () => {
+      const mode = this.canvasManager.getMode();
+      const isFullscreen = !!document.fullscreenElement;
+      if (mode.fullscreen !== isFullscreen) {
+        this.canvasManager.setMode({ ...mode, fullscreen: isFullscreen });
+      }
+    });
   }
 
-  private handleFullscreenChange(): void {
-    const mode = this.canvasManager.getMode();
-    const isFullscreen = !!document.fullscreenElement;
-    if (mode.fullscreen !== isFullscreen) {
-      this.canvasManager.setMode({ ...mode, fullscreen: isFullscreen });
+  private dispatch<T extends EventType>(type: T, args: any[]): void {
+    if (!this.handleEvent) return;
+    
+    const event = { type, args, timestamp: performance.now() } as Like2DEvent;
+    
+    if (this.currentScene) {
+      this.currentScene.handleEvent?.(this.like, event);
+      const method = this.currentScene[event.type as keyof Scene] as Function | undefined;
+      method?.call(this.currentScene, this.like, ...args);
+    } else {
+      this.handleEvent(event);
     }
   }
 
   setMode(mode: PartialCanvasMode): void {
     const currentMode = this.canvasManager.getMode();
     const mergedMode = { ...currentMode, ...mode };
-    const needsFullscreenChange = mode.fullscreen !== undefined && mode.fullscreen !== currentMode.fullscreen;
 
-    if (needsFullscreenChange) {
-      if (mergedMode.fullscreen) {
-        this.container.requestFullscreen().catch(console.error);
-      } else {
-        document.exitFullscreen();
-      }
+    if (mode.fullscreen !== undefined && mode.fullscreen !== currentMode.fullscreen) {
+      mergedMode.fullscreen ? this.container.requestFullscreen().catch(console.error) : document.exitFullscreen();
     }
 
     this.canvasManager.setMode(mode);
   }
 
-  private dispatchEvent<T extends EventType>(type: T, args: any): void {
-    if (this.onEvent) {
-      this.onEvent({ type, args, timestamp: performance.now() } as Like2DEvent);
-    }
-  }
-
-  async start(onEvent: (event: Like2DEvent) => void) {
-    this.onEvent = onEvent;
+  async start(handleEvent: (event: Like2DEvent) => void): Promise<void> {
+    this.handleEvent = handleEvent;
     this.isRunning = true;
     this.lastTime = performance.now();
 
-    // Initialize gamepad
     await this.like.gamepad.init();
 
     const loop = () => {
       if (!this.isRunning) return;
 
-      const currentTime = performance.now();
-      const dt = (currentTime - this.lastTime) / 1000;
-      this.lastTime = currentTime;
+      const now = performance.now();
+      const dt = (now - this.lastTime) / 1000;
+      this.lastTime = now;
 
       if (!this.like.timer.isSleeping()) {
         this.like.timer.update(dt);
-        const inputEvents = this.like.input.update();
-        inputEvents.pressed.forEach(action => this.dispatchEvent('actionpressed', [action]));
-        inputEvents.released.forEach(action => this.dispatchEvent('actionreleased', [action]));
-        this.dispatchEvent('update', [dt]);
+        const { pressed, released } = this.like.input.update();
+        pressed.forEach(action => this.dispatch('actionpressed', [action]));
+        released.forEach(action => this.dispatch('actionreleased', [action]));
+        this.dispatch('update', [dt]);
       }
 
-      this.dispatchEvent('draw', []);
+      this.dispatch('draw', []);
       this.canvasManager.present();
       requestAnimationFrame(loop);
     };
 
-    this.dispatchEvent('load', []);
+    this.dispatch('load', []);
     requestAnimationFrame(loop);
-  }
-
-  stop() {
-    this.isRunning = false;
   }
 
   dispose(): void {
@@ -163,9 +154,5 @@ export class Engine {
     if (this.canvas.parentNode === this.container) {
       this.container.removeChild(this.canvas);
     }
-  }
-
-  getCanvasSize(): [number, number] {
-    return [this.canvas.width, this.canvas.height];
   }
 }
