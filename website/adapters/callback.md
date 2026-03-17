@@ -1,15 +1,19 @@
 # Callback Adapter
 
-Love2D-style callback pattern for Like2D. This adapter provides a singleton-based API familiar to Love2D users.
+Love2D-style callback pattern for Like2D. This adapter provides a familiar, simple API.
 
 ## Quick Start
 
 ```typescript
-import { like, graphics } from 'like2d/callback';
+import { createLike } from 'like2d/callback';
+import { newImage } from 'like2d';
 
-// Assign callbacks
+const like = createLike(document.getElementById('game-container'));
+
+let image;
+
 like.load = () => {
-  console.log('Game loaded!');
+  image = newImage('sprite.png');
 };
 
 like.update = (dt) => {
@@ -17,50 +21,60 @@ like.update = (dt) => {
 };
 
 like.draw = () => {
-  graphics.print('Hello, World!', [100, 100]);
+  like.gfx.clear([0, 0, 0, 1]);
+  like.gfx.print('white', 'Hello, World!', [100, 100]);
 };
 
 like.keypressed = (scancode, keycode) => {
   console.log('Key pressed:', keycode);
 };
 
-// Start the game
-const container = document.getElementById('game-container');
-await like.init(container);
-like.setMode({ pixelResolution: [800, 600] });
+await like.start();
 ```
 
-See the [Callbacks documentation](/callbacks) for a complete list of available callbacks.
+## Custom Event Handling
 
-## Singleton Modules
-
-All core modules are exported as singletons:
-
-- `graphics` - 2D rendering (images, shapes, text)
-- `audio` - Audio playback and management
-- `timer` - Time tracking, FPS, delta time
-- `input` - Action mapping system
-- `keyboard` - Direct keyboard access
-- `mouse` - Direct mouse access
-- `gamepad` - Direct gamepad access
-
-## Love2D Compatibility
-
-For even more compatibility, import as `love`:
+Override `like.handleEvent` to intercept events before they reach callbacks:
 
 ```typescript
-import { love as like } from 'like2d/callback';
+import { routeEvents } from 'like2d/callback';
 
-love.load = () => { ... };
-love.update = (dt) => { ... };
-love.draw = () => { ... };
+like.handleEvent = (event) => {
+  console.log('Event:', event.type);
+  // Call default routing to callbacks
+  routeEvents(like)(event);
+};
 ```
 
-## API Methods
+Or completely override event handling:
 
-### like.init(container)
+```typescript
+like.handleEvent = (event) => {
+  // Custom handling only
+  if (event.type === 'keypressed') {
+    const [scancode] = event.args;
+    if (scancode === 'Escape') like.dispose();
+  }
+};
+```
 
-Initialize and start the game loop. The canvas is created and attached to the container.
+## API
+
+### createLike(container)
+
+Creates a new Like instance attached to the container element. Returns synchronously.
+
+### like.start()
+
+Starts the game loop. Returns a Promise that resolves when the loop begins.
+
+```typescript
+await like.start();
+```
+
+### like.dispose()
+
+Stops the game loop and cleans up resources.
 
 ### like.setMode(mode)
 
@@ -74,11 +88,54 @@ like.setMode({ pixelResolution: [800, 600] });
 like.setMode({ fullscreen: true });
 ```
 
+### routeEvents(like)
+
+Returns a function that routes events to callback properties. Useful when composing custom `handleEvent`.
+
+```typescript
+import { createLike, routeEvents } from 'like2d/callback';
+
+const like = createLike(container);
+like.handleEvent = (event) => {
+  // Custom logic
+  routeEvents(like)(event);  // Route to callbacks
+};
+```
+
+## Callbacks
+
+Assign functions to these properties:
+
+- `like.load()` - Called once when game starts
+- `like.update(dt)` - Called every frame with delta time
+- `like.draw()` - Called every frame for rendering
+- `like.resize(size, pixelSize, fullscreen)` - Called when canvas resizes
+- `like.keypressed(scancode, keycode)` - Key pressed
+- `like.keyreleased(scancode, keycode)` - Key released
+- `like.mousepressed(x, y, button)` - Mouse button pressed
+- `like.mousereleased(x, y, button)` - Mouse button released
+- `like.gamepadpressed(index, buttonIndex, buttonName)` - Gamepad button pressed
+- `like.gamepadreleased(index, buttonIndex, buttonName)` - Gamepad button released
+- `like.actionpressed(action)` - Action mapping triggered
+- `like.actionreleased(action)` - Action mapping released
+
+## Systems
+
+Access via the like object:
+
+- `like.gfx` - Graphics context for rendering
+- `like.audio` - Audio playback
+- `like.timer` - Time tracking, FPS, delta time
+- `like.input` - Action mapping system
+- `like.keyboard` - Direct keyboard access
+- `like.mouse` - Direct mouse access
+- `like.gamepad` - Direct gamepad access
+
 ## When to Use This Adapter
 
 Use the callback adapter when:
 - You're porting from Love2D
-- You prefer a simple, global-state approach
+- You prefer a simple, callback-based approach
 - You're building a quick prototype
 - You want minimal boilerplate
 
@@ -86,4 +143,4 @@ For class-based scene management, consider the [Scene Adapter](./scene) instead.
 
 ## Full API Reference
 
-For detailed type information and all available methods, see the [Callback Adapter API Documentation](/api/adapters/callback).
+For detailed type information, see the [Callback Adapter API Documentation](/api/adapters/callback).
