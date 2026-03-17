@@ -34,6 +34,10 @@ const demoScene: Scene = {
     like.input.map('move_right', ['ArrowRight', 'KeyD', 'DPRight']);
     like.input.map('move_up', ['ArrowUp', 'KeyW', 'DPUp']);
     like.input.map('move_down', ['ArrowDown', 'KeyS', 'DPDown']);
+    like.input.map('audio_play_pause', ['KeyP']);
+    like.input.map('sleep_timer', ['KeyL']);
+    like.input.map('audio_play_pause', ['KeyP']);
+    like.input.map('sleep_timer', ['KeyL']);
   },
 
   update(like: Like, dt: number) {
@@ -91,8 +95,11 @@ const demoScene: Scene = {
     gfx.polygon('fill', 'magenta', [[350, 100], [400, 150], [350, 200], [300, 150]]);
 
     if (pepperImage?.isReady()) {
+      gfx.push()
+      gfx.rotate(timer.getTime())
       gfx.draw(pepperImage, [380, 220]);
       gfx.draw(pepperImage, [420, 220], { scale: 0.5 });
+      gfx.pop()
     }
 
     const mousePos = mouse.getPosition();
