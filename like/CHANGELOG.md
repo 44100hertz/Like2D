@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Transform API: `push()`, `pop()`, `translate()`, `rotate()`, `scale()` for canvas state management
 - StartupScene now correctly displays the Like2D logo
+- `like.setScene()` method for switching scenes in the unified API
 
 ### Removed
 
@@ -22,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adapters removed - import directly from `'like2d'`:
   - `createLike()` is now exported from main module (was `'like2d/callback'`)
   - `Scene` type and `StartupScene` are exported from main module (was `'like2d/scene'`)
+  - Scene management now via `like.setScene()` instead of `SceneRunner`
 - `newImage()` moved from standalone export to `like.gfx.newImage()` - update `import { newImage }` to use `like.gfx.newImage()`
 
 ## [2.6.0] - 2026-03-17
