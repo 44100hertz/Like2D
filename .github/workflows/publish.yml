@@ -36,6 +36,8 @@ jobs:
       - name: Publish to NPM
         run: npm publish
         working-directory: like
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       
       - name: Publish to JSR
         run: npx jsr publish
