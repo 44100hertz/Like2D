@@ -1,16 +1,8 @@
-# Like2D Callback Adapter
+# Callback Adapter
 
 Love2D-style callback pattern for Like2D. This adapter provides a singleton-based API familiar to Love2D users.
 
-## Installation
-
-```typescript
-import { like, graphics, audio, timer, input, keyboard, mouse, gamepad } from 'like2d/callback';
-```
-
-## Pattern
-
-Assign callbacks to the `like` object, then call `like.init()` to start:
+## Quick Start
 
 ```typescript
 import { like, graphics } from 'like2d/callback';
@@ -38,19 +30,7 @@ await like.init(container);
 like.setMode({ pixelResolution: [800, 600] });
 ```
 
-## Available Callbacks
-
-| Callback | Signature | Description |
-|----------|-----------|-------------|
-| `load` | `() => void` | Called once when the game starts |
-| `update` | `(dt: number) => void` | Called every frame with delta time |
-| `draw` | `() => void` | Called every frame to render |
-| `keypressed` | `(scancode: string, keycode: string) => void` | Called when a key is pressed |
-| `keyreleased` | `(scancode: string, keycode: string) => void` | Called when a key is released |
-| `mousepressed` | `(x: number, y: number, button: number) => void` | Called when mouse button is pressed |
-| `mousereleased` | `(x: number, y: number, button: number) => void` | Called when mouse button is released |
-| `gamepadpressed` | `(gamepadIndex: number, buttonIndex: number, buttonName: string) => void` | Called when gamepad button is pressed |
-| `gamepadreleased` | `(gamepadIndex: number, buttonIndex: number, buttonName: string) => void` | Called when gamepad button is released |
+See the [Callbacks documentation](/callbacks) for a complete list of available callbacks.
 
 ## Singleton Modules
 
@@ -102,4 +82,8 @@ Use the callback adapter when:
 - You're building a quick prototype
 - You want minimal boilerplate
 
-For class-based scene management, consider the [Scene Adapter](../scene/) instead.
+For class-based scene management, consider the [Scene Adapter](./scene) instead.
+
+## Full API Reference
+
+For detailed type information and all available methods, see the [Callback Adapter API Documentation](/api/adapters/callback).

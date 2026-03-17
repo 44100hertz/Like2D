@@ -1,20 +1,11 @@
-# Like2D Scene Adapter
+# Scene Adapter
 
 Class-based scene pattern for Like2D. This adapter provides an instance-based API with explicit scene management.
 
-## Installation
+## Quick Start
 
 ```typescript
-import { SceneRunner, Scene, Graphics, Audio, Input, Timer } from 'like2d/scene';
-```
-
-## Pattern
-
-Create a class implementing the `Scene` interface, then use `SceneRunner` to manage it:
-
-```typescript
-import { SceneRunner, Scene, graphics } from 'like2d/scene';
-import type { Event } from 'like2d/scene';
+import { SceneRunner, Scene } from 'like2d/scene';
 
 class MyScene implements Scene {
   load() {
@@ -28,12 +19,6 @@ class MyScene implements Scene {
   draw() {
     graphics.print('Hello, World!', [100, 100]);
   }
-
-  handleEvent(event: Event) {
-    if (event.type === 'keypressed') {
-      console.log('Key pressed:', event.args[1]);
-    }
-  }
 }
 
 // Create runner and start
@@ -42,48 +27,35 @@ runner.setMode({ pixelResolution: [800, 600] });
 await runner.start(new MyScene());
 ```
 
+See the [Callbacks documentation](/callbacks) for a complete list of available callback methods.
+
 ## Scene Interface
 
+A scene is a class that implements the `Scene` interface. All callbacks are optional methods:
+
 ```typescript
-type Scene = {
+interface Scene {
   load?(): void;
-  update(dt: number): void;
-  draw(): void;
-  handleEvent?(event: Event): void;
-};
-```
-
-Canvas size is controlled via `runner.setMode()`, not scene properties.
-
-## Events
-
-The `handleEvent` method receives all engine events:
-
-```typescript
-handleEvent(event: Event) {
-  switch (event.type) {
-    case 'keypressed':
-      console.log('Key:', event.keycode);
-      break;
-    case 'mousepressed':
-      console.log('Mouse:', event.position);
-      break;
-    case 'gamepadpressed':
-      console.log('Gamepad button:', event.buttonName);
-      break;
-    case 'actionpressed':
-      console.log('Action:', event.action);
-      break;
-  }
+  update?(dt: number): void;
+  draw?(g: GraphicsContext): void;
+  resize?(size: Vector2, pixelSize: Vector2, fullscreen: boolean): void;
+  keypressed?(scancode: string, keycode: string): void;
+  keyreleased?(scancode: string, keycode: string): void;
+  mousepressed?(x: number, y: number, button: number): void;
+  mousereleased?(x: number, y: number, button: number): void;
+  gamepadpressed?(gamepadIndex: number, buttonIndex: number, buttonName: string): void;
+  gamepadreleased?(gamepadIndex: number, buttonIndex: number, buttonName: string): void;
+  actionpressed?(action: string): void;
+  actionreleased?(action: string): void;
+  
+  // handleEvent is special - it returns the event
+  handleEvent?(event: Like2DEvent): Like2DEvent;
 }
 ```
 
-Available event types:
-- `load`, `update`, `draw` - Lifecycle events
-- `keypressed`, `keyreleased` - Keyboard input
-- `mousepressed`, `mousereleased` - Mouse input
-- `gamepadpressed`, `gamepadreleased` - Gamepad input
-- `actionpressed`, `actionreleased` - Mapped actions
+Every callback except `handleEvent` is a method that receives unpacked arguments. The `handleEvent` method receives the full event object and must return it (possibly modified).
+
+Canvas size is controlled via `runner.setMode()`, not scene properties.
 
 ## SceneRunner API
 
@@ -118,7 +90,7 @@ Use the scene adapter when:
 - You're building a larger application
 - You want explicit lifecycle management
 
-For a simpler Love2D-style callback pattern, consider the [Callback Adapter](../callback/) instead.
+For a simpler Love2D-style callback pattern, consider the [Callback Adapter](./callback) instead.
 
 ## Example: Scene Switching
 
@@ -128,8 +100,8 @@ class MenuScene implements Scene {
     graphics.print('Press SPACE to start', [350, 300]);
   }
   
-  handleEvent(event: Event) {
-    if (event.type === 'keypressed' && event.args[1] === ' ') {
+  keypressed(scancode: string, keycode: string) {
+    if (keycode === ' ') {
       runner.setScene(new GameScene());
     }
   }
@@ -149,3 +121,7 @@ const runner = new SceneRunner(document.body);
 runner.setMode({ pixelResolution: [800, 600] });
 await runner.start(new MenuScene());
 ```
+
+## Full API Reference
+
+For detailed type information and all available methods, see the [Scene Adapter API Documentation](/api/adapters/scene).

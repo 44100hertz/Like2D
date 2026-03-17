@@ -4,24 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
+    "dev": "vitepress dev",
+    "build": "pnpm run docs:generate && vitepress build",
+    "preview": "vitepress preview",
+    "docs:generate": "typedoc --options typedoc.json",
     "typecheck": "tsc --noEmit",
-    "lint": "echo 'No linting configured'",
-    "docs:generate": "typedoc --options typedoc.json"
-  },
-  "dependencies": {
-    "like2d": "workspace:*",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "lint": "echo 'No linting configured'"
   },
   "devDependencies": {
-    "@types/react": "^19.0.10",
-    "@types/react-dom": "^19.0.4",
-    "@vitejs/plugin-react": "^4.3.4",
-    "typedoc": "^0.25.0",
+    "typedoc": "^0.28.17",
+    "typedoc-plugin-markdown": "^4.10.0",
     "typescript": "^5.9.3",
-    "vite": "^7.3.1"
+    "vitepress": "^1.6.4"
   }
 }

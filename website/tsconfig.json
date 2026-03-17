@@ -10,15 +10,11 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
-    "paths": {
-      "like2d": ["../../packages/like2d/src/index.ts"]
-    }
+    "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/**/*"]
+  "include": [".vitepress/**/*", "**/*.md"],
+  "exclude": ["node_modules"]
 }

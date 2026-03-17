@@ -1,9 +1,19 @@
 {
-  "entryPoints": ["../../packages/like2d/src/index.ts"],
-  "json": "docs/generated/api.json",
-  "tsconfig": "../../packages/like2d/tsconfig.json",
+  "entryPoints": [
+    "../packages/like2d/src/index.ts",
+    "../packages/like2d/src/adapters/callback/index.ts",
+    "../packages/like2d/src/adapters/scene/index.ts"
+  ],
+  "tsconfig": "../packages/like2d/tsconfig.json",
+  "plugin": ["typedoc-plugin-markdown"],
+  "out": "./api",
   "excludeExternals": true,
   "excludePrivate": true,
   "excludeProtected": true,
-  "sort": ["source-order"]
+  "sort": ["source-order"],
+  "readme": "none",
+  "hideBreadcrumbs": true,
+  "hidePageTitle": false,
+  "outputFileStrategy": "modules",
+  "membersWithOwnFile": ["Class", "Enum", "Interface"]
 }
