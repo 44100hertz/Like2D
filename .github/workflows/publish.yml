@@ -5,17 +5,18 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   publish:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
       - uses: pnpm/action-setup@v3
         with:
@@ -34,9 +35,7 @@ jobs:
         run: pnpm --filter like2d test
       
       - name: Publish to NPM
-        run: |
-          npm install -g npm@latest
-          npm publish --provenance --access public
+        run: npm publish
         working-directory: like
       
       - name: Publish to JSR
