@@ -10,14 +10,6 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./callback": {
-      "import": "./dist/adapters/callback/index.js",
-      "types": "./dist/adapters/callback/index.d.ts"
-    },
-    "./scene": {
-      "import": "./dist/adapters/scene/index.js",
-      "types": "./dist/adapters/scene/index.d.ts"
     }
   },
   "files": [

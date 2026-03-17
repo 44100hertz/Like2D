@@ -43,7 +43,7 @@ pnpm add like2d
 Ideal for small games, jams, or prototyping.
 
 ```typescript
-import { createLike } from 'like2d/callback';
+import { createLike } from 'like2d';
 
 const like = createLike(document.body);
 
@@ -72,7 +72,7 @@ await like.start();
 Ideal for larger projects with menus, levels, and explicit state management.
 
 ```typescript
-import { SceneRunner, type Scene } from 'like2d/scene';
+import { type Scene, StartupScene } from 'like2d';
 import type { Like } from 'like2d';
 
 class MyScene implements Scene {
@@ -90,18 +90,65 @@ class MyScene implements Scene {
   }
 }
 
-const runner = new SceneRunner(document.body);
-await runner.start(new MyScene());
+const like = createLike(document.body);
+like.setScene(new StartupScene(new MyScene()));
+await like.start();
 ```
 
 ## Module Overview
 
-Pick your pattern, import what you need:
+Everything imports from `'like2d'`:
 
 ```typescript
-import { createLike } from 'like2d/callback';           // Love2D-style
-import { SceneRunner, type Scene } from 'like2d/scene'; // Class-based scenes
-import { Vec2, Rect, type Like } from 'like2d';         // Core types and math
+import { 
+  createLike,      // Main entry point
+  type Scene,      // Scene interface
+  StartupScene,    // Built-in startup/loading scene
+  Vec2, Rect,      // Math utilities
+  type Like        // Core type
+} from 'like2d';
+```
+
+### Scene Pattern (Class-based)
+
+Ideal for larger projects with menus, levels, and explicit state management.
+
+```typescript
+import { type Scene, StartupScene } from 'like2d';
+import type { Like } from 'like2d';
+
+class MyScene implements Scene {
+  load(like: Like) {
+    console.log('Scene loaded!');
+  }
+
+  update(like: Like, dt: number) {
+    // update logic
+  }
+
+  draw(like: Like) {
+    like.gfx.clear([0.1, 0.1, 0.1, 1]);
+    like.gfx.print('white', 'Hello Like2D!', [20, 20]);
+  }
+}
+
+const like = createLike(document.body);
+like.setScene(new StartupScene(new MyScene()));
+await like.start();
+```
+
+## Module Overview
+
+Everything imports from `'like2d'`:
+
+```typescript
+import { 
+  createLike,      // Main entry point
+  type Scene,      // Scene interface
+  StartupScene,    // Built-in startup/loading scene
+  Vec2, Rect,      // Math utilities
+  type Like        // Core type
+} from 'like2d';
 ```
 
 See the [PHILOSOPHY.md](../../docs/PHILOSOPHY.md) for the principles behind the design.
