@@ -13,7 +13,7 @@
     "preview:website": "pnpm --filter website preview",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
-    "publish:lib": "pnpm build:lib && pnpm --filter like publish",
+    "publish:lib": "pnpm build:lib && cd like && npm publish",
     "update-gamepad-db": "curl -o like/src/gamecontrollerdb.txt https://raw.githubusercontent.com/gabomdq/SDL_GameControllerDB/master/gamecontrollerdb.txt",
     "clean": "pnpm -r exec rm -rf dist node_modules/.cache"
   },
