@@ -33,6 +33,12 @@ jobs:
       - name: Run tests
         run: pnpm --filter like2d test
       
+      - name: Publish to NPM
+        run: npm publish
+        working-directory: like
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      
       - name: Publish to JSR
-        run: npx jsr publish --project @like2d/like2d
-        working-directory: packages/like2d
+        run: npx jsr publish
+        working-directory: like
