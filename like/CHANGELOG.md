@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `isVisible()` → `isPointerLocked()` - inverted logic (returns true when locked)
   - `getRelativeMode()` removed - use `isPointerLocked()` instead
   - `getX()`/`getY()` removed - use `getPosition()` which returns `[x, y]`
+  - Mouse events now bound to canvas instead of window
+  - Canvas is now focusable (tabindex="0") and receives focus on click
+  - Wheel events preventDefault to stop page scrolling
 
 ## [2.7.1] - 2026-03-17
 
