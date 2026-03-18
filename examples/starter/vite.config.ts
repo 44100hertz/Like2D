@@ -7,4 +7,12 @@ export default defineConfig({
     emptyOutDir: true,
   },
   publicDir: 'public',
+  server: {
+    watch: {
+      ignored: ['!**/like/**']
+    }
+  },
+  optimizeDeps: {
+    exclude: ['like']
+  }
 });

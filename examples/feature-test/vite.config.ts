@@ -19,4 +19,12 @@ export default defineConfig({
       },
     ],
   },
+  server: {
+    watch: {
+      ignored: ['!**/like/**']
+    }
+  },
+  optimizeDeps: {
+    exclude: ['like']
+  }
 });
