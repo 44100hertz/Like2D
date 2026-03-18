@@ -1,25 +1,33 @@
 export class Keyboard {
   private pressedScancodes = new Set<string>();
   public onKeyEvent?: (scancode: string, keycode: string, type: 'keydown' | 'keyup') => void;
+  private canvas: HTMLCanvasElement | null = null;
 
   // Event handler references for cleanup
   private keydownHandler: (e: globalThis.KeyboardEvent) => void;
   private keyupHandler: (e: globalThis.KeyboardEvent) => void;
   private blurHandler: () => void;
 
-  constructor() {
-    // Bind event handlers
+  constructor(canvas: HTMLCanvasElement | null) {
+    this.canvas = canvas;
+
     this.keydownHandler = this.handleKeyDown.bind(this);
     this.keyupHandler = this.handleKeyUp.bind(this);
     this.blurHandler = this.handleBlur.bind(this);
 
-    // Register event listeners
-    window.addEventListener('keydown', this.keydownHandler);
-    window.addEventListener('keyup', this.keyupHandler);
-    window.addEventListener('blur', this.blurHandler);
+    if (this.canvas) {
+      this.canvas.addEventListener('keydown', this.keydownHandler);
+      this.canvas.addEventListener('keyup', this.keyupHandler);
+      this.canvas.addEventListener('blur', this.blurHandler);
+    }
   }
 
   private handleKeyDown(e: globalThis.KeyboardEvent): void {
+    const scrollKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'PageUp', 'PageDown', 'Home', 'End'];
+    if (scrollKeys.includes(e.code)) {
+      e.preventDefault();
+    }
+
     if (e.code) {
       this.pressedScancodes.add(e.code);
     }
@@ -38,9 +46,11 @@ export class Keyboard {
   }
 
   dispose(): void {
-    window.removeEventListener('keydown', this.keydownHandler);
-    window.removeEventListener('keyup', this.keyupHandler);
-    window.removeEventListener('blur', this.blurHandler);
+    if (this.canvas) {
+      this.canvas.removeEventListener('keydown', this.keydownHandler);
+      this.canvas.removeEventListener('keyup', this.keyupHandler);
+      this.canvas.removeEventListener('blur', this.blurHandler);
+    }
     this.pressedScancodes.clear();
   }
 
