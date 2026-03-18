@@ -36,8 +36,7 @@ const demoScene: Scene = {
     like.input.map('move_down', ['ArrowDown', 'KeyS', 'DPDown']);
     like.input.map('audio_play_pause', ['KeyP']);
     like.input.map('sleep_timer', ['KeyL']);
-    like.input.map('audio_play_pause', ['KeyP']);
-    like.input.map('sleep_timer', ['KeyL']);
+    like.input.map('toggle_pointer_lock', ['KeyC']);
   },
 
   update(like: Like, dt: number) {
@@ -70,6 +69,10 @@ const demoScene: Scene = {
     }
     if (action === 'sleep_timer') {
       like.timer.sleep(2);
+    }
+    if (action === 'toggle_pointer_lock') {
+      const locked = like.mouse.isPointerLocked();
+      like.mouse.lockPointer(!locked);
     }
   },
 
@@ -108,6 +111,7 @@ const demoScene: Scene = {
 
     const [l, m, r] = [mouse.isDown(1) ? 'L' : '_', mouse.isDown(2) ? 'M' : '_', mouse.isDown(3) ? 'R' : '_'];
     gfx.print('yellow', `Buttons: [${l}] [${m}] [${r}]`, [20, 200], { font: '16px sans-serif' });
+    gfx.print(mouse.isPointerLocked() ? 'lime' : 'gray', `Pointer Lock: ${mouse.isPointerLocked() ? 'ON' : 'OFF'} (C to toggle)`, [20, 220], { font: '14px sans-serif' });
 
     const gpCount = gamepad.getConnectedGamepads().length;
     gfx.print(gpCount ? 'limegreen' : 'gray', `Gamepads: ${gpCount}`, [20, h - 60], { font: '16px sans-serif' });
