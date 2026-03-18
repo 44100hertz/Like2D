@@ -4,10 +4,10 @@
  - [x] Make the canvas manager always display the same in-browser canvas, only changing the render target.
  - [x] Use algebra to fix and/or simplify mouse coord transform logic, broken by this change.
 
-## Mouse API updates (in progress?)
+## Mouse API updates
  - [x] Replace setVisible and getPointerLock with lockPointer and isPointerLocked
  - [x] replace mouse getX and getY with getPosition in API
- - [ ] test pointer lock in feature demo
+ - [x] test pointer lock in feature demo
 
 ## Focus Blur (in progress?)
  - [x] Add 'focus' and 'blur' events in the engine.
