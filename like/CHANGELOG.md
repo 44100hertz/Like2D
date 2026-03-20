@@ -1,11 +1,39 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## [2.9.0] - unreleased
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+### Breaking Changes
 
-## [2.8.0] - UNRELEASED
+ - **Rect and type Rectangle now separate.**
+
+ - **Named Mouse Buttons** 1, 2, 3 are now `'left' | 'middle' | 'right'`.
+
+ - **Updates to mouse moved callback**
+   - API is now `mousemoved(pos: Vector2, relative: boolean)` => `mousemoved(pos: Vector2, delta: Vector2)` 
+   - in non-capture mode, delta is calculated
+   - in capture mode, pos is calculated -- clamps to boundaries of canvas
+
+  - `like.getMode` is now `like.canvas.getMode(): { size: Vector2, flags: CanvasModeFlags }`
+  - `like.setMode` is now `like.canvas.setmode(size: Vector2 | 'native', flags: Partial<CanvasModeFlags> )`
+
+ - **Resize event** signature is now just  `resize(size: Vector2)`.
+
+ - **Module exports**:
+    - All API methods intended to be private have vanished. Import from `like/core/[name]` and cast `[Name]` to `[NameInternal]` to retrieve.
+    - `Rect`, `Rectangle`, `Vector2`, and `Vec2` now import from `like/math`.
+
+### Added
+ - `like.canvas` module.
+ - `like.canvas.getFullscreen(): bool`
+ - `like.canvas.setFullscreen(bool)`
+
+### Updated
+ - Documented public-facing API with TSDoc
+
+### Fixed
+ - canvas resize events now _actually fire_
+
+## [2.8.0] - 2025-03-18
 
 ### Breaking Changes
 
@@ -36,12 +64,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Game controller database updated to latest from SDL_GameControllerDB
 
-## [2.7.1] - 2026-03-17
-
-### Updated
-
-- Game controller database updated to latest from SDL_GameControllerDB
-
 ## [2.7.0] - 2026-03-17
 
 ### Added
@@ -61,7 +83,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `createLike()` is now exported from main module (was `'like2d/callback'`)
   - `Scene` type and `StartupScene` are exported from main module (was `'like2d/scene'`)
   - Scene management now via `like.setScene()` instead of `SceneRunner`
-- `newImage()` moved from standalone export to `like.gfx.newImage()` - update `import { newImage }` to use `like.gfx.newImage()`
 
 ## [2.6.0] - 2026-03-17
 

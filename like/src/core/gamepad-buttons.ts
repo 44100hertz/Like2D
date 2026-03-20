@@ -33,6 +33,8 @@ export namespace GP {
 // Build reverse mappings programmatically
 const GP_ENTRIES = Object.entries(GP) as [string, number][];
 
+export type ButtonNames = keyof typeof GP;
+
 // Map button index to name (for debugging/display)
 export const GP_NAMES: Record<number, string> = Object.fromEntries(
   GP_ENTRIES.map(([name, index]) => [index, name])

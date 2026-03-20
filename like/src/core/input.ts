@@ -2,25 +2,14 @@ import type { Keyboard } from './keyboard';
 import type { Mouse } from './mouse';
 import type { Gamepad } from './gamepad';
 import { InputStateTracker } from './input-state';
-import { GP_NAME_MAP } from './gamepad-buttons';
+import { ButtonNames, GP_NAME_MAP } from './gamepad-buttons';
+import { MouseButton } from './events';
 
-export type InputType = 'keyboard' | 'mouse' | 'gamepad';
-
-export interface InputBinding {
-  type: InputType;
-  code: string;
-}
-
-const buttonMap: Record<string, number> = {
-  'Left': 1,
-  'Right': 3,
-  'Middle': 2,
-  '1': 1,
-  '2': 2,
-  '3': 3,
-  '4': 4,
-  '5': 5,
-};
+export type InputType = InputBinding['type'];
+export type InputBinding =
+  | { type: 'keyboard'; code: string }
+  | { type: 'mouse'; code: MouseButton }
+  | { type: 'gamepad'; code: ButtonNames };
 
 export class Input {
   private actionMap = new Map<string, InputBinding[]>();
@@ -81,11 +70,11 @@ export class Input {
 
     if (normalized.startsWith('Mouse')) {
       const buttonCode = normalized.replace('Mouse', '');
-      return { type: 'mouse', code: buttonCode };
+      return { type: 'mouse', code: buttonCode as MouseButton };
     }
 
     if (normalized.startsWith('Button') || normalized.startsWith('DP')) {
-      return { type: 'gamepad', code: normalized };
+      return { type: 'gamepad', code: normalized as ButtonNames };
     }
 
     return { type: 'keyboard', code: normalized };
@@ -96,9 +85,8 @@ export class Input {
       case 'keyboard':
         return this.keyboard.isDown(binding.code);
       case 'mouse': {
-        const button = buttonMap[binding.code];
-        if (button !== undefined) {
-          return this.mouse.isDown(button);
+        if (binding.code !== undefined) {
+          return this.mouse.isDown(binding.code);
         }
         return false;
       }

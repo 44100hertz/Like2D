@@ -1,6 +1,6 @@
 # LÏKE2D
 
-<svg width="300mm" height="105mm" version="1.1" viewBox="0 0 300 105" xmlns="http://www.w3.org/2000/svg">
+<svg version="1.1" viewBox="0 0 300 105" xmlns="http://www.w3.org/2000/svg">
  <rect x="10" y="11.23" width="280" height="83.544" fill="#e48080" stroke="#000" stroke-linejoin="round" stroke-width="2"/>
  <g fill="none" stroke="#000" stroke-linejoin="round">
   <rect x="97.484" y="11.23" width="52.516" height="46.237"/>
@@ -31,37 +31,42 @@
  </g>
 </svg>
 
-A web-native 2D game framework inspired by [LÖVE](https://love2d.org/), built for simplicity and the modern web.
+Web framework inspired by [LÖVE](https://love2d.org/).
 
+## <div style="color:red">LIKE is alpha, and its API may change. Expect flaws.</div>
 ## What it is
 
-LIKE is a **curated toolkit** around browser APIs.
+LIKE is a cozy way to make 2d games for browser.
 
-It does less, because it **does the right thing**. And when that's not the right thing for you, we hand you the wrench.
+## What LIKE does
 
-- **Stateless Graphics:** Forget to reset native Canvas state (like LineCap) between calls and things break mysteriously. We make drawing explicit: what you see is what you set.
-
-- **Fire-and-forget Assets:** Async asset loading directly on realtime web games is annoying. We let you pretend it's instant and synchronous.
-
-- **Physical Joypad:** Our gamepad module auto-maps to physical buttons like "bottom" and "top". Because A isn't always in the same spot.
-
-- **Actions System:** Of course you can use device input callbacks just like love2d -- but you can also map inputs to actions and get callbacks on that.
-
-- **Scaling Modes:** Pixel art games need pixel-perfect scaling. So we do that: integer nearest -> linear. Or not; turn off pixelart mode to have a canvas that stays at native resolution.
-
-- **Sane Architecture:** Everything is built around a centralized event handler for browser-native events. We won't reinvent the wheel.
+- **↔️ Canvas Scaling:** Two canvas modes for flexibility.
+   - Keep the canvas at 1:1 pixel resolution for maximum sharpness.
+   - For retro-style developers, pixels stay sharp but smooth with automatic prescaling. 👾
+- **🔥 Fire-and-forget Assets:** Graphics and audio that pretend to be synchronous.
+- **🎯 Faster, more DWIM graphics:** LIKE turns many repetitive Canvas calls into one, and removes state bleed for properties like `lineCap`.
+- **🔊 Audio Source Tracking:** Global volume, global play/pause.
+- **⭕ Easier Geometry:** `Vector2` and `Rect` are just number tuples (arrays), but a pure-functional library makes them easy to work with and plays nice with `map` and `reduce`. 
+- **🕹️ Physical Joypad:** Our gamepad module auto-maps to physical buttons like "bottom" and "top". Because A isn't always in the same spot.
+- **👉 Actions System:** A simple input layer to map inputs to actions, which fire usable events.
 
 ## Installation
 
+Most package managers will work.
 ```bash
 npm install like2d
-# or
-pnpm add like2d
+# or ...
+deno add jsr:@like2d/like
+# or...
 ```
 
 ## Quick Start
 
-[Like2D Starter Template](https://github.com/44100hertz/Like2D-starter)
+To try Like2D quickly, use this starter with
+hot reloading and a basic webpage.
+```bash
+npx degit 44100hertz/Like2D/examples/starter my-game
+```
 
 ## Usage Example
 
@@ -71,7 +76,7 @@ import { createLike } from 'like2d';
 const like = createLike(document.body);
 
 like.load = () => {
-  like.setMode({ pixelResolution: [800, 600] });
+  like.setMode([800, 600]);
   like.input.map('jump', ['Space', 'ButtonBottom']);
 };
 
@@ -93,27 +98,19 @@ await like.start();
 ## For Love2D Developers
 
 LIKE's API is not the same as LOVE, but similar in spirit. Notable differences:
- - Graphics have less state, there is no setColor getColor etc.
- - Our APIs are, in general, a bit different. You'll have to learn some.
- - You manage your own state; like is not global, but you can share it around for similar results. This allows multiple LIKE instances per webpage.
- - We use Vector2 and Rect tuples (as in `[number, number]`) instead of loose coordinates.
+ - Draw your graphics in one call, that's all. No setup or state bleed.
+ - You manage your own instance of like in a big friendly object. This allows us to have multiple games on one page.
+ - We use Vector2 and Rect tuples (like `[x, y]`) instead of loose coordinates.
  - Theres an actions system -- `input.map` / `actionpressed` and `actionreleased` callbacks.
  - Some things are missing either due to browser limitations or smaller scope.
 
 ## Feedback welcome
 
-Before you report a bug:
- 1. Make sure you're on the latest release.
- 2. If the issue exists already, just comment on that one.
- 3. See if it happens in other web browsers.
+[LIKE is on GitHub.](https://github.com/44100hertz/Like2D)
 
-Before you request a feature:
- 1. ask: Would it make sense as a core feature, or should it be an external library?
- 2. See if the feature exists already.
- 3. Think about the demand for it overall. Make your case why game developers want it.
- 4. Consider just making a PR yourself, or sending a prompt/spec that an AI can hack on.
+[Check out the docs for our long-term vision.](https://github.com/44100hertz/Like2D/tree/master/docs)
 
-[Then, put your feedback on GitHub.](https://github.com/44100hertz/Like2D/issues)
+[Feature requests welcome. PRs discouraged for now.](https://github.com/44100hertz/Like2D/issues/)
 
 ## License
 

@@ -1,5 +1,5 @@
-import { createLike, StartupScene, type Scene, type ImageHandle, type Source, type CanvasMode, type Like } from "like";
-import { Vec2 } from "like";
+import { createLike, StartupScene, type Scene, type ImageHandle, type Source, type Like, type CanvasSize } from "like";
+import { Vec2 } from "like/math";
 
 let pepperImage: ImageHandle | null = null;
 let audioSource: Source | null = null;
@@ -9,22 +9,20 @@ const player = {
   speed: 200,
 };
 
-const scalingModes: CanvasMode[] = [
-  { pixelResolution: [320, 320], fullscreen: false },
-  { pixelResolution: [800, 300], fullscreen: false },
-  { pixelResolution: [240, 320], fullscreen: false },
-  { pixelResolution: null, fullscreen: false },
+const scales: CanvasSize[] = [
+  [320, 320],
+  [800, 300],
+  [240, 320],
+  'native'
 ];
-let currentScalingIndex = 0;
-let scalingModeName = 'Pixel 800x600';
-let isFullscreen = false;
+let scaleIndex = 0;
 
 const container = document.getElementById('game-container')!;
 const like = createLike(container);
 
 const demoScene: Scene = {
   load(like: Like) {
-    like.setMode({ pixelResolution: [800, 600], fullscreen: false });
+    like.canvas.setMode(scales[0]);
     pepperImage = like.gfx.newImage('pepper.png');
     audioSource = like.audio.newSource('./test.ogg');
     
@@ -45,30 +43,25 @@ const demoScene: Scene = {
     if (like.input.isDown('move_right')) moveDelta = Vec2.add(moveDelta, [1, 0]);
     if (like.input.isDown('move_up')) moveDelta = Vec2.add(moveDelta, [0, -1]);
     if (like.input.isDown('move_down')) moveDelta = Vec2.add(moveDelta, [0, 1]);
-    
     player.pos = Vec2.add(player.pos, Vec2.mul(moveDelta, player.speed * dt));
+    // Wrap around edges
+    player.pos = Vec2.mod(player.pos, like.canvas.getSize());
   },
 
-  mousemoved(like: Like, pos: [number, number], relative: boolean) {
-    if (relative && like.mouse.isPointerLocked()) {
+  mousemoved(like: Like, pos: [number, number], delta: [number, number]) {
+    if (like.mouse.isPointerLocked()) {
       // Relative movement when pointer is locked - move the player
       const sensitivity = 0.5;
-      player.pos = Vec2.add(player.pos, Vec2.mul(pos, sensitivity));
+      player.pos = Vec2.add(player.pos, Vec2.mul(delta, sensitivity));
     }
-    
-    // Wrap around edges
-    const [w, h] = like.getCanvasSize();
-    player.pos[0] = (player.pos[0] + w) % w;
-    player.pos[1] = (player.pos[1] + h) % h;
   },
 
   keypressed(like: Like, scancode: string) {
     if (scancode === 'KeyZ') {
-      currentScalingIndex = (currentScalingIndex + 1) % scalingModes.length;
-      const mode = scalingModes[currentScalingIndex];
-      like.setMode({ pixelResolution: mode.pixelResolution, fullscreen: isFullscreen });
-      const names = ['Pixel 320x320', 'Wide 800x300', 'Portrait 240x320', 'Native'];
-      scalingModeName = names[currentScalingIndex];
+      scaleIndex = (scaleIndex + 1) % scales.length;
+      console.log();
+      const mode = scales[scaleIndex];
+      like.canvas.setMode(mode);
     }
   },
 
@@ -91,12 +84,12 @@ const demoScene: Scene = {
   draw(like: Like) {
     const { timer, mouse, gamepad, gfx } = like;
     gfx.clear([0.1, 0.1, 0.15, 1]);
-    const canvasSize = like.getCanvasSize();
+    const canvasSize = like.canvas.getMode().size;
     const center = Vec2.mul(canvasSize, 0.5);
     const [w, h] = canvasSize;
 
     gfx.print('white', 'Like Demo', [20, 30], { font: '28px sans-serif' });
-    gfx.print('yellow', `Scaling: ${scalingModeName} (Z to cycle)`, [20, 60], { font: '14px sans-serif' });
+    gfx.print('yellow', `Scaling: ${scales[scaleIndex]} (Z to cycle)`, [20, 60], { font: '14px sans-serif' });
 
     gfx.print('lime', `FPS: ${timer.getFPS()}`, [w - 80, 30]);
     gfx.print('lime', `${(timer.getDelta() * 1000).toFixed(1)}ms`, [w - 80, 48]);
@@ -121,7 +114,7 @@ const demoScene: Scene = {
     gfx.print('cyan', `Mouse: (${Math.round(mousePos[0])}, ${Math.round(mousePos[1])})`, [20, 180], { font: '16px sans-serif' });
     gfx.circle('line', 'cyan', mousePos, 10);
 
-    const [l, m, r] = [mouse.isDown(1) ? 'L' : '_', mouse.isDown(2) ? 'M' : '_', mouse.isDown(3) ? 'R' : '_'];
+    const [l, m, r] = [mouse.isDown('left') ? 'L' : '_', mouse.isDown('middle') ? 'M' : '_', mouse.isDown('right') ? 'R' : '_'];
     gfx.print('yellow', `Buttons: [${l}] [${m}] [${r}]`, [20, 200], { font: '16px sans-serif' });
     gfx.print(mouse.isPointerLocked() ? 'lime' : 'gray', `Pointer Lock: ${mouse.isPointerLocked() ? 'ON' : 'OFF'} (C to toggle)`, [20, 220], { font: '14px sans-serif' });
 
@@ -135,11 +128,8 @@ const demoScene: Scene = {
 };
 
 document.getElementById('fullscreen-btn')?.addEventListener('click', () => {
-  isFullscreen = !isFullscreen;
-  const mode = scalingModes[currentScalingIndex];
-  like.setMode({ pixelResolution: mode.pixelResolution, fullscreen: isFullscreen });
+  like.canvas.setFullscreen(true);
 });
 
-like.setMode({ pixelResolution: null });
 like.setScene(new StartupScene(demoScene));
 await like.start();

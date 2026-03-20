@@ -1,79 +1,56 @@
-import type { Vector2 } from './vector2';
+import { EngineDispatch } from '../engine';
+import { Vec2, type Vector2 } from '../math/vector2';
+import { type MouseButton } from './events';
 
-export type MousePositionTransform = (offsetX: number, offsetY: number) => Vector2;
-export type MouseMoveHandler = (pos: Vector2, relative: boolean) => void;
-export type MouseButtonHandler = (pos: Vector2, button: number) => void;
+const mouseButtons = ["left", "middle", "right"] as const;
+const numToButton = (i: number): MouseButton => mouseButtons[i];
+type MouseMoveEvent = HTMLElementEventMap["like:mousemoved"];
 
 /**
  * Mouse input handling. Bound to canvas. Emits relative movement when pointer locked.
  * Buttons: 1 = left, 2 = middle, 3 = right.
  */
 export class Mouse {
-  private x = 0;
-  private y = 0;
-  private buttons = new Set<number>();
+  private pos: Vector2 = [0, 0];
+  private lastPos: Vector2 = [0, 0];
+  private buttons = new Set<MouseButton>();
   private cursorVisible = true;
-  public onMouseMove?: MouseMoveHandler;
-  public onMouseDown?: MouseButtonHandler;
-  public onMouseUp?: MouseButtonHandler;
-  private transformFn?: MousePositionTransform;
-  private canvas: HTMLCanvasElement | null = null;
+  private abort = new AbortController();
 
-  // Event handler references for cleanup
-  private mousemoveHandler: (e: globalThis.MouseEvent) => void;
-  private mousedownHandler: (e: globalThis.MouseEvent) => void;
-  private mouseupHandler: (e: globalThis.MouseEvent) => void;
-  private wheelHandler: (e: WheelEvent) => void;
-
-  constructor(canvas: HTMLCanvasElement | null, transformFn?: MousePositionTransform) {
-    this.canvas = canvas;
-    this.transformFn = transformFn;
-
-    if (this.canvas) {
-      this.canvas.tabIndex = 0;
-    }
-
-    this.mousemoveHandler = this.handleMouseMove.bind(this);
-    this.mousedownHandler = this.handleMouseDown.bind(this);
-    this.mouseupHandler = this.handleMouseUp.bind(this);
-    this.wheelHandler = this.handleWheel.bind(this);
-
-    if (this.canvas) {
-      this.canvas.addEventListener('mousemove', this.mousemoveHandler);
-      this.canvas.addEventListener('mousedown', this.mousedownHandler);
-      window.addEventListener('mouseup', this.mouseupHandler);
-      this.canvas.addEventListener('wheel', this.wheelHandler, { passive: false });
-    }
+  constructor(private canvas: HTMLCanvasElement, private dispatch: EngineDispatch) {
+    this.canvas.addEventListener('like:mousemoved', this.handleMouseMove.bind(this) as any, { signal: this.abort.signal });
+    this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this), { signal: this.abort.signal });
+    window.addEventListener('mouseup', this.handleMouseUp.bind(this), { signal: this.abort.signal });
+    this.canvas.addEventListener('wheel', this.handleWheel.bind(this), { passive: false, signal: this.abort.signal });
+    this.canvas.addEventListener('mouseleave', () => this.buttons.clear(), { signal: this.abort.signal });
   }
 
-  setTransform(transformFn: MousePositionTransform | undefined): void {
-    this.transformFn = transformFn;
-  }
-
-  private handleMouseMove(e: globalThis.MouseEvent): void {
+  private handleMouseMove(e: MouseMoveEvent): void {
     if (this.isPointerLocked()) {
-      // When locked, emit relative movement
-      this.onMouseMove?.([e.movementX, e.movementY], true);
+      /** In pointer-lock mode, simulate a real cursor bounded by the canvas. */
+      this.pos = Vec2.clamp(Vec2.add(this.pos, e.detail.delta),
+        [0, 0],
+        e.detail.renderSize);
+      this.dispatch('mousemoved', [this.pos, e.detail.delta]);
     } else {
-      // Normal mode: track position and emit absolute coords
-      this.x = e.offsetX;
-      this.y = e.offsetY;
-      const pos = this.getPosition();
-      this.onMouseMove?.(pos, false);
+      /** In non-pointer locked mode, calculate deltas ourselves. */
+      this.pos = e.detail.pos;
+      this.dispatch('mousemoved', [this.pos, Vec2.sub(this.pos, this.lastPos)]);
     }
+    this.lastPos = this.pos;
   }
 
   private handleMouseDown(e: globalThis.MouseEvent): void {
-    this.buttons.add(e.button + 1);
-    const pos: Vector2 = this.transformFn ? this.transformFn(e.offsetX, e.offsetY) : [e.offsetX, e.offsetY];
-    this.onMouseDown?.(pos, e.button + 1);
+    // hack: ignore right clicks because they cause a refocus
+    if (!this.isPointerLocked() && e.button == 2) return;
+    this.buttons.add(numToButton(e.button));
+    this.dispatch('mousepressed', [[e.offsetX, e.offsetY], numToButton(e.button)]);
     this.canvas?.focus();
   }
 
   private handleMouseUp(e: globalThis.MouseEvent): void {
-    this.buttons.delete(e.button + 1);
-    const pos: Vector2 = this.transformFn ? this.transformFn(e.offsetX, e.offsetY) : [e.offsetX, e.offsetY];
-    this.onMouseUp?.(pos, e.button + 1);
+    this.buttons.delete(numToButton(e.button));
+    this.dispatch('mousereleased', [[e.offsetX, e.offsetY], numToButton(e.button)]);
   }
 
   private handleWheel(e: WheelEvent): void {
@@ -81,30 +58,21 @@ export class Mouse {
   }
 
   dispose(): void {
-    if (this.canvas) {
-      this.canvas.removeEventListener('mousemove', this.mousemoveHandler);
-      this.canvas.removeEventListener('mousedown', this.mousedownHandler);
-      this.canvas.removeEventListener('wheel', this.wheelHandler);
-    }
-    window.removeEventListener('mouseup', this.mouseupHandler);
-    this.buttons.clear();
+    this.abort.abort();
   }
 
-  /** Mouse position in canvas pixels. */
+  /** Mouse position, transformed to canvas pixels. */
   getPosition(): Vector2 {
-    if (this.transformFn) {
-      return this.transformFn(this.x, this.y);
-    }
-    return [this.x, this.y];
+    return this.pos;
   }
 
   /** Check if button is held. Button 1 = left, 2 = middle, 3 = right. */
-  isDown(button: number): boolean {
+  isDown(button: MouseButton): boolean {
     return this.buttons.has(button);
   }
 
   /** All currently held buttons. */
-  getPressedButtons(): Set<number> {
+  getPressedButtons(): Set<MouseButton> {
     return new Set(this.buttons);
   }
 

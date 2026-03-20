@@ -15,9 +15,9 @@
     "noFallthroughCasesInSwitch": true
   },
   "references": [
-    { "path": "./packages/like2d" },
-    { "path": "./apps/demo" },
-    { "path": "./apps/website" }
+    { "path": "./examples/feature-test" },
+    { "path": "./examples/starter" },
+    { "path": "./like" }
   ],
   "files": []
 }

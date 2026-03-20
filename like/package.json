@@ -10,6 +10,18 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./math": {
+      "import": "./dist/math/index.js",
+      "types": "./dist/math/index.d.ts"
+    },
+    "./math/*": {
+      "import": "./dist/math/*",
+      "types": "./dist/math/*"
+    },
+    "./internal/*": {
+      "import": "./dist/core/*.js",
+      "types": "./dist/core/*.d.ts"
     }
   },
   "files": [
