@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Rect } from '../core/rect';
+import { Rect } from '../math/rect';
 
 describe('Rect', () => {
   it('creates a rect from points', () => {

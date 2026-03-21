@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Vec2 } from '../core/vector2';
+import { Vec2 } from '../math/vector2';
 
 describe('Vec2', () => {
   it('adds two vectors', () => {
