@@ -8,8 +8,15 @@
 
  - **Named Mouse Buttons** 1, 2, 3 are now `'left' | 'middle' | 'right'`.
 
+ - **No More Physical Mapping** Here lies Sam's attempt at making physical gamepad mappings in the
+ browser. At first reading sdlgamecontrollerdb was promising, but the browser wasn't giving enough info for
+ an SDL GUID -- it was ambiguous. Then, disaster strikes: Firefox and Chromium don't
+ agree on where to map his DPad or analog sticks. **tl;dr
+ gamepad physical mapping support has been ended. Use actions bindings.**
+   - `like.gamepadpressed(gamepad: number, name: string)` event is now `like.gamepadpressed(gamepad: number, buttonNum: number, name: string)` 
+
  - **Updates to mouse moved callback**
-   - API is now `mousemoved(pos: Vector2, relative: boolean)` => `mousemoved(pos: Vector2, delta: Vector2)` 
+   - API is `mousemoved(pos: Vector2, relative: boolean)` => `mousemoved(pos: Vector2, delta: Vector2)` 
    - in non-capture mode, delta is calculated
    - in capture mode, pos is calculated -- clamps to boundaries of canvas
 

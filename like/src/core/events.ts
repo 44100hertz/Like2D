@@ -86,10 +86,10 @@ export type EventMap = {
   mousereleased: [pos: Vector2, button: MouseButton];
 
   /** Gamepad button pressed. index is controller number (0-3). */
-  gamepadpressed: [gamepadIndex: number, button: LikeButton];
+  gamepadpressed: [source: number, num: number, name: LikeButton];
 
   /** Gamepad button released. */
-  gamepadreleased: [gamepadIndex: number, button: LikeButton];
+  gamepadreleased: [source: number, num: number, name: LikeButton];
 
   /** Mapped action triggered. See {@link Input} for action mapping. */
   actionpressed: [action: string];

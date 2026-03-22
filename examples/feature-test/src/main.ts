@@ -1,5 +1,5 @@
 import { createLike, StartupScene, type Scene, type ImageHandle, type Source, type Like, type CanvasSize } from "like";
-import { Vec2 } from "like/math";
+import { Vec2 } from "like/math/vector2";
 
 let pepperImage: ImageHandle | null = null;
 let audioSource: Source | null = null;
@@ -118,12 +118,20 @@ const demoScene: Scene = {
     gfx.print('yellow', `Buttons: [${l}] [${m}] [${r}]`, [20, 200], { font: '16px sans-serif' });
     gfx.print(mouse.isPointerLocked() ? 'lime' : 'gray', `Pointer Lock: ${mouse.isPointerLocked() ? 'ON' : 'OFF'} (C to toggle)`, [20, 220], { font: '14px sans-serif' });
 
-    const gpCount = gamepad.getConnectedGamepads().length;
-    gfx.print(gpCount ? 'limegreen' : 'gray', `Gamepads: ${gpCount}`, [20, h - 60], { font: '16px sans-serif' });
-
     gfx.print('springgreen', `Player: (${Math.round(player.pos[0])}, ${Math.round(player.pos[1])})`, [20, h - 30], { font: '16px sans-serif' });
     gfx.circle('fill', 'springgreen', player.pos, 15);
     gfx.circle('line', 'lime', player.pos, 15);
+
+    // Display gamepad axes
+    const axes = gamepad.getGamepad(0)?.axes;
+    if (axes && axes.length > 0) {
+      gfx.print('orange', 'Gamepad Axes:', [20, 260], { font: '16px sans-serif' });
+      axes.forEach((axis, i) => {
+        gfx.print('white', `  Axis ${i}: ${axis.toFixed(3)}`, [20, 280 + i * 18], { font: '14px sans-serif' });
+      });
+    } else {
+      gfx.print('gray', 'No gamepad connected', [20, 260], { font: '14px sans-serif' });
+    }
   },
 };
 
