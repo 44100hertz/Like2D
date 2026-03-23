@@ -76,12 +76,27 @@ export class MouseInternal {
     return new Set(this.buttons);
   }
 
-  /** True when pointer is locked to canvas. */
+  /** True when pointer is locked to canvas.
+   * {@link lockPointer}
+   */
   isPointerLocked(): boolean {
     return document.pointerLockElement !== null;
   }
 
-  /** Lock or unlock pointer. When locked, mousemoved emits relative deltas. */
+  /**
+   * Whether to lock (capture) the pointer.
+   * 
+   * In locked mode, the cursor cannot escape the canvas.
+   * It also becomes invisible.
+   * 
+   * Note that event {@link mousemoved} passes both
+   * `pos` and `delta`.
+   * 
+   * Though the emulated cursor in locked mode
+   * (locked mode doesn't natively track absolute position)
+   * may be stuck on canvas edges, the `delta` field always
+   * represents mouse movement.
+  */
   lockPointer(locked: boolean): void {
     if (!this.canvas) return;
 

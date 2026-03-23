@@ -76,7 +76,7 @@ export type EventMap = {
   /** Canvas or tab lost focus. Game may pause audio/updates. */
   blur: [source: 'canvas' | 'tab'];
 
-  /** Mouse moved. pos is absolute, delta is relative.. */
+  /** Mouse moved event. `pos` is absolute, `delta` is relative. */
   mousemoved: [pos: Vector2, delta: Vector2];
 
   /** Mouse button pressed. pos in canvas pixels. Button: 1=left, 2=middle, 3=right. */

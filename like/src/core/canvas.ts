@@ -3,17 +3,6 @@ import { Rect, Rectangle } from "../math/rect";
 import { Vec2, type Vector2 } from "../math/vector2";
 
 export type CanvasModeOptions = { fullscreen: boolean };
-/**
- * ### `'native'` mode
- * Keeps the canvas pixel resolution
- * the same as the physical pixel resolution of the
- * device. 
- * 
- * ### Pixel art mode `[width, height]`
- * The canvas will use prescaling to keep your pixel
- * games looking sharp, but without the uneven pixels
- * caused by the naive approach.
- */
 export type CanvasSize = Vector2 | 'native';
 
 export class CanvasInternal {
@@ -97,6 +86,17 @@ export class CanvasInternal {
     }
 
     /** Set the game's apparent resolution, fullscreen, etc.
+     * 
+     * ### `'native'` mode
+     * Keeps the canvas pixel resolution
+     * the same as the physical pixel resolution of the
+     * device. 
+     * 
+     * ### Pixel art mode `[width, height]`
+     * The canvas will use prescaling to keep your pixel
+     * games looking sharp, but without the uneven pixels
+     * caused by the naive approach.
+     * 
      * @param size 'native' for native mode, otherwise [width, height]
      * @param flags optional options.
      */
