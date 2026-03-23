@@ -6,7 +6,9 @@
 
 **Private Methods** - Prefix all non-API methods with `_`. Each module is named `ThingInternal`. Use `Public<T>` in like.ts to get `Thing`.
 
-**0-1 color range** - Colors use 0.0-1.0, not 0-255. Matches shaders, easier mental math.
+**0-1 color range** - Colors use 0.0-1.0, not 0-255.
+
+**Seconds** - No milliseconds.
 
 **Canvas coordinates** - (0,0) at top-left, Y increases downward. Matches HTML Canvas and CSS.
 
