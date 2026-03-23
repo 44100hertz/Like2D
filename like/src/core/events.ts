@@ -15,7 +15,7 @@
  *
  * @see {@link EventMap} lists every event.
  * @see {@link Scene} for implementing callbacks in a class
- * @see {@link LikeWithCallbacks} for global callback assignment
+ * @see {@link Like} for global callback assignment
  * @see {@link Input} for action mapping
  */
 
