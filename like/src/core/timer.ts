@@ -1,4 +1,4 @@
-export class Timer {
+export class TimerInternal {
   private currentDelta = 0;
   private totalTime = 0;
   private frameCount = 0;
@@ -7,7 +7,7 @@ export class Timer {
   private sleepUntil: number | null = null;
   private sceneStartTime = 0;
 
-  update(dt: number): void {
+  _update(dt: number): void {
     this.currentDelta = dt;
     this.totalTime += dt;
     this.frameCount++;

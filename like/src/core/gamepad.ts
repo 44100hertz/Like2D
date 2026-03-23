@@ -28,7 +28,7 @@ const newButtonTracker = (): ButtonTracker =>
  * }
  * ```
  */
-export class LikeGamepad {
+export class GamepadInternal {
   private buttonTrackers = new Map<number, ButtonTracker>();
   private abort = new AbortController();
 
@@ -46,14 +46,14 @@ export class LikeGamepad {
         `[Gamepad] buttons: ${ev.gamepad.buttons.length}, axes: ${ev.gamepad.axes.length}`,
       );
       this.buttonTrackers.set(ev.gamepad.index, newButtonTracker());
-    });
+    }, { signal: this.abort.signal });
     window.addEventListener("gamepaddisconnected", (ev: GamepadEvent) => {
       console.log(`[Gamepad] Disconnected ${ev.gamepad.id}`)
       this.buttonTrackers.delete(ev.gamepad.index);
-    });
-    window.addEventListener("blur", () =>
-      this.buttonTrackers.forEach(({current, prev}) => { current.clear(); prev.clear(); }),
-    );
+    }, { signal: this.abort.signal });
+    window.addEventListener("blur", () => {
+      this.buttonTrackers.forEach(({current, prev}) => { current.clear(); prev.clear(); });
+    }, { signal: this.abort.signal });
   }
 
   _update(): void {
@@ -75,7 +75,7 @@ export class LikeGamepad {
         if (tracker.prev.has(i) != tracker.current.has(i)) {
           this.dispatch(
             tracker.prev.has(i) ? "gamepadreleased" : "gamepadpressed",
-            [gpIndex, i, LikeGamepad.getButtonName(i)!]
+            [gpIndex, i, GamepadInternal.getButtonName(i)!]
           )
         }
       })
@@ -85,12 +85,12 @@ export class LikeGamepad {
   }
 
   isButtonDown(target: GamepadTarget, buttonRaw: number | LikeButton): boolean | undefined {
-    const btn = LikeGamepad.getButtonNumber(buttonRaw);
+    const btn = GamepadInternal.getButtonNumber(buttonRaw);
     return this.buttonTrackers.get(target)?.current.has(btn);
   }
 
   isButtonJustPressed(target: GamepadTarget, buttonRaw: LikeButton): boolean | undefined {
-    const btn = LikeGamepad.getButtonNumber(buttonRaw);
+    const btn = GamepadInternal.getButtonNumber(buttonRaw);
     const bt = this.buttonTrackers.get(target);
     if (bt) {
       return !bt.prev.has(btn) && bt.current.has(btn);

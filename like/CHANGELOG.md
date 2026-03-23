@@ -13,7 +13,7 @@
  an SDL GUID -- it was ambiguous. Then, disaster strikes: Firefox and Chromium don't
  agree on where to map his DPad or analog sticks. **tl;dr
  gamepad physical mapping support has been ended. Use actions bindings.**
-   - `like.gamepadpressed(gamepad: number, name: string)` event is now `like.gamepadpressed(gamepad: number, buttonNum: number, name: string)` 
+   - `like.gamepadpressed(gamepad: number, name: string)` event is now `like.gamepadpressed(gamepad: number, buttonNum: number, name: string)` as it was before. 
 
  - **Updates to mouse moved callback**
    - API is `mousemoved(pos: Vector2, relative: boolean)` => `mousemoved(pos: Vector2, delta: Vector2)` 
@@ -27,11 +27,12 @@
 
  - **Module exports**:
     - All API methods intended to be private have vanished. Import from `like/core/[name]` and cast `[Name]` to `[NameInternal]` to retrieve.
-    - `Rect`, `Rectangle`, `Vector2`, and `Vec2` now import from `like/math`.
+    - `Rect`, `Rectangle`, `Vector2`, and `Vec2` now import from `like/math/rect` and `like/math/vector2` etc.
 
  - **LikeWithCallbacks is now just Like**
  - **Like is now LikeInternal**
  - **Like2DEvent is now just LikeEvent**
+ - **Renamed Source to AudioSource**
 
 ### Added
  - `like.canvas` module.
@@ -48,6 +49,7 @@
 
 ### Fixed
  - canvas resize events now _actually fire_
+ - countless internal inconsistencies: duplicated efforts, unclear names, repetitive and long code. To be clear, I had AI generate this codebase for me initially, and I have been reviewing / rewriting the code to match my human standards. Sometimes with the help of AI, sorry not sorry.
 
 ## [2.8.0] - 2025-03-18
 

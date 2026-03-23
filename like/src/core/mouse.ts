@@ -10,7 +10,7 @@ type MouseMoveEvent = HTMLElementEventMap["like:mousemoved"];
  * Mouse input handling. Bound to canvas. Emits relative movement when pointer locked.
  * Buttons: 1 = left, 2 = middle, 3 = right.
  */
-export class Mouse {
+export class MouseInternal {
   private pos: Vector2 = [0, 0];
   private lastPos: Vector2 = [0, 0];
   private buttons = new Set<MouseButton>();
@@ -57,7 +57,7 @@ export class Mouse {
     e.preventDefault();
   }
 
-  dispose(): void {
+  _dispose(): void {
     this.abort.abort();
   }
 

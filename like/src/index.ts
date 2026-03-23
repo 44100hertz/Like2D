@@ -14,7 +14,7 @@ export type { LikeEvent, EventType, EventMap } from './core/events';
 export type { CanvasSize, CanvasModeOptions as CanvasModeFlags } from './core/canvas';
 export type { Color, ShapeProps, DrawProps, PrintProps } from './core/graphics';
 export { ImageHandle } from './core/graphics';
-export type { Source, SourceOptions } from './core/audio';
+export type { AudioSource, AudioSourceOptions } from './core/audio';
 export { type LikeButton } from './core/gamepad';
 
 export type TopLevelEventHandler = (event: LikeEvent) => void;

@@ -7,13 +7,12 @@
  * 
  */
 
-
-import type { Audio } from './audio';
-import type { Timer } from './timer';
-import type { Input } from './input';
-import type { Keyboard } from './keyboard';
-import type { Mouse } from './mouse';
-import type { LikeGamepad } from './gamepad';
+import type { AudioInternal } from './audio';
+import type { TimerInternal } from './timer';
+import type { InputInternal } from './input';
+import type { KeyboardInternal } from './keyboard';
+import type { MouseInternal } from './mouse';
+import type { GamepadInternal } from './gamepad';
 import type { CanvasInternal } from './canvas';
 import type { BoundGraphics } from './graphics';
 import { EventMap, EventType, LikeEvent } from './events';
@@ -27,31 +26,15 @@ type Callbacks = {
 };
 
 export type LikeInternal = Callbacks & {
-  /** Synchronous audio handles with global control. */
-  readonly audio: Audio;
-  
-  /** Timer system for tracking time, delta, FPS, and freezing the whole game. */
-  readonly timer: Timer;
-  
-  /** Input system for action-based input handling */
-  readonly input: Input;
-  
-  /** Keyboard input handling */
-  readonly keyboard: Keyboard;
-  
-  /** Mouse input handling */
-  readonly mouse: Mouse;
-  
-  /** Gamepad input handling */
-  readonly gamepad: LikeGamepad;
+  readonly audio: AudioInternal;
+  readonly timer: TimerInternal;
+  readonly input: InputInternal;
+  readonly keyboard: KeyboardInternal;
+  readonly mouse: MouseInternal;
+  readonly gamepad: GamepadInternal;
 
   canvas: CanvasInternal,
 
-  /** I think you meant to type like.canvas instead.  */
-  window?: never;
-
-  /** Look at {@link handleEvent} -- it serves the same purpose. */
-  run?: never;
 
   /** Graphics context for rendering operations */
   gfx: BoundGraphics;
@@ -103,6 +86,12 @@ type Public<T> = {
 };
 
 type Canvas = Public<CanvasInternal>; 
+type Keyboard = Public<KeyboardInternal>;
+type Mouse = Public<MouseInternal>;
+type Audio = Public<AudioInternal>;
+type Timer = Public<TimerInternal>;
+type Input = Public<InputInternal>;
+type Gamepad = Public<GamepadInternal>;
 
 /**
  * The main Like instance.
@@ -117,4 +106,28 @@ type Canvas = Public<CanvasInternal>;
 export type Like = LikeInternal & {
   /** Canvas settings, including even Pixel Art mode. */
   readonly canvas: Canvas;
+
+  /** Synchronous audio handles with global control. */
+  readonly audio: Audio;
+
+  /** Timer system for tracking time, delta, FPS, and freezing the whole game. */
+  readonly timer: Timer;
+
+  /** Input system for action-based input handling */
+  readonly input: Input;
+
+  /** Keyboard input handling */
+  readonly keyboard: Keyboard;
+
+  /** Mouse input handling */
+  readonly mouse: Mouse;
+
+  /** Gamepad input handling */
+  readonly gamepad: Gamepad;
+
+  /** Look at {@link handleEvent} -- it serves the same purpose. */
+  run?: never;
+
+  /** I think you meant to type like.canvas instead.  */
+  window?: never;
 }

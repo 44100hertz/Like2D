@@ -1,6 +1,6 @@
-import type { Keyboard } from './keyboard';
-import type { Mouse } from './mouse';
-import { GamepadTarget, LikeGamepad } from './gamepad';
+import type { KeyboardInternal } from './keyboard';
+import type { MouseInternal } from './mouse';
+import { GamepadTarget, GamepadInternal } from './gamepad';
 import { InputStateTracker } from './input-state';
 import { LikeButton } from './gamepad-mapping';
 import { MouseButton } from './events';
@@ -11,14 +11,14 @@ export type InputBinding =
   | { type: 'mouse'; button: MouseButton }
   | { type: 'gamepad'; gamepad: GamepadTarget, button: number };
 
-export class Input {
+export class InputInternal {
   private actionMap = new Map<string, InputBinding[]>();
   private actionStateTracker = new InputStateTracker<string>();
-  private keyboard: Keyboard;
-  private mouse: Mouse;
-  private gamepad: LikeGamepad;
+  private keyboard: KeyboardInternal;
+  private mouse: MouseInternal;
+  private gamepad: GamepadInternal;
 
-  constructor(deps: { keyboard: Keyboard; mouse: Mouse; gamepad: LikeGamepad }) {
+  constructor(deps: { keyboard: KeyboardInternal; mouse: MouseInternal; gamepad: GamepadInternal }) {
     this.keyboard = deps.keyboard;
     this.mouse = deps.mouse;
     this.gamepad = deps.gamepad;
@@ -49,7 +49,7 @@ export class Input {
     return this.actionStateTracker.justReleased(action);
   }
 
-  update(): { pressed: string[]; released: string[] } {
+  _update(): { pressed: string[]; released: string[] } {
     this.gamepad._update();
 
     const activeActions = new Set<string>();
@@ -77,7 +77,7 @@ export class Input {
       return {
         type: "gamepad",
         gamepad: 0,
-        button: LikeGamepad.getButtonNumber(normalized as LikeButton),
+        button: GamepadInternal.getButtonNumber(normalized as LikeButton),
       };
     }
 

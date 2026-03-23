@@ -19,12 +19,12 @@
  *
  */
 
-import { Audio } from './core/audio';
-import { Input } from './core/input';
-import { Timer } from './core/timer';
-import { Keyboard } from './core/keyboard';
-import { Mouse } from './core/mouse';
-import { LikeGamepad } from './core/gamepad';
+import { AudioInternal } from './core/audio';
+import { InputInternal } from './core/input';
+import { TimerInternal } from './core/timer';
+import { KeyboardInternal } from './core/keyboard';
+import { MouseInternal } from './core/mouse';
+import { GamepadInternal } from './core/gamepad';
 import { bindGraphics } from './core/graphics';
 import type { LikeEvent, EventType, EventMap } from './core/events';
 import type { LikeInternal } from './core/like';
@@ -68,12 +68,12 @@ export class Engine {
     let gfx = bindGraphics(canvas.getContext('2d')!);
 
     const dispatch = this.dispatch.bind(this);
-    const audio = new Audio();
-    const timer = new Timer();
-    const keyboard = new Keyboard(canvas, dispatch);
-    const mouse = new Mouse(canvas, dispatch);
-    const gamepad = new LikeGamepad(dispatch);
-    const input = new Input({ keyboard, mouse, gamepad });
+    const audio = new AudioInternal();
+    const timer = new TimerInternal();
+    const keyboard = new KeyboardInternal(canvas, dispatch);
+    const mouse = new MouseInternal(canvas, dispatch);
+    const gamepad = new GamepadInternal(dispatch);
+    const input = new InputInternal({ keyboard, mouse, gamepad });
 
     this.like = {
       audio,
@@ -133,8 +133,8 @@ export class Engine {
       this.lastTime = now;
 
       if (!this.like.timer.isSleeping()) {
-        this.like.timer.update(dt);
-        const { pressed, released } = this.like.input.update();
+        this.like.timer._update(dt);
+        const { pressed, released } = this.like.input._update();
         pressed.forEach(action => this.dispatch('actionpressed', [action]));
         released.forEach(action => this.dispatch('actionreleased', [action]));
         this.dispatch('update', [dt]);
@@ -164,8 +164,8 @@ export class Engine {
   dispose(): void {
     const canvas = this.canvas._displayCanvas;
     this.isRunning = false;
-    this.like.keyboard.dispose();
-    this.like.mouse.dispose();
+    this.like.keyboard._dispose();
+    this.like.mouse._dispose();
     this.like.gamepad._dispose();
     this.canvas._dispose();
     this.abort.abort();

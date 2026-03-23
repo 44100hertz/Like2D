@@ -1,10 +1,10 @@
-import { createLike, type ImageHandle, type Source, type Like, type CanvasSize, LikeEvent } from "like";
+import { createLike, type ImageHandle, type AudioSource, type Like, type CanvasSize } from "like";
 import { StartScreen } from "like/prefab-scenes";
 import { Vec2 } from "like/math/vector2";
-import { callSceneHandlers, Scene } from "like/scene";
+import { Scene } from "like/scene";
 
 let pepperImage: ImageHandle | null = null;
-let audioSource: Source | null = null;
+let audioSource: AudioSource | null = null;
 
 const player = {
   pos: [240, 160] as [number, number],
