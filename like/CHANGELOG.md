@@ -1,11 +1,62 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## [2.9.0] - 2026-03-23
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+### Breaking Changes
 
-## [2.8.0] - UNRELEASED
+ - **Rect and type Rectangle now separate.**
+ 
+ - **Named Mouse Buttons** 1, 2, 3 are now `'left' | 'middle' | 'right'`.
+
+ - **No More Physical Mapping** Here lies Sam's attempt at making physical gamepad mappings in the
+ browser. At first reading sdlgamecontrollerdb was promising, but the browser wasn't giving enough info for
+ an SDL GUID -- it was ambiguous. Then, disaster strikes: Firefox and Chromium don't
+ agree on where to map his DPad or analog sticks. **tl;dr
+ gamepad physical mapping support has been ended. Use actions bindings.**. A prefab scene for binding controller inputs is in the works.
+   - `like.gamepadpressed(gamepad: number, name: string)` event is now `like.gamepadpressed(gamepad: number, buttonNum: number, name: string)` as it was before. 
+
+ - **Updates to mouse moved callback**
+   - API is `mousemoved(pos: Vector2, relative: boolean)` => `mousemoved(pos: Vector2, delta: Vector2)` 
+   - in non-capture mode, delta is calculated
+   - in capture mode, pos is calculated -- clamps to boundaries of canvas
+
+  - `like.getMode` is now `like.canvas.getMode(): { size: Vector2, flags: CanvasModeFlags }`
+  - `like.setMode` is now `like.canvas.setmode(size: Vector2 | 'native', flags: Partial<CanvasModeFlags> )`
+
+ - **Resize event** signature is now just  `resize(size: Vector2)`.
+
+ - **Module exports**:
+    - `Rect`, `Rectangle`, `Vector2`, and `Vec2` now import from `like/math/rect` and `like/math/vector2` etc.
+    - `like/scene` builtins are now in `like/prefab-scenes`
+
+ - **Removed Timer `setSceneTime`** because it doesn't play nice with composed scenes.
+
+ - `LikeWithCallbacks` is now just `Like`
+ - `Like` is now `LikeInternal`
+ - `Like2DEvent` is now just `LikeEvent`
+ - Renamed `Source` to `AudioSource`
+ - Renamed `input.map` and `input.unmap` to `input.setAction(string, string[]?)` -- which clears the action if nothing provided.
+
+### Added
+ - `like.canvas` module.
+ - `like.canvas.getFullscreen(): bool`
+ - `like.canvas.setFullscreen(bool)`
+ - `like.callOwnHandlers(LikeEvent)`: This has been split out and exposed for the sake of
+   ease in writing custom LIKE systems.
+ - `callSceneHandlers(LikeEvent)`: Similar, but for a scene to call its own events.
+ - `sceneDispatch(Scene, like, LikeEvent)`: Used for passing events into sub-scenes (including root scene).
+ - `like.focus` and `like.blur` now have one argument `'tab' | 'canvas'` for source.
+ - `like.audio.getAllSources`
+
+### Updated
+ - Documented public-facing API with TSDoc
+
+### Fixed
+ - canvas resize events now _actually fire_
+ - `like.handleEvents` and `scene.handleEvents` now work as expected -- they override the preexisting event handling.
+ - All API methods intended to be private have vanished from the user-facing API. Import from `like/internal/[name]` and cast `[Name]` to `[NameInternal]` to retrieve.
+
+## [2.8.0] - 2025-03-18
 
 ### Breaking Changes
 
@@ -36,12 +87,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Game controller database updated to latest from SDL_GameControllerDB
 
-## [2.7.1] - 2026-03-17
-
-### Updated
-
-- Game controller database updated to latest from SDL_GameControllerDB
-
 ## [2.7.0] - 2026-03-17
 
 ### Added
@@ -61,7 +106,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `createLike()` is now exported from main module (was `'like2d/callback'`)
   - `Scene` type and `StartupScene` are exported from main module (was `'like2d/scene'`)
   - Scene management now via `like.setScene()` instead of `SceneRunner`
-- `newImage()` moved from standalone export to `like.gfx.newImage()` - update `import { newImage }` to use `like.gfx.newImage()`
 
 ## [2.6.0] - 2026-03-17
 

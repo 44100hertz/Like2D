@@ -1,48 +1,38 @@
-import type { Keyboard } from './keyboard';
-import type { Mouse } from './mouse';
-import type { Gamepad } from './gamepad';
+import type { KeyboardInternal } from './keyboard';
+import type { MouseInternal } from './mouse';
+import { GamepadTarget, GamepadInternal } from './gamepad';
 import { InputStateTracker } from './input-state';
-import { GP_NAME_MAP } from './gamepad-buttons';
+import { LikeButton } from './gamepad-mapping';
+import { MouseButton } from './events';
 
-export type InputType = 'keyboard' | 'mouse' | 'gamepad';
+export type InputType = InputBinding['type'];
+export type InputBinding =
+  | { type: 'keyboard'; scancode: string }
+  | { type: 'mouse'; button: MouseButton }
+  | { type: 'gamepad'; gamepad: GamepadTarget, button: number };
 
-export interface InputBinding {
-  type: InputType;
-  code: string;
-}
-
-const buttonMap: Record<string, number> = {
-  'Left': 1,
-  'Right': 3,
-  'Middle': 2,
-  '1': 1,
-  '2': 2,
-  '3': 3,
-  '4': 4,
-  '5': 5,
-};
-
-export class Input {
+export class InputInternal {
   private actionMap = new Map<string, InputBinding[]>();
   private actionStateTracker = new InputStateTracker<string>();
-  private keyboard: Keyboard;
-  private mouse: Mouse;
-  private gamepad: Gamepad;
+  private keyboard: KeyboardInternal;
+  private mouse: MouseInternal;
+  private gamepad: GamepadInternal;
 
-  constructor(deps: { keyboard: Keyboard; mouse: Mouse; gamepad: Gamepad }) {
+  constructor(deps: { keyboard: KeyboardInternal; mouse: MouseInternal; gamepad: GamepadInternal }) {
     this.keyboard = deps.keyboard;
     this.mouse = deps.mouse;
     this.gamepad = deps.gamepad;
   }
 
-  map(action: string, inputs: string[]): void {
-    const bindings: InputBinding[] = inputs.map(input => this.parseInput(input));
-    this.actionMap.set(action, bindings);
-  }
-
-  unmap(action: string): void {
-    this.actionMap.delete(action);
-    this.actionStateTracker.clear();
+  setAction(action: string, inputs: string[] = []): void {
+    if (inputs.length) {
+      const bindings: InputBinding[] = inputs.map(input => this.parseInput(input));
+      this.actionMap.set(action, bindings);
+    } else {
+      this.actionMap.delete(action);
+      this.actionStateTracker.currState.delete(action);
+      this.actionStateTracker.prevState.delete(action);
+    }
   }
 
   isDown(action: string): boolean {
@@ -60,8 +50,8 @@ export class Input {
     return this.actionStateTracker.justReleased(action);
   }
 
-  update(): { pressed: string[]; released: string[] } {
-    this.gamepad.update();
+  _update(): { pressed: string[]; released: string[] } {
+    this.gamepad._update();
 
     const activeActions = new Set<string>();
 
@@ -81,33 +71,28 @@ export class Input {
 
     if (normalized.startsWith('Mouse')) {
       const buttonCode = normalized.replace('Mouse', '');
-      return { type: 'mouse', code: buttonCode };
+      return { type: 'mouse', button: buttonCode as MouseButton };
     }
 
     if (normalized.startsWith('Button') || normalized.startsWith('DP')) {
-      return { type: 'gamepad', code: normalized };
+      return {
+        type: "gamepad",
+        gamepad: 0,
+        button: GamepadInternal.getButtonNumber(normalized as LikeButton),
+      };
     }
 
-    return { type: 'keyboard', code: normalized };
+    return { type: 'keyboard', scancode: normalized };
   }
 
   private isBindingActive(binding: InputBinding): boolean {
     switch (binding.type) {
       case 'keyboard':
-        return this.keyboard.isDown(binding.code);
-      case 'mouse': {
-        const button = buttonMap[binding.code];
-        if (button !== undefined) {
-          return this.mouse.isDown(button);
-        }
-        return false;
-      }
+        return this.keyboard.isDown(binding.scancode);
+      case 'mouse':
+        return this.mouse.isDown(binding.button);
       case 'gamepad': {
-        const buttonIndex = GP_NAME_MAP[binding.code];
-        if (buttonIndex !== undefined) {
-          return this.gamepad.isButtonDownOnAny(buttonIndex);
-        }
-        return false;
+        return !!this.gamepad.isButtonDown(binding.gamepad, binding.button);
       }
       default:
         return false;

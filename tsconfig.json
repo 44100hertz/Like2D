@@ -3,7 +3,7 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "module": "ESNext",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
@@ -15,9 +15,9 @@
     "noFallthroughCasesInSwitch": true
   },
   "references": [
-    { "path": "./packages/like2d" },
-    { "path": "./apps/demo" },
-    { "path": "./apps/website" }
+    { "path": "./examples/feature-test" },
+    { "path": "./examples/starter" },
+    { "path": "./like" }
   ],
   "files": []
 }

@@ -8,7 +8,7 @@
  *
  */
 
-export type SourceOptions = {
+export type AudioSourceOptions = {
   volume?: number;
 }
 
@@ -17,23 +17,23 @@ type LoadState =
   | { loaded: true };
 
 /**
- * Handle to a loaded audio resource.
+ * Handle to a loaded audio resource, which pretends to be synchronous.
  * Use `play()`, `stop()`, `pause()`, `resume()` for playback control.
  * Access the underlying HTMLAudioElement via `source.audio` for looping,
  * pitch, etc. Note: Use `source.setVolume()` instead of setting
  * `source.audio.volume` directly to ensure global volume scaling works correctly.
  */
-export class Source {
+export class AudioSource {
   readonly path: string;
   /** Underlying HTMLAudioElement. Modify directly for looping, pitch, etc. Use methods for playback control. Avoid setting volume directly. */
   readonly audio: HTMLAudioElement;
-  readonly options: Required<SourceOptions>;
+  readonly options: Required<AudioSourceOptions>;
   /** Resolves when the audio is loaded and ready to play. */
   readonly ready: Promise<void>;
   private loadState: LoadState = { loaded: false, pendingPlay: false, pendingSeek: 0 };
-  private audioRef: Audio;
+  private audioRef: AudioInternal;
 
-  constructor(path: string, audioRef: Audio, options: SourceOptions = {}) {
+  constructor(path: string, audioRef: AudioInternal, options: AudioSourceOptions = {}) {
     this.path = path;
     this.audioRef = audioRef;
     this.audio = document.createElement('audio');
@@ -156,12 +156,15 @@ export class Source {
   }
 }
 
-export class Audio {
-  private sources: WeakRef<Source>[] = [];
+export class AudioInternal {
+  private sources: WeakRef<AudioSource>[] = [];
   private globalVolume = 1;
 
-  newSource(path: string, options?: SourceOptions): Source {
-    const source = new Source(path, this, options);
+  /**
+   * Get a {@link AudioSource}
+   */
+  newSource(path: string, options?: AudioSourceOptions): AudioSource {
+    const source = new AudioSource(path, this, options);
     this.sources.push(new WeakRef(source));
     return source;
   }
@@ -170,8 +173,8 @@ export class Audio {
     * using weak references, and storing this list can cause
     * a memory leak.
     */
-  private getAllSources(): Source[] {
-    const active: Source[] = [];
+  getAllSources(): AudioSource[] {
+    const active: AudioSource[] = [];
     for (const sourceRef of this.sources) {
       const source = sourceRef.deref();
       if (source) active.push(source);
@@ -202,7 +205,7 @@ export class Audio {
     return this.globalVolume;
   }
 
-  clone(source: Source): Source {
+  clone(source: AudioSource): AudioSource {
     return this.newSource(source.path, { ...source.options });
   }
 }

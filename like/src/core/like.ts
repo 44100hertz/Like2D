@@ -1,71 +1,134 @@
-import type { Audio } from './audio';
-import type { Timer } from './timer';
-import type { Input } from './input';
-import type { Keyboard } from './keyboard';
-import type { Mouse } from './mouse';
-import type { Gamepad } from './gamepad';
-import type { Vector2 } from './vector2';
-import type { CanvasMode, PartialCanvasMode } from './canvas-config';
-import type { BoundGraphics } from './graphics';
-import type { Scene } from '../scene';
-
 /**
- * The Like interface provides access to all core systems and APIs
- * that are passed to game callbacks (load, update, draw, etc.).
+ * @module like
+ * @description A catalogue of subsystems
+ *
+ * This is how we know what's part of like.
+ * `like.gfx`, `like.canvas`, and such.
  * 
- * This is the main interface for interacting with the engine's subsystems.
  */
-export interface Like {
-  /** Audio system for managing and playing sounds */
-  readonly audio: Audio;
-  
-  /** Timer system for tracking time, delta, and FPS */
-  readonly timer: Timer;
-  
-  /** Input system for action-based input handling */
-  readonly input: Input;
-  
-  /** Keyboard input handling */
-  readonly keyboard: Keyboard;
-  
-  /** Mouse input handling */
-  readonly mouse: Mouse;
-  
-  /** Gamepad input handling */
-  readonly gamepad: Gamepad;
-  
+
+import type { AudioInternal } from './audio';
+import type { TimerInternal } from './timer';
+import type { InputInternal } from './input';
+import type { KeyboardInternal } from './keyboard';
+import type { MouseInternal } from './mouse';
+import type { GamepadInternal } from './gamepad';
+import type { CanvasInternal } from './canvas';
+import type { BoundGraphics } from './graphics';
+import { EventMap, EventType, LikeEvent } from './events';
+import { TopLevelEventHandler } from '..';
+import { Scene } from '../scene';
+
+type Callback<K extends EventType> = (...args: EventMap[K]) => void;
+
+type Callbacks = {
+  [K in EventType]?: Callback<K>;
+};
+
+export type LikeInternal = Callbacks & {
+  readonly audio: AudioInternal;
+  readonly timer: TimerInternal;
+  readonly input: InputInternal;
+  readonly keyboard: KeyboardInternal;
+  readonly mouse: MouseInternal;
+  readonly gamepad: GamepadInternal;
+
+  canvas: CanvasInternal,
+
+
   /** Graphics context for rendering operations */
   gfx: BoundGraphics;
-  
+
   /**
-   * Set the canvas display mode.
-   * @param mode - Partial canvas mode configuration
+   * Start the game loop. Call this only once.
+   * @returns Promise that resolves when the engine is ready
    */
-  setMode(mode: PartialCanvasMode): void;
-  
+  start(): Promise<void>;
+
   /**
-   * Get the current canvas mode configuration.
-   * @returns The current canvas mode or undefined if not available
+   * Clears out event listeners to avoid memory leaks.
    */
-  getMode(): CanvasMode | undefined;
-  
+  dispose(): void;
+
   /**
-   * Get the current canvas size in pixels.
-   * @returns The canvas size as a Vector2 [width, height]
+   * A simple way to set the current scene, which acts like a pluggable
+   * set of callbacks. 
+   * 
+   * Translates into `like.handleEvent = (event) => sceneDispatch(scene, like, event)`
+   * followed by dispatching a `load` event.
+   * 
+   * {@link Scene} for detailed usage.
+   * @param scene Scene to load, leave out to use callbacks.
    */
-  getCanvasSize(): Vector2;
-  
+  setScene(scene?: Scene): void;
+
   /**
-   * Set the active scene. Pass null to revert to global callbacks.
+   * LIKE's runtime is built around calling handleEvent.
+   * 
+   * For more advanced LIKE users, overriding this function allows you
+   * to create your own fundamental systems by writing an {@link TopLevelEventHandler}
+   * 
+   * The built-in event handler amounts to calling `like[ev.type](...ev.args)`, as
+   * does the scene one which is a bit more like `yourScene[ev.type](like, ...ev.args)`.
+   * 
+   * The code for them is very short and simple. Take a look if you're interested
+   * in building your own.
    */
-  setScene(scene: Scene | null): void;
+  handleEvent?: TopLevelEventHandler;
+
+  callOwnHandlers(event: LikeEvent): void;
 }
 
-// Re-export core types that are commonly used with Like
-export type { Audio, Source, SourceOptions } from './audio';
-export type { Timer } from './timer';
-export type { Input, InputBinding, InputType } from './input';
-export type { Keyboard } from './keyboard';
-export type { Mouse, MousePositionTransform } from './mouse';
-export type { Gamepad, StickPosition, ButtonCallback } from './gamepad';
-export type { CanvasMode, PartialCanvasMode } from './canvas-config';
+/**
+ * A little helper that hides methods with underscores.
+ */
+type Public<T> = {
+  [K in keyof T as K extends `_${string}` ? never : K]: T[K]
+};
+
+type Canvas = Public<CanvasInternal>; 
+type Keyboard = Public<KeyboardInternal>;
+type Mouse = Public<MouseInternal>;
+type Audio = Public<AudioInternal>;
+type Timer = Public<TimerInternal>;
+type Input = Public<InputInternal>;
+type Gamepad = Public<GamepadInternal>;
+
+/**
+ * The main Like instance.
+ * Use this object much how you would the `love` object in Love2D.
+ * This is the interface returned by {@link createLike}.
+ *
+ * Assigns callbacks to handle events. See {@link EventMap} for all available events.
+ * 
+ * Don't forget to call `await start()` when you're ready,
+ * and `dispose()` if you're done with it.
+ */
+export type Like = LikeInternal & {
+  /** Canvas settings, including even Pixel Art mode. */
+  readonly canvas: Canvas;
+
+  /** Synchronous audio handles with global control. */
+  readonly audio: Audio;
+
+  /** Timer system for tracking time, delta, FPS, and freezing the whole game. */
+  readonly timer: Timer;
+
+  /** Input system for action-based input handling */
+  readonly input: Input;
+
+  /** Keyboard input handling */
+  readonly keyboard: Keyboard;
+
+  /** Mouse input handling */
+  readonly mouse: Mouse;
+
+  /** Gamepad input handling */
+  readonly gamepad: Gamepad;
+
+  /** Look at {@link handleEvent} -- it serves the same purpose. */
+  run?: never;
+
+  /** I think you meant to type like.canvas instead.  */
+  window?: never;
+}

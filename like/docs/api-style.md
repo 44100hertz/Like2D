@@ -2,15 +2,13 @@
 
 ## Design Principles
 
-**Functions over classes** - Where possible, use functions instead of classes. Easier to tree-shake, simpler to understand.
+**Named exports only** - No default exports. Every import is explicit.
 
-**Named exports only** - No default exports. Every import is explicit:
+**Private Methods** - Prefix all non-API methods with `_`. Each module is named `ThingInternal`. Use `Public<T>` in like.ts to get `Thing`.
 
-```typescript
-import { like, Scene } from './like/index.ts';
-```
+**0-1 color range** - Colors use 0.0-1.0, not 0-255.
 
-**0-1 color range** - Colors use 0.0-1.0 floats, not 0-255. Matches shaders, easier mental math.
+**Seconds** - No milliseconds.
 
 **Canvas coordinates** - (0,0) at top-left, Y increases downward. Matches HTML Canvas and CSS.
 
@@ -25,9 +23,6 @@ like.graphics.rectangle('fill', [1, 0, 0], [100, 100, 50, 50]);
 
 // Required: color, text, position. Optional: font, wrapping in props
 like.graphics.print([1, 1, 1], 'Hello', [100, 100], { limit: 200, align: 'center' });
-
-// Required: image, position. Optional: quad, rotation, scale in props
-like.graphics.draw(playerImage, [x, y], { quad: spriteQuad, r: rotation, sx: 2 });
 ```
 
 **Tuple types for coordinates** - Use `Vector2` and `Rect` tuples for geometric data:
@@ -46,16 +41,6 @@ const position: Vector2 = [100, 200];
 const velocity: Vector2 = [10, 5];
 const newPos = Vec2.add(position, velocity);  // [110, 205]
 ```
-
-## Global Singleton
-
-The `like` object is a global singleton. This is intentional:
-
-- Games typically have one graphics context, one audio system
-- No dependency injection boilerplate
-- Easy to access from anywhere
-
-For testing or multiple instances, create a new Like instance (though this is rarely needed).
 
 ## TypeScript First
 

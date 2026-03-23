@@ -7,14 +7,12 @@ Hardcoding keys (`if (key === 'Space')`) creates problems:
 - Awkward multi-input checks (`if (key === 'Space' || key === 'ArrowUp')`)
 - Different controllers have different button layouts
 
-Like2D separates **actions** from **physical inputs**.
-
 ## Action Mapping
 
 ```typescript
 // Map abstract actions to physical inputs
-like.input.map('jump', ['Space', 'ArrowUp', 'KeyW', 'ButtonBottom']);
-like.input.map('fire', ['MouseLeft', 'KeyZ', 'RT']);
+like.input.setAction('jump', ['Space', 'ArrowUp', 'KeyW', 'ButtonBottom']);
+like.input.setAction('fire', ['MouseLeft', 'KeyZ', 'RT']);
 
 // Query by action
 if (like.input.isDown('jump')) { /* ... */ }
@@ -27,8 +25,6 @@ if (like.input.justPressed('fire')) { /* ... */ }
 
 **Multiple inputs per action** - Natural way to support alternatives (WASD + arrows, keyboard + gamepad).
 
-**Gamepad abstraction** - SDL game controller database maps physical buttons to standard names (`ButtonBottom`, `RT`, `DPadLeft`). Games work across controller brands without code changes.
-
 **Three query methods**:
 - `isDown(action)` - Currently held (for movement)
 - `justPressed(action)` - First frame of press (for one-shot actions)
@@ -38,12 +34,6 @@ if (like.input.justPressed('fire')) { /* ... */ }
 - Debug overlays
 - Text input
 - Special controller features (gyro, touchpads)
-
-## Gamepad Mapping
-
-Controllers use vendor/product IDs for identification. The SDL database provides standard mappings.
-
-Browser limitation: Only 4 bytes of GUID available (vendor + product). Matching is by vendor/product only, which may cause issues with variants. This is an accepted trade-off for web compatibility.
 
 ## Input String Format
 

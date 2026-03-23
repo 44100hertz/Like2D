@@ -1,5 +1,52 @@
+import { mod as mmod } from ".";
+
+/** A pair of numbers `[x, y]`
+ * representing for example:
+ *  - position in 2D space
+ *  - width and height
+ *  - velocity
+ * 
+ * See {@link Vec2} for full library.
+ * 
+ * ## Examples
+ * 
+ * #### Constructing a Vector2
+ * ```ts
+ * const onionSize: Vector2 = [width, height];
+ * ```
+ * 
+ * #### Deconstructing a Vector2
+ * ```ts
+ * const [width, height] = onionSize;
+ * ```
+ * 
+ * #### Making math less repetitive.
+ * ```ts
+ * x += dx * speed;
+ * y += dy * speed;
+ * // becomes...
+ * pos = Vec2.add(pos, Vec2.mul(delta, speed))
+ * ```
+ * 
+ * #### Summing an array of Vector2
+ * ```ts
+ * const nums: Vector2[] = [[50, 100], [-5, -5], [0, 99]];
+ * const sum = nums.reduce(Vec2.add);
+ * ```
+ * 
+ * #### Using LIKE graphics API
+ * ```ts
+ * // Draw a circle in the center of the canvas.
+ * const pos = Vec2.div(
+ *   like.canvas.getSize(),
+ *   2,
+ * )
+ * like.graphics.circle('fill', 'blue', pos, 20); 
+ * ```
+ * */
 export type Vector2 = [number, number];
 
+/** Library of Vec2 functions. See {@link Vector2} for overview. */
 export namespace Vec2 {
   export function add(a: Vector2, b: Vector2): Vector2 {
     return [a[0] + b[0], a[1] + b[1]];
@@ -21,6 +68,17 @@ export namespace Vec2 {
       return [v[0] / other, v[1] / other];
     }
     return [v[0] / other[0], v[1] / other[1]];
+  }
+
+  export function mod(v: Vector2, other: Vector2 | number): Vector2 {
+    if (typeof other === 'number') {
+      return [mmod(v[0], other), mmod(v[1], other)]
+    }
+    return [mmod(v[0], other[0]), mmod(v[1], other[1])]
+  }
+
+  export function eq(v: Vector2, other: Vector2): boolean {
+    return v[0] == other[0] && v[1] == other[1];
   }
 
   export function dot(a: Vector2, b: Vector2): number {
@@ -51,6 +109,17 @@ export namespace Vec2 {
 
   export function lerp(a: Vector2, b: Vector2, t: number): Vector2 {
     return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  }
+
+  export function toPolar(v: Vector2): { r: number, angle: number } {
+    return {
+      r: Vec2.length(v),
+      angle: Vec2.angle(v),
+    }
+  }
+
+  export function fromPolar(r: number, angle: number): Vector2 {
+    return [ r * Math.cos(angle), r * Math.sin(angle) ]
   }
 
   export function angle(v: Vector2): number {

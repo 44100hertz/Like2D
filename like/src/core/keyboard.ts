@@ -1,24 +1,17 @@
-export class Keyboard {
+import { EngineDispatch } from "../engine";
+
+export class KeyboardInternal {
   private pressedScancodes = new Set<string>();
-  public onKeyEvent?: (scancode: string, keycode: string, type: 'keydown' | 'keyup') => void;
   private canvas: HTMLCanvasElement | null = null;
+  private abort = new AbortController();
 
-  // Event handler references for cleanup
-  private keydownHandler: (e: globalThis.KeyboardEvent) => void;
-  private keyupHandler: (e: globalThis.KeyboardEvent) => void;
-  private blurHandler: () => void;
-
-  constructor(canvas: HTMLCanvasElement | null) {
+  constructor(canvas: HTMLCanvasElement | null, private dispatch: EngineDispatch) {
     this.canvas = canvas;
 
-    this.keydownHandler = this.handleKeyDown.bind(this);
-    this.keyupHandler = this.handleKeyUp.bind(this);
-    this.blurHandler = this.handleBlur.bind(this);
-
     if (this.canvas) {
-      this.canvas.addEventListener('keydown', this.keydownHandler);
-      this.canvas.addEventListener('keyup', this.keyupHandler);
-      this.canvas.addEventListener('blur', this.blurHandler);
+      this.canvas.addEventListener('keydown', this.handleKeyDown.bind(this), { signal: this.abort.signal });
+      this.canvas.addEventListener('keyup', this.handleKeyUp.bind(this), { signal: this.abort.signal });
+      this.canvas.addEventListener('blur', this.handleBlur.bind(this), { signal: this.abort.signal });
     }
   }
 
@@ -31,26 +24,22 @@ export class Keyboard {
     if (e.code) {
       this.pressedScancodes.add(e.code);
     }
-    this.onKeyEvent?.(e.code, e.key, 'keydown');
+    this.dispatch('keypressed', [e.code, e.key]);
   }
 
   private handleKeyUp(e: globalThis.KeyboardEvent): void {
     if (e.code) {
       this.pressedScancodes.delete(e.code);
     }
-    this.onKeyEvent?.(e.code, e.key, 'keyup');
+    this.dispatch('keyreleased', [e.code, e.key]);
   }
 
   private handleBlur(): void {
     this.pressedScancodes.clear();
   }
 
-  dispose(): void {
-    if (this.canvas) {
-      this.canvas.removeEventListener('keydown', this.keydownHandler);
-      this.canvas.removeEventListener('keyup', this.keyupHandler);
-      this.canvas.removeEventListener('blur', this.blurHandler);
-    }
+  _dispose(): void {
+    this.abort.abort();
     this.pressedScancodes.clear();
   }
 
