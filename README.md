@@ -33,7 +33,7 @@ The code base is intentionally kept as small and simple as possible, so you can 
 
 Check out the [Like2D Starter](https://github.com/44100hertz/Like2D-starter) template to get up and running quickly!
 
-[Read the full documentation](https://github.com/44100hertz/Like2D/tree/master/packages/like2d)
+[Read the full documentation](https://github.com/44100hertz/Like2D/tree/master/like)
 
 ## Why the Spade?
 
