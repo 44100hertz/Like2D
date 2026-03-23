@@ -46,6 +46,7 @@
  - `callSceneHandlers(LikeEvent)`: Similar, but for a scene to call its own events.
  - `sceneDispatch(Scene, like, LikeEvent)`: Used for passing events into sub-scenes (including root scene).
  - Focus/blur now take one argument `'tab' | 'canvas'` for source.
+ - `like.audio.getAllSources`
 
 ### Updated
  - Documented public-facing API with TSDoc

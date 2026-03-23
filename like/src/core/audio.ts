@@ -173,7 +173,7 @@ export class AudioInternal {
     * using weak references, and storing this list can cause
     * a memory leak.
     */
-  private getAllSources(): AudioSource[] {
+  getAllSources(): AudioSource[] {
     const active: AudioSource[] = [];
     for (const sourceRef of this.sources) {
       const source = sourceRef.deref();
