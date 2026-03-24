@@ -31,7 +31,14 @@ The code base is intentionally kept as small and simple as possible, so you can 
 
 ## Ready to go?
 
-Check out the [Like2D Starter](https://github.com/44100hertz/Like2D-starter) template to get up and running quickly!
+Clone a simple starter this way:
+
+```bash
+npx degit 44100hertz/Like2D/examples/starter my-game
+cd my-game
+npm install
+npm run dev
+```
 
 [Read the full documentation](https://github.com/44100hertz/Like2D/tree/master/like)
 

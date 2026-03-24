@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "like": "file:../.."
+    "like2d": "^2.9.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
