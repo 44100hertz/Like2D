@@ -14,7 +14,6 @@ type MouseSetMode = Partial<MouseMode> & { lock: boolean };
 
 /**
  * Mouse input handling. Bound to canvas. Emits relative movement when pointer locked.
- * Buttons: 1 = left, 2 = middle, 3 = right.
  */
 export class MouseInternal {
   private pos: Vector2 = [0, 0];
