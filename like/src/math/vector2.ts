@@ -1,5 +1,7 @@
 import { mod as mmod } from "./index.js";
 
+export type Pair<T> = [T, T];
+
 /** A pair of numbers `[x, y]`
  * representing for example:
  *  - position in 2D space
@@ -58,63 +60,66 @@ import { mod as mmod } from "./index.js";
  * 
  * #### Squaring each element of a Vector2
  * ```ts
- * const squareVec2 = Vec2.map(a => a**2);
+ * const squareVec2 = Vec2.map(a: number => a**2);
  * squareVec2([6, 7]) // returns [36, 42]
  * // one in one line...
- * Vec2.map(a => a**2)([6, 7]);
+ * Vec2.map(a: number => a**2)([6, 7]);
  * ```
  * 
  * */
-export type Vector2 = [number, number];
+
+export type Vector2 = Pair<number>;
 
 /**
- * According to benchmarks, constructing funcs with map/map2 is just as fast as loose coords.
+ * According to benchmarks, constructing funcs with these helpers is just as fast as loose coords in v8.
  * Why not, then?
  * If you're writing hyper-optimized Vector2 code, just use loose math anyway
  * -- it will likely logically optimize down further, if you do the algebra.
  */
 
-/** See {@link Vec2.map} */
-const map =
-  (op: (a: number) => number) =>
-  (a: Vector2): Vector2 => [op(a[0]), op(a[1])];
+/** @see {@link Vec2.map} */
+function map2x1<I, O>(op: (a: I) => O): (a: Pair<I>) => Pair<O> {
+  return (a) => [op(a[0]), op(a[1])];
+}
 
-/** See {@link Vec2.map2} */
-const map2 =
-  (op: (a: number, b: number) => number) =>
-  (a: Vector2, b: Vector2 | number): Vector2 =>
-    typeof b == "number"
-      ? [op(a[0], b), op(a[1], b)]
-      : [op(a[0], b[0]), op(a[1], b[1])];
+/** @see {@link Vec2.map2} */
+function map2x2<I, O>(
+  op: (a: I, b: I) => O,
+): (a: Pair<I>, b: I | Pair<I>) => Pair<O> {
+  return (a, b) =>
+    typeof b == "object" && b instanceof Array
+      ? [op(a[0], b[0]), op(a[1], b[1])]
+      : [op(a[0], b), op(a[1], b)];
+}
 
 export const Vec2 = {
   /**
-   * Turn a one-arg number function into a Vector2 function.
-   * @param op A function that transforms a number
-   * @returns A function that transforms each coordinate of a Vector2 in the same way.
+   * Turn a unary function into a pair-wise unary function.
+   * @param op A function that takes one arg and returns something.
+   * @returns A function that takes a pair such as `[number, number]` (Vector2) and transforms it with `op`.
    */
-  map,
+  map: map2x1,
   /**
-   * Turn a two-arg number function into a Vector2 function.
-   * @param op A function that takes two numbers and calculates one
-   * @returns A function that runs that function on both coordinate pairs of a pair of Vec2s.
+   * Turn a binary function into a pair-wise binary function, for example one that operates on two `Vector2`s.
+   * @param op A function that takes two values and calculates one.
+   * @returns A function that runs `op` pair-wise on both arguments, constructing a new pair.
    */
-  map2,
+  map2: map2x2,
 
-  add: map2((a, b) => a + b),
-  sub: map2((a, b) => a - b),
-  mul: map2((a, b) => a * b),
-  div: map2((a, b) => a / b),
+  add: map2x2((a: number, b) => a + b),
+  sub: map2x2((a: number, b) => a - b),
+  mul: map2x2((a: number, b) => a * b),
+  div: map2x2((a: number, b) => a / b),
   /** Returns the maximum of two coordinates,
    * i.e. the lower right corner of a bounding box containing them. */
-  max: map2(Math.max),
+  max: map2x2(Math.max),
   /** Returns the minimum of two coordinates,
    * i.e. the upper left corner of a bounding box containing them. */
-  min: map2(Math.min),
+  min: map2x2(Math.min),
   /** Apply a true modulus (i.e. where -1 % 3 == 2) to a Vector2.
    * 
    * For JS-style modulus (who wants that?) use `Vec2.map2((a,b) => a % b)` */
-  mod: map2(mmod),
+  mod: map2x2(mmod),
 
   /** Apply deep (not referential) equality to a pair of Vec2s.
    * @param epsilon Tolerance factor for inexact matches.
@@ -177,10 +182,10 @@ export const Vec2 = {
     return [v[0] * cos - v[1] * sin, v[0] * sin + v[1] * cos];
   },
 
-  negate: map((a) => -a),
-  floor: map(Math.floor),
-  ceil: map(Math.ceil),
-  round: map(Math.round),
+  negate: map2x1((a: number) => -a),
+  floor: map2x1(Math.floor),
+  ceil: map2x1(Math.ceil),
+  round: map2x1(Math.round),
 
   clamp(v: Vector2, min: Vector2, max: Vector2): Vector2 {
     return [
