@@ -39,7 +39,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "echo 'No linting configured'",
     "clean": "rm -rf dist",
-    "test": "vitest run"
+    "test": "vitest run",
+    "bench": "vitest bench"
   },
   "keywords": [
     "game",
