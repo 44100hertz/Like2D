@@ -29,7 +29,8 @@ export type TopLevelEventHandler = (event: LikeEvent) => void;
  * ### How to bind callbacks
  * 
  * ```ts
- * export const like = createLike();
+ * const elem = document.getElementById("canvasHolder");
+ * export const like = createLike(elem);
  * 
  * like.start();
  * 
@@ -43,7 +44,6 @@ export type TopLevelEventHandler = (event: LikeEvent) => void;
  * ```
  *
  * @param container - The HTML element to attach the game canvas to.
- *                    Must be in the DOM.
  * @returns A {@link Like} instance ready for callback assignment
  * 
  */
