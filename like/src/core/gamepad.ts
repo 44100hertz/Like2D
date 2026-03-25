@@ -1,37 +1,52 @@
-import { LikeButton, nameToNumber, numberToName } from './gamepad-mapping';
+import { defaultMapping, GamepadMapping, LikeButton, mapStick, standardButtonMapping } from './gamepad-mapping';
 import { EngineDispatch } from '../engine';
 import { Vector2 } from '../math/vector2';
 
-export type { LikeButton };
+export {
+  type LikeButton,
+  type GamepadMapping,
+  type StickMapping,
+  type StickAxisMapping,
+  defaultMapping,
+} from "./gamepad-mapping";
 
 /** A selector for a gamepad. */
 export type GamepadTarget = number | "any";
 
-type Mapping = {
-  buttons: number[],
-  sticks: StickMapping[],
-}
-type StickMapping = [StickAxisMapping, StickAxisMapping];
-type StickAxisMapping = {index: number, invert: boolean};
-
-const defaultMapping = (stickCount: number): Mapping => ({
-  buttons: [],
-  sticks: Array(stickCount / 2).fill(0).map((_, i) => [
-    { index: i * 2, invert: false },
-    { index: i * 2 + 1, invert: false },
-  ]),
-});
-
 /** LIKE Gamepad Wrapper
  * 
- *  - Allows events/callbacks to be sent from joy buttons
- *  - Can track if any gamepad has a button pressed.
+ *  - Allows events/callbacks to be sent from joy buttons.
+ *  - Can track if any gamepad has a button pressed / just pressed.
+ *  - Remaps raw input numbers to readable strings using.
  * 
- * # Examples
+ * If you're planning on supporting gamepads, be sure to include a
+ * way to generate {@link GamepadMapping} and set it with {@link Gamepad.setMapping}.
  * 
- * ### Binding events
+ * If you don't want to make your own, take a look at `prefab-scenes/mapGamepad`.
+ * 
+ * ## Using the built-in mapping scene
+ * Usage:
  * ```ts
- * like.gamepadpressed = (idx: number, _num: number, button: string) => {
+ * import { buttonSetSNES, MapGamepad } from "like/prefab-scenes";
+ * 
+ * like.gamepadconnected = (index: number, mapped: boolean) => {
+ *   if (!mapped) {
+ *     const myTargetMapping = { buttons: buttonSetSNES, sticks: 2 };
+ *     const mappingScene = new MapGamepad(myTargetMapping, index);
+ *     like.scene.setScene(mappingScene);
+ *   }
+ * }
+ * ```
+ * 
+ * Available button sets:
+ *  - `buttonSetNES`: A, B, Start, Select, DPad
+ *  - `buttonSetSNES`: NES plus X, Y, L1, R1
+ *  - `buttonSetPS1`: SNES plus L2, R2
+ *  - `buttonSetAll`: PS1 plus Lstick, RStick (stick click buttons)
+ * 
+ * ## Getting events
+ * ```ts
+ * like.gamepadpressed = (idx: number, button: LikeButton) => {
  *   console.log(`Button ${button} pressed on controller ${idx}`);
  * }
  * ```
@@ -79,6 +94,7 @@ export class GamepadInternal {
         );
     } else if (ev.gamepad.mapping == "standard") {
       console.log(`[Gamepad] Connected standard gamepad ${ev.gamepad.id}.`);
+      gps.mapping.buttons = standardButtonMapping();
     } else {
       console.log(
         `[Gamepad] Connected non-standard gamepad ${ev.gamepad.id}.Consider remapping it.`,
@@ -102,38 +118,36 @@ export class GamepadInternal {
   getSticks(target: number): Vector2[] {
     const gp = this.gamepads.get(target);
     if (gp) {
-      return gp.sticks;
+      return gp.getSticks();
     }
     return [];
+  }
+
+  _checkButton(target: GamepadTarget, button: LikeButton, mode: 'justPressed' | 'pressed'): boolean | undefined {
+    if (target == "any") {
+      return this.gamepads.values().some((gp) => gp[mode].has(button));
+    } else {
+      return this.gamepads.get(target)?.[mode].has(button);
+    }
   }
 
   /** Check if a gamepad button is down. */
   isButtonDown(
     target: GamepadTarget,
-    buttonRaw: number | LikeButton,
+    button: LikeButton,
   ): boolean | undefined {
-    const btn = GamepadInternal.getButtonNumber(buttonRaw);
-    if (target == "any") {
-      return this.gamepads.values().some((gp) => gp.pressed[btn]);
-    } else {
-      return this.gamepads.get(target)?.pressed[btn];
-    }
+    return this._checkButton(target, button, 'pressed');
   }
 
   /**
    * Returns true for only one frame/update if a button is pressed.
-   * Consider using `gamepadpressed` callback instead.
+   * Considered an alternative to `like.gamepadpressed`.
    */
   isButtonJustPressed(
     target: GamepadTarget,
-    buttonRaw: number | LikeButton,
+    button: LikeButton,
   ): boolean | undefined {
-    const btn = GamepadInternal.getButtonNumber(buttonRaw);
-    if (target == "any") {
-      return this.gamepads.values().some((gp) => gp.justPressed[btn]);
-    } else {
-      return this.gamepads.get(target)?.justPressed[btn];
-    }
+    return this._checkButton(target, button, 'justPressed');
   }
 
   /**
@@ -141,7 +155,7 @@ export class GamepadInternal {
    * Note that modifying this mapping in place will modify the target controller.
    * However, use `setMapping` to finalize the mapping.
    */
-  getMapping(index: number): Mapping | undefined {
+  getMapping(index: number): GamepadMapping | undefined {
     return this.gamepads.get(index)?.mapping;
   }
 
@@ -150,7 +164,7 @@ export class GamepadInternal {
    *
    * Set `save = false` if you don't want this written into localstorage.
    */
-  setMapping(index: number, mapping: Mapping, save = true) {
+  setMapping(index: number, mapping: GamepadMapping, save = true) {
     const gp = this.gamepads.get(index);
     if (gp) {
       gp.mapping = mapping;
@@ -163,12 +177,16 @@ export class GamepadInternal {
   /**
    * Get saved mapping from db, if it exists.
    */
-  loadMapping(index: number): Mapping | undefined {
+  loadMapping(index: number): GamepadMapping | undefined {
     const gp = navigator.getGamepads()?.[index];
     if (gp) {
-      const item = localStorage.getItem(getLocalstoragePath(gp));
+      const path = getLocalstoragePath(gp);
+      console.log(`[Gamepad] Loaded mapping ${path} from localStorage.`)
+      const item = localStorage.getItem(path);
       if (item) {
-        return JSON.parse(item);
+        const raw = JSON.parse(item);
+        raw.buttons = new Map(Object.entries(raw.buttons));
+        return raw;
       }
     }
   }
@@ -176,10 +194,12 @@ export class GamepadInternal {
   /**
    * Save a mapping to persistant storage
    */
-  saveMapping(index: number, mapping: Mapping) {
+  saveMapping(index: number, mapping: GamepadMapping) {
     const gp = navigator.getGamepads()?.[index];
     if (gp) {
-      localStorage.setItem(getLocalstoragePath(gp), JSON.stringify(mapping));
+      const path = getLocalstoragePath(gp);
+      console.log(`[Gamepad] Saved mapping ${path} to localStorage.`)
+      localStorage.setItem(path, JSON.stringify(mapping));
     }
   }
 
@@ -199,17 +219,6 @@ export class GamepadInternal {
     this.abort.abort();
   }
 
-  public static getButtonName(button: number | LikeButton): LikeButton {
-    return typeof button == "number"
-      ? (numberToName.get(button) ?? `Button${button}`)
-      : button;
-  }
-
-  public static getButtonNumber(button: number | LikeButton): number {
-    return typeof button == "number"
-      ? button
-      : (nameToNumber.get(button) ?? Number(button.substring(6)));
-  }
 }
 
 function getLocalstoragePath(gamepad: Gamepad): string {
@@ -221,36 +230,45 @@ function getLocalstoragePath(gamepad: Gamepad): string {
  * its state.
  */
 class GamepadState {
-  public mapping: Mapping;
-  public pressed: boolean[] = [];
-  public sticks: Vector2[] = [];
-  public justPressed: boolean[] = [];
+  public mapping: GamepadMapping;
+  public pressed = new Set<LikeButton>();
+  public justPressed = new Set<LikeButton>();
 
   constructor(public index: number) {
     const gp = navigator.getGamepads()[this.index]!;
     this.mapping = defaultMapping(gp.axes.length);
-    console.log(JSON.stringify(this.mapping));
-  };
+  }
 
   update(dispatch: EngineDispatch) {
     const gp = navigator.getGamepads()[this.index]!;
-    
-    gp.buttons.forEach((_, i) => {
-      this.justPressed[i] = false;/** Vector2 is a subset of pair. */
-      const pressed = gp.buttons[this.mapping.buttons[i] ?? i].pressed;
-      if (pressed && !this.pressed[i]) {
-        dispatch('gamepadpressed', [this.index, i, GamepadInternal.getButtonName(i)])
-        this.justPressed[i] = true;
-      } else if (!pressed && this.pressed[i]) {
-        dispatch('gamepadreleased', [this.index, i, GamepadInternal.getButtonName(i)])
+
+    const nextPressed = new Set<LikeButton>();
+    this.justPressed.clear();
+    gp.buttons.forEach((btn, i) => {
+      const name = this.mapping.buttons.get(i) ?? `Unknown${i}`;
+      if (btn.pressed) {
+        nextPressed.add(name);
       }
-      this.pressed[i] = pressed;
+      if (btn.pressed && !this.pressed.has(name)) {
+        dispatch("gamepadpressed", [this.index, name, i]);
+        this.pressed.add(name);
+        this.justPressed.add(name);
+      } else if (!btn.pressed && this.pressed.has(name)) {
+        console.log("released")
+        dispatch("gamepadreleased", [this.index, name, i]);
+      }
     });
 
-    this.sticks = this.mapping.sticks.map((mapping) =>
-      mapping.map(({index, invert}) => (invert ? -1 : 1) * (gp.axes[index] ?? 0)) as Vector2
-    )
+    this.pressed = nextPressed;
   }
 
-  clear() { this.pressed = [] }
+  getSticks(): Vector2[] {
+    const gp = navigator.getGamepads()[this.index]!;
+    return this.mapping.sticks.map((stick) => mapStick(gp, stick));
+  }
+
+  clear() {
+    this.justPressed.clear();
+    this.pressed.clear();
+  }
 }

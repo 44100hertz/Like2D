@@ -9,7 +9,7 @@ export type InputType = InputBinding['type'];
 export type InputBinding =
   | { type: 'keyboard'; scancode: string }
   | { type: 'mouse'; button: MouseButton }
-  | { type: 'gamepad'; gamepad: GamepadTarget, button: number };
+  | { type: 'gamepad'; gamepad: GamepadTarget, button: LikeButton };
 
 export class InputInternal {
   private currState = new Set<string>();
@@ -87,8 +87,8 @@ export class InputInternal {
     if (normalized.startsWith("Button") || normalized.startsWith("DP")) {
       return {
         type: "gamepad",
-        gamepad: 0,
-        button: GamepadInternal.getButtonNumber(normalized as LikeButton),
+        gamepad: "any",
+        button: normalized as LikeButton,
       };
     }
 

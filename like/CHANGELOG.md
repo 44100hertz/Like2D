@@ -7,20 +7,31 @@
    Note that setting `visible` to `false` in `setMode` will be remembered when capture state is exited.
  - Removed `like.gamepad.getGamepad` -- Redundant with DOM
  - Removed `like.input.clear` -- Why does this exist?
+ - Removed `buttonMenuCenter` mapping -- Relatively uncommon, no games will rely on this.
+ - Removed `gfx.circle` angle property -- prefer transforms, we can rotate any shape...
+ - Gamepads now have mapping enabled by default.
+    - Changed argument order of `gamepadpressed` -- name first (names _are_ mapped), then number (numbers _aren't_ mapped).
+    - `like.gamepad.isButtonDown` no longer lets you check for unmapped (numeric) presses. Use `gamepadpressed`.
+ - `like.gfx.print` option `limit` renamed to `width`.
 
 ### Added
- - `like.mouse.setMode`, which replaces `showCursor` and allows setting mouse sensitivity in capture mode, as well as visibility and scroll blocking in non-captured mode.
- - `like.mouse.setCapturedPos`, allows emulated mouse to be teleported while in capture mode.
- - `Vec.map` and `Vec.map2` curried functions to make operations 
- - `like.gamepad.isPressed` and `like.gamepad.isJustPressed` now accept `'any'` as the first argument, to check all gamepads.
- - Gamepad mapping / remapping system
+  - `like.mouse.setMode`, which replaces `showCursor` and allows setting mouse sensitivity in capture mode, as well as visibility and scroll blocking in non-captured mode.
+  - `like.mouse.setCapturedPos`, allows emulated mouse to be teleported while in capture mode.
+  - `Vec.map` and `Vec.map2` curried functions to make operations 
+  - `like.gamepad.isPressed` and `like.gamepad.isJustPressed` now accept `'any'` as the first argument, to check all gamepads.
+  - Gamepad mapping / remapping system
   - `like.gamepad.setMapping`, `like.gamepad.getMapping`: Set / get active button mappings.
   - `like.gamepad.loadMapping`, `like.gamepad.saveMapping`: Put persistent mappings in localstorage.
   - `like.gamepad.enableAutoLoadMapping`: Always load saved mappings on gamepad connection.
-  - `like.gamepad.getSticks`
+  - `like.gamepad.getSticks`: Get an array of mapped sticks.
 
 ### Fixed
  - **Capture Bug** If another element set cursor capture, LIKE would report capture TRUE.
+ - Make `gfx.circle` center property actually work.
+ - Make `gfx.circle` filled arc actually fill like a pie slice kinda
+ - **Double Load** Scene-based games were loading twice. `like.setScene` was dispatching `load` before `like` had actually started running.
+ - **Hiding internal methods for good** Underscore methods are now totally invisible via type magic.
+ - (Type enforcement) Don't allow setting `like.gfx.print` font alignment without width.
 
 ## [2.9.0] - 2026-03-23
 
