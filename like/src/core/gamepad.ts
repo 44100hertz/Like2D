@@ -139,7 +139,7 @@ export class GamepadInternal {
   _checkButton(
     target: GamepadTarget,
     button: LikeButton | number,
-    mode: "isJustPressed" | "isDown",
+    mode: "justPressed" | "isDown",
   ): boolean | undefined {
     if (target == "any") {
       return this.gamepads.values().some((gp) => gp[mode](button));
@@ -160,11 +160,11 @@ export class GamepadInternal {
    * Returns true for only one frame/update if a button is pressed.
    * Considered an alternative to `like.gamepadpressed`.
    */
-  isJustPressed(
+  justPressed(
     target: GamepadTarget,
     button: LikeButton | number,
   ): boolean | undefined {
-    return this._checkButton(target, button, "isJustPressed");
+    return this._checkButton(target, button, "justPressed");
   }
 
   /**
@@ -263,7 +263,7 @@ class GamepadState {
     return typeof(button) == "number" ? this.downNums.has(button) : this.down.has(button);
   }
 
-  isJustPressed(button: number | LikeButton): boolean {
+  justPressed(button: number | LikeButton): boolean {
     return typeof(button) == "number" ?
       (this.downNums.has(button) && !this.lastDownNums.has(button)) :
       (this.down.has(button) && !this.lastDown.has(button));
