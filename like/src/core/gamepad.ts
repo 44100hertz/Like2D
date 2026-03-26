@@ -265,7 +265,6 @@ class GamepadState {
         this.pressed.add(name);
         this.justPressed.add(name);
       } else if (!btn.pressed && this.pressed.has(name)) {
-        console.log("released")
         dispatch("gamepadreleased", [this.index, name, i]);
       }
     });

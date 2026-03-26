@@ -55,13 +55,9 @@ export type DrawProps = ShapeProps & {
 
 export type PrintProps = {
   font?: string;
-} & (
-  | {
-      width: number;
-      align: CanvasTextAlign;
-    }
-  | {}
-);
+  width?: number,
+  align?: CanvasTextAlign,
+};
 
 export class ImageHandle {
   readonly path: string;
@@ -261,21 +257,16 @@ export const pure = {
     const { font = "16px sans-serif" } = props ?? {};
     ctx.fillStyle = parseColor(color);
     ctx.font = font;
-
+    ctx.textAlign = props?.align ?? "left";
     if (props && 'width' in props) {
-      const { width, align } = props;
-      const lines = wrapText(ctx, text, width);
+      const { width } = props;
+      const lines = wrapText(ctx, text, width as any);
       const lineHeight = getFontHeight(ctx);
+      ctx.textBaseline = "top";
       lines.forEach((line, i) => {
-        const lineWidth = ctx.measureText(line).width;
-        const drawX =
-          align === "center"
-            ? x + (width - lineWidth) / 2
-            : align === "right"
-              ? x + width - lineWidth
-              : x;
-        ctx.fillText(line, drawX, y + i * lineHeight);
+        ctx.fillText(line, x, y + i * lineHeight, width);
       });
+      ctx.textBaseline = "alphabetic";
     } else {
       ctx.fillText(text, x, y);
     }

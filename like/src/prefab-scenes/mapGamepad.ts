@@ -1,4 +1,4 @@
-import { Color, Like, LikeButton } from "..";
+import { Color, Like, LikeButton, PrintProps } from "..";
 import { defaultMapping, GamepadMapping } from "../core/gamepad";
 import { Vector2 } from "../math/vector2";
 import { Scene } from "../scene";
@@ -133,7 +133,7 @@ export class MapGamepad implements Scene {
   }
 
   draw(like: Like): void {
-    const centerText = {
+    const centerText: PrintProps = {
         font: "1px serif",
         align: "center",
         width: 16,
@@ -143,7 +143,10 @@ export class MapGamepad implements Scene {
     like.gfx.scale(20);
     like.gfx.translate([0, 1]);
     like.gfx.print(
-        "white", "Unmapped gamepad detected.", [0.2, 0.2], centerText
+      "white",
+      "Unmapped gamepad detected. Please map it or else it will be bad. Do you want it bad?",
+      [8, 0.2],
+      centerText,
     );
     for (const prop of this.mapMode.buttons.keys()) {
       const color =
@@ -191,7 +194,6 @@ export class MapGamepad implements Scene {
     num: number,
   ): void {
     if (source !== this.targetPad) return;
-    console.log(this.held, this.mapping.buttons.get(num))
     if (this.held == this.mapping.buttons.get(num)) {
       this.held = undefined;
     }

@@ -16,6 +16,7 @@
  - Shortened the name of gamepad buttons. "BBottom" instead of "ButtonBottom", "Left" instead of "DPadLeft", "L1" instead of "ButtonL1", etc.
  - Gamepads now have a remapping feature, with auto-save / auto-load to localStorage enabled by default.
  - `like.gfx.print` option `limit` renamed to `width`.
+ - `like.gfx.print` made alignment work differently than LOVE, more like browser canvas.
 
 ### Added
   - `like.mouse.setCapturedPos`, allows emulated mouse to be teleported while in capture mode.
@@ -33,8 +34,7 @@
  - Make `gfx.circle` center property actually work.
  - Make `gfx.circle` filled arc actually fill like a pie slice kinda
  - **Double Load** Scene-based games were loading twice. `like.setScene` was dispatching `load` before `like` had actually started running.
- - **Hiding internal methods for good** Underscore methods are now totally invisible via type magic.
- - (Type enforcement) Don't allow setting `like.gfx.print` font alignment without width.
+ - **Hiding internal methods** Underscore methods are now totally invisible via type magic.
 
 ## [2.9.0] - 2026-03-23
 
