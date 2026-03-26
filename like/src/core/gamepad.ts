@@ -132,7 +132,7 @@ export class GamepadInternal {
   }
 
   /** Check if a gamepad button is down. */
-  isButtonDown(
+  isDown(
     target: GamepadTarget,
     button: LikeButton,
   ): boolean | undefined {
@@ -143,7 +143,7 @@ export class GamepadInternal {
    * Returns true for only one frame/update if a button is pressed.
    * Considered an alternative to `like.gamepadpressed`.
    */
-  isButtonJustPressed(
+  isJustPressed(
     target: GamepadTarget,
     button: LikeButton,
   ): boolean | undefined {

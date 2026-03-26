@@ -9,9 +9,10 @@
  - Removed `like.input.clear` -- Why does this exist?
  - Removed `buttonMenuCenter` mapping -- Relatively uncommon, no games will rely on this.
  - Removed `gfx.circle` angle property -- prefer transforms, we can rotate any shape...
- - Gamepads now have mapping enabled by default.
-    - Changed argument order of `gamepadpressed` -- name first (names _are_ mapped), then number (numbers _aren't_ mapped).
-    - `like.gamepad.isButtonDown` no longer lets you check for unmapped (numeric) presses. Use `gamepadpressed`.
+ - Renamed `gamepad.isButtonDown` to `gamepad.isDown`, and it no longer lets you check unmapped (numeric) pressed. use `gamepadpressed`
+ - `like.gamepad.isDown` no longer lets you check for unmapped (numeric) presses. Use `gamepadpressed`.
+ - Renamed `gamepad.isButtonJustPressed` to `gamepad:isJustPressed`
+ - Gamepads now have mapping, auto-save / auto-load enabled by default.
  - `like.gfx.print` option `limit` renamed to `width`.
 
 ### Added

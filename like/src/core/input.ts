@@ -102,7 +102,7 @@ export class InputInternal {
       case "mouse":
         return this.mouse.isDown(binding.button);
       case "gamepad": {
-        return !!this.gamepad.isButtonDown(binding.gamepad, binding.button);
+        return !!this.gamepad.isDown(binding.gamepad, binding.button);
       }
       default:
         return false;
