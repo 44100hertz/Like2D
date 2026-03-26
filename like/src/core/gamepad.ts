@@ -1,12 +1,10 @@
-import { defaultMapping, fullButtonName, GamepadMappingEntry, getMappingFromGamepad, LikeButton, mapStick, standardButtonMapping } from './gamepad-mapping';
+import { defaultMapping, fullButtonName, GamepadMapping, getSdlMapping, LikeButton, mapStick } from './gamepad-mapping';
 import { EngineDispatch } from '../engine';
 import { Vector2 } from '../math/vector2';
 
-type GamepadMapping = GamepadMappingEntry;
-
 export {
   type LikeButton,
-  type GamepadMappingEntry as GamepadMapping,
+  type GamepadMapping,
   type StickMapping,
   type StickAxisMapping,
   defaultMapping,
@@ -53,7 +51,7 @@ export type GamepadTarget = number | "any";
  * 
  */
 export class GamepadInternal {
-  private gamepads = new Map<number, GamepadState>();
+  private gamepads: Record<number, GamepadState> = {};
   private abort = new AbortController();
   private autoLoadMapping = false;
 
@@ -70,14 +68,16 @@ export class GamepadInternal {
       "gamepaddisconnected",
       (ev: GamepadEvent) => {
         console.log(`[Gamepad] Disconnected ${ev.gamepad.id}`);
-        this.gamepads.delete(ev.gamepad.index);
+        delete this.gamepads[ev.gamepad.index];
       },
       { signal: this.abort.signal },
     );
     window.addEventListener(
       "blur",
       () => {
-        this.gamepads.forEach((gps) => gps.clear());
+        for (const gps of Object.values(this.gamepads)) {
+          gps.clear();
+        }
       },
       { signal: this.abort.signal },
     );
@@ -85,38 +85,36 @@ export class GamepadInternal {
 
   _onGamepadConnected(ev: GamepadEvent) {
     const gps = new GamepadState(ev.gamepad.index);
-    this.gamepads.set(ev.gamepad.index, gps);
+    this.gamepads[ev.gamepad.index] = gps;
+    console.log(
+      `[Gamepad] Connected ${ev.gamepad.id}. buttons: ${ev.gamepad.buttons.length}, axes: ${ev.gamepad.axes.length}`,
+    );
 
     const mapping = this.loadMapping(ev.gamepad.index);
     if (this.autoLoadMapping && mapping) {
       gps.mapping = mapping;
-      console.log(
-        `[Gamepad] Connected, auto-loaded mapping for ${ev.gamepad.id}`,
-      );
-    } else if (ev.gamepad.mapping == "standard") {
-      console.log(`[Gamepad] Connected standard gamepad ${ev.gamepad.id}.`);
-      gps.mapping.buttons = standardButtonMapping();
+      console.log(`[Gamepad] Applied presaved mapping.`);
+    } else if (ev.gamepad.mapping == 'standard') {
+      gps.mapping = defaultMapping(ev.gamepad.axes.length / 2);
+      console.log(`Loaded standard mapping.`);
     } else {
-      const sdlMapping = getMappingFromGamepad(ev.gamepad);
-      if (sdlMapping.size > 0) {
+      const sdlMapping = getSdlMapping(ev.gamepad);
+      if (sdlMapping) {
         gps.mapping.buttons = sdlMapping;
         console.log(
-          `[Gamepad] Connected, applied SDL database mapping for ${ev.gamepad.id}.`,
+          `[Gamepad] Connected, applied SDL database mapping.`,
         );
       } else {
         console.log(
-          `[Gamepad] Connected non-standard gamepad ${ev.gamepad.id}. Consider remapping it.`,
+          `[Gamepad] Could not find mapping for gamepad. Consider remapping it.`,
         );
       }
     }
 
-    console.log(
-      `[Gamepad] buttons: ${ev.gamepad.buttons.length}, axes: ${ev.gamepad.axes.length}`,
-    );
   }
 
   _update(): void {
-    this.gamepads.forEach((gp) => gp.update(this.dispatch));
+    Object.values(this.gamepads).forEach((gp) => gp.update(this.dispatch));
   }
 
   /**
@@ -125,7 +123,7 @@ export class GamepadInternal {
    * @returns all of the sticks. Convention is 0 = left, 1 = right.
    */
   getSticks(target: number): Vector2[] {
-    const gp = this.gamepads.get(target);
+    const gp = this.gamepads[target];
     if (gp) {
       return gp.getSticks();
     }
@@ -142,9 +140,9 @@ export class GamepadInternal {
     mode: "justPressed" | "isDown",
   ): boolean | undefined {
     if (target == "any") {
-      return this.gamepads.values().some((gp) => gp[mode](button));
+      return Object.values(this.gamepads).some((gp) => gp[mode](button));
     } else {
-      return this.gamepads.get(target)?.[mode](button);
+      return this.gamepads[target]?.[mode](button);
     }
   }
 
@@ -173,7 +171,7 @@ export class GamepadInternal {
    * However, use `setMapping` to finalize the mapping.
    */
   getMapping(index: number): GamepadMapping | undefined {
-    return this.gamepads.get(index)?.mapping;
+    return this.gamepads[index]?.mapping;
   }
 
   /**
@@ -182,7 +180,7 @@ export class GamepadInternal {
    * Set `save = false` if you don't want this written into localstorage.
    */
   setMapping(index: number, mapping: GamepadMapping, save = true) {
-    const gp = this.gamepads.get(index);
+    const gp = this.gamepads[index];
     if (gp) {
       gp.mapping = mapping;
       if (save) {
@@ -198,12 +196,10 @@ export class GamepadInternal {
     const gp = navigator.getGamepads()?.[index];
     if (gp) {
       const path = getLocalstoragePath(gp);
-      console.log(`[Gamepad] Loaded mapping ${path} from localStorage.`);
+      console.log(`[Gamepad] Found saved mapping for ${gp.id}.`);
       const item = localStorage.getItem(path);
       if (item) {
-        const raw = JSON.parse(item);
-        raw.buttons = new Map(Object.entries(raw.buttons));
-        return raw;
+        return JSON.parse(item);
       }
     }
   }
@@ -249,10 +245,10 @@ const maxButtons = 64;
  */
 class GamepadState {
   public mapping: GamepadMapping;
-  public downNums = new Set<number>();
-  public down = new Set<LikeButton>();
-  public lastDownNums = new Set<number>();
-  public lastDown = new Set<LikeButton>();
+  public downNums: boolean[] = [];
+  public lastDownNums: boolean[] = [];
+  public down = {} as Record<LikeButton, true>;
+  public lastDown = {} as Record<LikeButton, true>;
 
   constructor(public index: number) {
     const gp = navigator.getGamepads()[this.index]!;
@@ -260,18 +256,18 @@ class GamepadState {
   }
 
   isDown(button: number | LikeButton): boolean {
-    return typeof(button) == "number" ? this.downNums.has(button) : this.down.has(button);
+    return typeof(button) == "number" ? !!this.downNums[button] : !!this.down[button];
   }
 
   justPressed(button: number | LikeButton): boolean {
     return typeof(button) == "number" ?
-      (this.downNums.has(button) && !this.lastDownNums.has(button)) :
-      (this.down.has(button) && !this.lastDown.has(button));
+      (!!this.downNums[button] && !this.lastDownNums[button]) :
+      (!!this.down[button] && !this.lastDown[button]);
   }
 
   map(button: number): LikeButton {
       return (
-        this.mapping.buttons.get(button) ??
+        this.mapping.buttons[button] ??
         (button < maxButtons
           ? `Button${button}`
           : `Axis${Math.floor((button - maxButtons) / 2)}${button % 2 ? "-" : "+"}`)
@@ -281,14 +277,14 @@ class GamepadState {
   update(dispatch: EngineDispatch) {
     const gp = navigator.getGamepads()[this.index]!;
 
-    // Swap down and last down, then clear 'down'
-    // Rotates the button log backwards w/o allocation.
     [this.downNums, this.lastDownNums] = [this.lastDownNums, this.downNums];
-    this.downNums.clear();
+    for (const k in this.downNums) {
+      delete this.downNums[Number(k)];
+    }
 
     gp.buttons.forEach((btn, i) => {
       if (btn.pressed) {
-        this.downNums.add(i);
+        this.downNums[i] = true;
       }
     });
 
@@ -296,27 +292,28 @@ class GamepadState {
       const pos: -1 | 0 | 1 = Math.round(axis) as any;
       if (pos == 0) return;
       const index = 64 + i * 2 + (pos == -1 ? 1 : 0);
-      this.downNums.add(index);
+      this.downNums[index] = true;
     });
 
-    // Now update mapped events and dispatch.
     [this.down, this.lastDown] = [this.lastDown, this.down];
-    this.down.clear();
+    for (const k in this.down) {
+      delete this.down[k as LikeButton];
+    }
 
-    this.downNums.forEach((i) => {
-      const name = this.map(i);
-      this.down.add(name);
-      if (!this.lastDownNums.has(i)) {
-        dispatch("gamepadpressed", [this.index, name, i]);
+    for (const i in this.downNums) {
+      const name = this.map(Number(i));
+      this.down[name] = true;
+      if (!this.lastDownNums[Number(i)]) {
+        dispatch("gamepadpressed", [this.index, name, Number(i)]);
       }
-    });
+    }
 
-    this.lastDownNums.forEach((i) => {
-      if (!this.downNums.has(i)) {
-        const name = this.map(i);
-        dispatch("gamepadreleased", [this.index, name, i]);
+    for (const i in this.lastDownNums) {
+      if (!this.downNums[Number(i)]) {
+        const name = this.map(Number(i));
+        dispatch("gamepadreleased", [this.index, name, Number(i)]);
       }
-    });
+    }
   }
 
   getSticks(): Vector2[] {
@@ -325,7 +322,11 @@ class GamepadState {
   }
 
   clear() {
-    this.lastDown.clear();
-    this.down.clear();
+    for (const k in this.lastDown) {
+      delete this.lastDown[k as LikeButton];
+    }
+    for (const k in this.down) {
+      delete this.down[k as LikeButton];
+    }
   }
 }

@@ -128,7 +128,7 @@ export class MapGamepad implements Scene {
         this.currentlyUnmapped.push(btn);
       }
     }
-    this.mapping.buttons.clear();
+    this.mapping.buttons = {};
     like.canvas.setMode([320, 240]);
   }
 
@@ -179,11 +179,10 @@ export class MapGamepad implements Scene {
     const active = this.currentlyUnmapped.pop();
     if (active && !this.alreadyMapped.has(num)) {
       this.alreadyMapped.add(num);
-      this.mapping.buttons.set(num, active);
+      this.mapping.buttons[num] = active;
       this.held = active;
     } else if (!active) {
       like.gamepad.setMapping(this.targetPad, this.mapping);
-      console.log(this.mapping.buttons.entries());
       setTimeout(() => like.setScene(this.next), 100);
     }
   }
@@ -195,7 +194,7 @@ export class MapGamepad implements Scene {
     num: number,
   ): void {
     if (source !== this.targetPad) return;
-    if (this.held == this.mapping.buttons.get(num)) {
+    if (this.held == this.mapping.buttons[num]) {
       this.held = undefined;
     }
   }
