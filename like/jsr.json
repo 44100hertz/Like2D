@@ -7,7 +7,7 @@
   },
   "publish": {
     "include": [
-      "src/**/*.ts",
+      "src/**/index.ts",
       "README.md"
     ],
     "exclude": [
