@@ -3,9 +3,9 @@
  * @description Core game engine - lifecycle management and event dispatch.
  */
 
-import { Audio } from './audio/internal';
-import { Input } from './input/index';
-import { Timer } from './timer/internal';
+import { Audio } from './audio/audio';
+import { Input } from './input/input';
+import { Timer } from './timer/timer';
 import { Keyboard } from './input/keyboard';
 import { Mouse } from './input/mouse';
 import { Gamepad } from './input/gamepad';

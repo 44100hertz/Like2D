@@ -16,10 +16,10 @@ export type {
 
 export { draw } from "./drawing";
 
-export {
-  type CanvasModeOptions,
-  type CanvasSize,
-  type Canvas,
+export type {
+  CanvasModeOptions,
+  CanvasSize,
+  Canvas,
 } from "./canvas";
 
 type Bind<F> = F extends (

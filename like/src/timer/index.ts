@@ -1,1 +1,1 @@
-export { type Timer } from "./internal";
+export { type Timer } from "./timer";

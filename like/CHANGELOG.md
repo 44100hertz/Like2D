@@ -3,7 +3,7 @@
 ## [2.10.0] - Unreleased
 
 ### Breaking Changes
- - Imports have been restructured for sanity, thus breaking all of your stuff. Sorry not sorry.
+ - Imports have been restructured for sanity, thus breaking all of your stuff. Sorry not sorry, this is how it was always supposed to be. Our modules:
     - `like`
     - `like/input`
     - `like/audio`
