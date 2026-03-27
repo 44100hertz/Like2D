@@ -18,8 +18,8 @@ export default defineConfig({
         replacement: path.resolve(__dirname, '../../like/src/index.ts')
       },
       {
-        find: /^like\/internal\/(.*)$/,
-        replacement: path.resolve(__dirname, '../../like/src/core/$1.ts')
+        find: /^like\/(.+)$/,
+        replacement: path.resolve(__dirname, '../../like/src/$1/index.ts')
       },
     ],
   },

@@ -20,7 +20,6 @@ export class Canvas {
         private dispatch: Dispatcher<'resize'>,
         private abort: AbortSignal,
     ) {
-        displayCanvas = document.createElement('canvas');
         displayCanvas.tabIndex = 0;
         displayCanvas.style.width = '100%';
         displayCanvas.style.height = '100%';
