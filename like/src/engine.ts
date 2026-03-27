@@ -16,6 +16,11 @@ import { Canvas } from './graphics/canvas';
 import { Scene, sceneDispatch } from './scene';
 
 export type EngineDispatcher = Dispatcher<EventType>;
+export type EngineProps<T extends keyof EventMap> = {
+  canvas: HTMLCanvasElement,
+  abort: AbortSignal,
+  dispatch: Dispatcher<T>,
+}
 
 /**
  * @private
@@ -46,13 +51,18 @@ export class Engine {
 
     let gfx = bindGraphics(this.canvas.getContext('2d')!);
 
-    const dispatch = this.dispatch.bind(this) as EngineDispatcher;
+    const props: EngineProps<keyof EventMap> = {
+      canvas: this.canvas,
+      dispatch: this.dispatch.bind(this),
+      abort: this.abort.signal,
+    }
+
     const audio = new Audio();
-    const timer = new Timer();
-    const keyboard = new Keyboard(this.canvas, dispatch, this.abort.signal);
-    const mouse = new Mouse(this.canvas, dispatch, this.abort.signal);
-    const gamepad = new Gamepad(dispatch, this.abort.signal);
-    const input = new Input({ keyboard, mouse, gamepad }, dispatch);
+    const timer = new Timer(props);
+    const keyboard = new Keyboard(props);
+    const mouse = new Mouse(props);
+    const gamepad = new Gamepad(props);
+    const input = new Input(props.dispatch, { keyboard, mouse, gamepad });
 
     this.like = {
       audio,
@@ -108,14 +118,15 @@ export class Engine {
       this.lastTime = now;
 
       if (!this.like.timer.isSleeping()) {
-        this.like.timer.update(dt);
-        this.like.input.update();
+        this.canvas.dispatchEvent(
+          new CustomEvent("update", { detail: { dt } }),
+        );
         this.dispatch('update', [dt]);
       }
 
-      this.like.canvas.prePresent();
+      this.canvas.dispatchEvent(new CustomEvent("like:preDraw"));
       this.dispatch('draw', []);
-      this.like.canvas.present();
+      this.canvas.dispatchEvent(new CustomEvent("like:postDraw"));
       requestAnimationFrame(loop);
     };
 

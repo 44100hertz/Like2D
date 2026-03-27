@@ -1,5 +1,6 @@
 import { Vec2, type Vector2 } from '../math/vector2';
 import { type MouseButton, type Dispatcher, type LikeMouseEvent } from '../events';
+import { EngineProps } from '../engine';
 
 const mouseButtons = ["left", "middle", "right"] as const;
 const numToButton = (i: number): MouseButton => mouseButtons[i];
@@ -15,6 +16,7 @@ export type MouseSetMode = Partial<MouseMode> & { lock: boolean };
  * Mouse input handling. Bound to canvas. Emits relative movement when pointer locked.
  */
 export class Mouse {
+  private dispatch: Dispatcher<LikeMouseEvent>;
   private pos: Vector2 = [0, 0];
   private lastPos: Vector2 = [0, 0];
   private buttons = new Set<MouseButton>();
@@ -22,6 +24,7 @@ export class Mouse {
    * track of the internal (apparent) canvas size.
    */
   private canvasSize: Vector2 = [800, 600];
+  private canvas: HTMLCanvasElement;
 
   // We keep track of a locked mode and an unlocked mode, so that when capture changes
   // we can use the settings from last time.
@@ -29,7 +32,11 @@ export class Mouse {
   private unlockedMode: MouseMode & {lock: false} = { lock: false, visible: true, scrollBlock: true };
   private enableLock = false;
 
-  constructor(private canvas: HTMLCanvasElement, private dispatch: Dispatcher<LikeMouseEvent>, abort: AbortSignal) {
+  constructor(props: EngineProps<LikeMouseEvent>) {
+    this.canvas = props.canvas;
+    this.dispatch = props.dispatch;
+    const { abort } = props;
+
     this.canvas.addEventListener(
       "like:mousemoved",
       this.handleMouseMove.bind(this) as any,

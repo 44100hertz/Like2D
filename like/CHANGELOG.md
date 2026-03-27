@@ -42,13 +42,13 @@
   - `like.input.setAction` now takes string or InputBinding arguments.
   - Added `like.input.appendToAction`
   - Added `like.input.getActionMapping`
+  - `like.canvas.getDisplayPixelSize` -- 
 
 ### Fixed
  - **Capture Bug** If another element set cursor capture, LIKE would report capture TRUE.
  - Make `gfx.circle` center property actually work.
  - Make `gfx.circle` filled arc actually fill like a pie slice kinda
  - **Double Load** Scene-based games were loading twice. `like.setScene` was dispatching `load` before `like` had actually started running.
- - **Hiding internal methods** Underscore methods are now totally invisible via type magic.
 
 ## [2.9.0] - 2026-03-23
 

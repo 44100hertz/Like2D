@@ -1,17 +1,21 @@
-import type { Dispatcher } from "../events";
+import { EngineProps } from "../engine";
+import { Dispatcher } from "../events";
+
+type KEvent = 'keypressed' | 'keyreleased';
 
 export class Keyboard {
   private pressedScancodes = new Set<string>();
-  private canvas: HTMLCanvasElement | null = null;
+  private canvas: HTMLCanvasElement;
+  private dispatch: Dispatcher<KEvent>;
 
-  constructor(canvas: HTMLCanvasElement | null, private dispatch: Dispatcher<'keypressed' | 'keyreleased'>, abort: AbortSignal) {
-    this.canvas = canvas;
+  constructor(props: EngineProps<KEvent>) {
+    this.canvas = props.canvas;
+    this.dispatch = props.dispatch;
+    const { abort } = props;
 
-    if (this.canvas) {
-      this.canvas.addEventListener('keydown', this.handleKeyDown.bind(this), { signal: abort });
-      this.canvas.addEventListener('keyup', this.handleKeyUp.bind(this), { signal: abort });
-      this.canvas.addEventListener('blur', this.handleBlur.bind(this), { signal: abort });
-    }
+    this.canvas.addEventListener('keydown', this.handleKeyDown.bind(this), { signal: abort });
+    this.canvas.addEventListener('keyup', this.handleKeyUp.bind(this), { signal: abort });
+    this.canvas.addEventListener('blur', this.handleBlur.bind(this), { signal: abort });
   }
 
   private handleKeyDown(e: globalThis.KeyboardEvent): void {

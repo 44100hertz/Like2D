@@ -1,6 +1,7 @@
 import { defaultMapping, fullButtonName, GamepadMapping, getSdlMapping, LikeButton, mapStick } from './gamepad-mapping';
 import { type Dispatcher, type LikeGamepadEvent } from '../events';
 import { Vector2 } from '../math/vector2';
+import { EngineProps } from '../engine';
 
 /** A selector for a gamepad. */
 export type GamepadTarget = number | "any";
@@ -17,10 +18,14 @@ export type GamepadTarget = number | "any";
  * If you don't want to make your own, take a look at `prefab-scenes/mapGamepad`.
  */
 export class Gamepad {
+  private dispatch: Dispatcher<LikeGamepadEvent>;
   private gamepads: Record<number, GamepadState> = {};
   private autoLoadMapping = true;
 
-  constructor(private dispatch: Dispatcher<LikeGamepadEvent>, abort: AbortSignal) {
+  constructor(props: EngineProps<LikeGamepadEvent>) {
+    this.dispatch = props.dispatch;
+    const { abort } = props;
+
     // Register event listeners
     window.addEventListener(
       "gamepadconnected",

@@ -28,16 +28,25 @@ type Callbacks = {
  * This is the interface returned by {@link createLike}.
  */
 export type Like = Callbacks & {
+  /** Handle a pool of pseudo-synchronous audio sources with global volume control and more. */
   readonly audio: Audio;
+  /** Misc. time functions, including sleeping the game. ZZZ */
   readonly timer: Timer;
+  /** Bind inputs to actions that call `like.actionpressed`, or query them here also. */
   readonly input: Input;
+  /** Check if scancodes are down / pressed. */
   readonly keyboard: Keyboard;
+  /** Mouse module: Get a properly scaled mouse position, set capture and more. */
   readonly mouse: Mouse;
+  /** Gamepad module: Map gamepads and check their buttons. */
   readonly gamepad: Gamepad;
+  /** Get and set screen size, choosing between native and pixel perfect prescaling. Plus fullscreen control. */
   readonly canvas: Canvas;
-
-  /** Graphics context for rendering operations */
+  /** Graphics module: LOVE-style rendering, plus a pseudo-synchronous way to load images. */
   gfx: BoundGraphics;
+
+  /** I think you meant to type `canvas`. */
+  window?: never;
 
   /**
    * Start the game loop. Call this only once.
@@ -46,7 +55,8 @@ export type Like = Callbacks & {
   start(): Promise<void>;
 
   /**
-   * Clears out event listeners to avoid memory leaks.
+   * Only call this when you're done with LIKE. Everything will stop
+   * running, and probably break if you try to use it.
    */
   dispose(): void;
 
@@ -58,8 +68,22 @@ export type Like = Callbacks & {
 
   /**
    * LIKE's runtime is built around calling handleEvent.
+   * 
+   * This function recieves all events. If set to undefined,
+   * `like.callOwnHandlers(ev)` is the default behavior.
+   * 
+   * Otherwise, you can really customize LIKE by setting this
+   * to a custom handler.
+   * 
+   * For example, the scene architecture is built around
+   * setting this function.
    */
   handleEvent?: TopLevelEventHandler;
 
+  /**
+   * Used as the default `like.handleEvent`, simply dispatches
+   * an event into LIKE callbacks.
+   * @param event 
+   */
   callOwnHandlers(event: LikeEvent): void;
 }

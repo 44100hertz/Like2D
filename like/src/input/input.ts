@@ -19,12 +19,12 @@ export class Input {
   private gamepad: Gamepad;
 
   constructor(
+    private dispatch: Dispatcher<'actionpressed' | 'actionreleased'>,
     deps: {
       keyboard: Keyboard;
       mouse: Mouse;
       gamepad: Gamepad;
     },
-    private dispatch: Dispatcher<'actionpressed' | 'actionreleased'>,
   ) {
     this.keyboard = deps.keyboard;
     this.mouse = deps.mouse;

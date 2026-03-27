@@ -73,6 +73,17 @@ export class Canvas {
                 }
             }));
         }, { signal: this.abort })
+
+        this.displayCanvas.addEventListener(
+          "like:preDraw",
+          this.preDraw.bind(this),
+          { signal: this.abort },
+        );
+        this.displayCanvas.addEventListener(
+          "like:postDraw",
+          this.postDraw.bind(this),
+          { signal: this.abort },
+        );
     }
 
     /** Get a unified canvas info object. */
@@ -150,8 +161,8 @@ export class Canvas {
         return [0, 0, ...this.getSize()];
     }
 
-    /** Get the actual (physical) canvas size on screen. You probably meant to type `getSize()` */
-    getDisplayPixelSize(): Vector2 {
+    /** Get the actual (physical) canvas size on screen. */
+    private getDisplayPixelSize(): Vector2 {
         return Vec2.round(Vec2.mul(
             [this.displayCanvas.clientWidth, this.displayCanvas.clientHeight],
             window.devicePixelRatio ?? 1,
@@ -176,10 +187,10 @@ export class Canvas {
     }
 
     /** 
-     * @private Called internally by the engine before
+     * Called internally by the engine before
      * rendering a frame.
      */
-    prePresent() {
+    private preDraw() {
         if (this.renderCanvas == this.displayCanvas) {
             const realSize = this.getDisplayPixelSize();
             if ((realSize[0] != this.displayCanvas.width ||
@@ -198,8 +209,8 @@ export class Canvas {
         this.renderCanvas.getContext('2d')!.resetTransform();
     }
 
-    /** @private Called every frame by the engine after drawing */
-    present() {
+    /** Called every frame by the engine after drawing */
+    private postDraw() {
         if (this.renderCanvas != this.displayCanvas) {
             /* We're in pixelart mode,
              * so set output canvas size to an ideal integer scale.

@@ -1,3 +1,5 @@
+import { EngineProps } from "../engine";
+
 export class Timer {
   private currentDelta = 0;
   private totalTime = 0;
@@ -6,7 +8,12 @@ export class Timer {
   private fpsAccumulator = 0;
   private sleepUntil: number | null = null;
 
-  update(dt: number): void {
+  constructor(props: EngineProps<never>) {
+    props.canvas.addEventListener("like:update", this.update.bind(this), { signal: props.abort })
+  }
+
+  update(ev: HTMLElementEventMap["like:update"]): void {
+    const {dt} = ev.detail;
     this.currentDelta = dt;
     this.totalTime += dt;
     this.frameCount++;
@@ -19,14 +26,19 @@ export class Timer {
     }
   }
 
+  /** Get `dt` (from the update loop) anywhere.
+   * AKA the time since the last frame.
+   */
   getDelta(): number {
     return this.currentDelta;
   }
 
+  /** Get an estimated FPS based on one-second average. */
   getFPS(): number {
     return this.fps;
   }
 
+  /** Get the ingame time. */
   getTime(): number {
     return this.totalTime;
   }
@@ -41,6 +53,10 @@ export class Timer {
     return false;
   }
 
+  /**
+   * Freeze the whole game for a time. Audio will keep playing,
+   * but update functions won't be called.
+   */
   sleep(duration: number): void {
     this.sleepUntil = performance.now() + (duration * 1000);
   }
