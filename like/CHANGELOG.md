@@ -2,8 +2,12 @@
 
 ## [2.10.1] - Unreleased
 
+### Fixes
+ - Fix engine dispatching the wrong 'update' event and breaking everything.
+
 ### Updates
- - Now loads sdl controller db into a JSON file and pre-process deletes all ambiguous buttons from the mapping.
+ - We now load sdl controller db into a JSON file and delete all ambiguous buttons from the mapping.
+ - mapGamepad.ts now only maps buttons that aren't unambiguously identified already.
 
 ## [2.10.0] - 2026-03-27
 

@@ -119,7 +119,7 @@ export class Engine {
 
       if (!this.like.timer.isSleeping()) {
         this.canvas.dispatchEvent(
-          new CustomEvent("update", { detail: { dt } }),
+          new CustomEvent("like:update", { detail: { dt } }),
         );
         this.dispatch('update', [dt]);
       }
