@@ -10,7 +10,7 @@ import type { Keyboard } from './input/keyboard';
 import type { Mouse } from './input/mouse';
 import type { Gamepad } from './input/gamepad';
 import type { Canvas } from './graphics/canvas';
-import type { BoundGraphics } from './graphics/index';
+import type { Graphics } from './graphics/index';
 import { EventMap, EventType, LikeEvent } from './events';
 import { Scene } from './scene';
 
@@ -43,10 +43,12 @@ export type Like = Callbacks & {
   /** Get and set screen size, choosing between native and pixel perfect prescaling. Plus fullscreen control. */
   readonly canvas: Canvas;
   /** Graphics module: LOVE-style rendering, plus a pseudo-synchronous way to load images. */
-  gfx: BoundGraphics;
+  readonly gfx: Graphics;
 
   /** I think you meant to type `canvas`. */
   window?: never;
+  /** Shortened to `like.gfx`. */
+  graphics?: never;
 
   /**
    * Start the game loop. Call this only once.

@@ -4,9 +4,9 @@ import { EngineProps } from '../engine';
 
 const mouseButtons = ["left", "middle", "right"] as const;
 const numToButton = (i: number): MouseButton => mouseButtons[i];
-import type { LikeEventType, LikeCanvasElement } from '../events';
+import type { LikeCanvasElement, LikeCanvasEventMap } from '../events';
 
-type MouseMoveEvent = LikeEventType<'like:mousemoved'>;
+type MouseMoveEvent = LikeCanvasEventMap['like:mousemoved'];
 
 type MouseMode =
   | { lock: false, visible: boolean, scrollBlock: boolean }
@@ -58,7 +58,7 @@ export class Mouse {
       signal: abort,
     });
     this.canvas.addEventListener(
-      "pointerlockchanged",
+      "pointerlockchange" as any, // unsupported on mobile, will have to test.
       () => {
         if (!this.isPointerLocked())
         this.enableLock = false;
@@ -68,7 +68,7 @@ export class Mouse {
     this.canvas.addEventListener(
       "like:resizeCanvas",
       (e: Event) => {
-        this.canvasSize = (e as LikeEventType<'like:resizeCanvas'>).detail.size;
+        this.canvasSize = (e as LikeCanvasEventMap['like:resizeCanvas']).detail.size;
       },
       { signal: abort }
     );

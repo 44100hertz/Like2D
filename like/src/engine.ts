@@ -9,7 +9,7 @@ import { Timer } from './timer/timer';
 import { Keyboard } from './input/keyboard';
 import { Mouse } from './input/mouse';
 import { Gamepad } from './input/gamepad';
-import { bindGraphics } from './graphics/index';
+import { Graphics } from './graphics/index';
 import type { LikeEvent, EventType, EventMap, Dispatcher, LikeCanvasElement } from './events';
 import type { Like } from './like';
 import { Canvas } from './graphics/canvas';
@@ -40,23 +40,21 @@ export class Engine {
   readonly like: Like;
 
   constructor(private container: HTMLElement) {
-    this.canvas = document.createElement('canvas');
+    this.canvas = document.createElement('canvas') as LikeCanvasElement;
     const canvas = new Canvas(this.canvas, this.dispatch.bind(this) as any, this.abort.signal);
-    this.canvas.addEventListener("like:updateRenderTarget", (event: Event) => {
-      if (!(event instanceof CustomEvent)) return;
-      this.like.gfx = bindGraphics(event.detail.target.getContext('2d')!);
+    this.canvas.addEventListener("like:updateRenderTarget", (event) => {
+      this.like.gfx.setContext(event.detail.target.getContext("2d")!)
     });
 
     this.container.appendChild(this.canvas);
-
-    let gfx = bindGraphics(this.canvas.getContext('2d')!);
 
     const props: EngineProps<keyof EventMap> = {
       canvas: this.canvas,
       dispatch: this.dispatch.bind(this),
       abort: this.abort.signal,
     }
-
+    
+    const gfx =  new Graphics(this.canvas.getContext('2d')!);
     const audio = new Audio();
     const timer = new Timer(props);
     const keyboard = new Keyboard(props);

@@ -32,27 +32,6 @@ import type { Rectangle } from "../math/rect";
 
 export type DrawMode = "fill" | "line";
 
-export type DrawFunctions = {
-  clear(ctx: CanvasRenderingContext2D, color?: Color): void;
-  rectangle(ctx: CanvasRenderingContext2D, mode: DrawMode, color: Color, rect: Rectangle, props?: ShapeProps): void;
-  circle(ctx: CanvasRenderingContext2D, mode: DrawMode, color: Color, position: Vector2, radii: number | Vector2, props?: ShapeProps & {
-    arc?: [number, number];
-    center?: boolean;
-  }): void;
-  line(ctx: CanvasRenderingContext2D, color: Color, points: Vector2[], props?: ShapeProps): void;
-  print(ctx: CanvasRenderingContext2D, color: Color, text: string, position: Vector2, props?: PrintProps): void;
-  draw(ctx: CanvasRenderingContext2D, handle: ImageHandle, position: Vector2, props?: DrawProps): void;
-  newImage(_ctx: CanvasRenderingContext2D, path: string): ImageHandle;
-  clip(ctx: CanvasRenderingContext2D, rect?: Rectangle): void;
-  polygon(ctx: CanvasRenderingContext2D, mode: DrawMode, color: Color, points: Vector2[], props?: ShapeProps): void;
-  points(ctx: CanvasRenderingContext2D, color: Color, pts: Vector2[]): void;
-  push(ctx: CanvasRenderingContext2D): void;
-  pop(ctx: CanvasRenderingContext2D): void;
-  translate(ctx: CanvasRenderingContext2D, offset: Vector2): void;
-  rotate(ctx: CanvasRenderingContext2D, angle: number): void;
-  scale(ctx: CanvasRenderingContext2D, factor: number | Vector2): void;
-};
-
 /**
  * - RGBA array with values 0-1: `[r, g, b, a]`
  * - Alpha defaults to 1 if omitted
@@ -178,27 +157,37 @@ function getFontHeight(ctx: CanvasRenderingContext2D): number {
  * ```
  * 
  */
-const drawImpl: DrawFunctions = {
+export class Graphics {
+  constructor(private ctx: CanvasRenderingContext2D) {}
+
+  /**
+   * Set the 2d drawing context for graphics. 
+   * 
+   * Be aware that that `like` can set this value at any time.
+   */
+  setContext(ctx: CanvasRenderingContext2D) {
+    this.ctx = ctx;
+  }
+
   /**
    * Clears the canvas with a solid color.
-   * @param ctx Canvas context.
+   * @param this.ctx Canvas context.
    * @param color Fill color.
    */
-  clear(ctx: CanvasRenderingContext2D, color: Color = [0, 0, 0, 1]): void {
-    ctx.fillStyle = parseColor(color);
-    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  },
+  clear(color: Color = [0, 0, 0, 1]): void {
+    this.ctx.fillStyle = parseColor(color);
+    this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+  }
 
   /**
    * Draws a rectangle.
-   * @param ctx Canvas context.
+   * @param this.ctx Canvas context.
    * @param mode Fill or line.
    * @param color Fill or stroke color.
    * @param rect Rectangle [x, y, w, h].
    * @param props Optional stroke properties.
    */
   rectangle(
-    ctx: CanvasRenderingContext2D,
     mode: DrawMode,
     color: Color,
     rect: Rectangle,
@@ -206,18 +195,18 @@ const drawImpl: DrawFunctions = {
   ): void {
     const c = applyColor(color);
     if (mode === "fill") {
-      ctx.fillStyle = c;
-      ctx.fillRect(...rect);
+      this.ctx.fillStyle = c;
+      this.ctx.fillRect(...rect);
     } else {
-      setStrokeProps(ctx, props);
-      ctx.strokeStyle = c;
-      ctx.strokeRect(...rect);
+      setStrokeProps(this.ctx, props);
+      this.ctx.strokeStyle = c;
+      this.ctx.strokeRect(...rect);
     }
-  },
+  }
 
   /**
    * Draws a circle or ellipse.
-   * @param ctx Canvas context.
+   * @param this.ctx Canvas context.
    * @param mode Fill or line.
    * @param color Fill or stroke color.
    * @param position Center position.
@@ -225,7 +214,6 @@ const drawImpl: DrawFunctions = {
    * @param props Optional arc, center, and stroke properties. Center is true by default.
    */
   circle(
-    ctx: CanvasRenderingContext2D,
     mode: DrawMode,
     color: Color,
     position: Vector2,
@@ -243,47 +231,46 @@ const drawImpl: DrawFunctions = {
       position = Vec2.add(position, size);
     }
 
-    ctx.save();
-    ctx.translate(...position);
-    ctx.scale(...size);
-    ctx.beginPath();
-    ctx.arc(0, 0, 1, startAngle, endAngle);
-    if (mode == 'fill') ctx.lineTo(0, 0);
-    ctx.closePath();
-    ctx.restore();
+    this.ctx.save();
+    this.ctx.translate(...position);
+    this.ctx.scale(...size);
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, 1, startAngle, endAngle);
+    if (mode == 'fill') this.ctx.lineTo(0, 0);
+    this.ctx.closePath();
+    this.ctx.restore();
 
     if (mode === "fill") {
-      ctx.fillStyle = c;
-      ctx.fill();
+      this.ctx.fillStyle = c;
+      this.ctx.fill();
     } else {
-      setStrokeProps(ctx, props);
-      ctx.strokeStyle = c;
-      ctx.stroke();
+      setStrokeProps(this.ctx, props);
+      this.ctx.strokeStyle = c;
+      this.ctx.stroke();
     }
-  },
+  }
 
   /**
    * Draws connected line segments.
-   * @param ctx Canvas context.
+   * @param this.ctx Canvas context.
    * @param color Stroke color.
    * @param points Array of [x, y] positions.
    * @param props Optional stroke properties.
    */
   line(
-    ctx: CanvasRenderingContext2D,
     color: Color,
     points: Vector2[],
     props?: ShapeProps,
   ): void {
     if (points.length < 2) return;
-    setStrokeProps(ctx, props);
-    ctx.beginPath();
+    setStrokeProps(this.ctx, props);
+    this.ctx.beginPath();
     const [[x0, y0], ...rest] = points;
-    ctx.moveTo(x0, y0);
-    rest.forEach(([x, y]) => ctx.lineTo(x, y));
-    ctx.strokeStyle = applyColor(color);
-    ctx.stroke();
-  },
+    this.ctx.moveTo(x0, y0);
+    rest.forEach(([x, y]) => this.ctx.lineTo(x, y));
+    this.ctx.strokeStyle = applyColor(color);
+    this.ctx.stroke();
+  }
 
   /**
    * Draws text at a position.
@@ -295,14 +282,13 @@ const drawImpl: DrawFunctions = {
    * to the left and right of its position. If you align right, your position
    * becomes the upper-right corner of the text.
    * 
-   * @param ctx Canvas context.
+   * @param this.ctx Canvas context.
    * @param color Fill color.
    * @param text Text string.
    * @param position Top-left position.
    * @param props {@link PrintProps} Optional font, text limit, or alignment.
    */
   print(
-    ctx: CanvasRenderingContext2D,
     color: Color,
     text: string,
     position: Vector2,
@@ -310,22 +296,22 @@ const drawImpl: DrawFunctions = {
   ): void {
     const [x, y] = position;
     const { font = "16px sans-serif" } = props ?? {};
-    ctx.fillStyle = parseColor(color);
-    ctx.font = font;
-    ctx.textAlign = props?.align ?? "left";
+    this.ctx.fillStyle = parseColor(color);
+    this.ctx.font = font;
+    this.ctx.textAlign = props?.align ?? "left";
     if (props && 'width' in props) {
       const { width } = props;
-      const lines = wrapText(ctx, text, width as any);
-      const lineHeight = getFontHeight(ctx);
-      ctx.textBaseline = "top";
+      const lines = wrapText(this.ctx, text, width as any);
+      const lineHeight = getFontHeight(this.ctx);
+      this.ctx.textBaseline = "top";
       lines.forEach((line, i) => {
-        ctx.fillText(line, x, y + i * lineHeight, width);
+        this.ctx.fillText(line, x, y + i * lineHeight, width);
       });
-      ctx.textBaseline = "alphabetic";
+      this.ctx.textBaseline = "alphabetic";
     } else {
-      ctx.fillText(text, x, y);
+      this.ctx.fillText(text, x, y);
     }
-  },
+  }
 
   /**
    * Draws an image.
@@ -333,13 +319,12 @@ const drawImpl: DrawFunctions = {
    * @remarks named "draw" because it draws anything _drawable_
    * in the long run.
    * 
-   * @param ctx Canvas context.
+   * @param this.ctx Canvas context.
    * @param handle Image handle from newImage.
    * @param position Draw position.
    * @param props Optional rotation, scale, origin, or quad.
    */
   draw(
-    ctx: CanvasRenderingContext2D,
     handle: ImageHandle,
     position: Vector2,
     props?: DrawProps,
@@ -353,56 +338,55 @@ const drawImpl: DrawFunctions = {
     const [sx, sy] = typeof scale === "number" ? [scale, scale] : scale;
     const [ox, oy] = typeof origin === "number" ? [origin, origin] : origin;
 
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(r);
-    ctx.scale(sx, sy);
+    this.ctx.save();
+    this.ctx.translate(x, y);
+    this.ctx.rotate(r);
+    this.ctx.scale(sx, sy);
     if (quad) {
       const [qx, qy, qw, qh] = quad;
-      ctx.drawImage(element, qx, qy, qw, qh, -ox, -oy, qw, qh);
+      this.ctx.drawImage(element, qx, qy, qw, qh, -ox, -oy, qw, qh);
     } else {
-      ctx.drawImage(element, -ox, -oy);
+      this.ctx.drawImage(element, -ox, -oy);
     }
-    ctx.restore();
-  },
+    this.ctx.restore();
+  }
 
   /**
    * Loads an image from a path.
    * Unlike built-in loading, this pretends to be synchronous.
-   * @param ctx Canvas context.
+   * @param this.ctx Canvas context.
    * @param path Image file path.
    * @returns ImageHandle for use with draw.
    */
-  newImage(_ctx: CanvasRenderingContext2D, path: string): ImageHandle {
+  newImage(path: string): ImageHandle {
     return new ImageHandle(path);
-  },
+  }
 
   /**
    * Sets the clipping region.
-   * @param ctx Canvas context.
+   * @param this.ctx Canvas context.
    * @param rect Clipping rectangle, or full canvas if omitted.
    */
-  clip(ctx: CanvasRenderingContext2D, rect?: Rectangle): void {
-    ctx.beginPath();
+  clip(rect?: Rectangle): void {
+    this.ctx.beginPath();
     if (rect) {
       const [x, y, w, h] = rect;
-      ctx.rect(x, y, w, h);
+      this.ctx.rect(x, y, w, h);
     } else {
-      ctx.rect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      this.ctx.rect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     }
-    ctx.clip();
-  },
+    this.ctx.clip();
+  }
 
   /**
    * Draws a polygon.
-   * @param ctx Canvas context.
+   * @param this.ctx Canvas context.
    * @param mode Fill or line.
    * @param color Fill or stroke color.
    * @param points Array of [x, y] vertices.
    * @param props Optional stroke properties.
    */
   polygon(
-    ctx: CanvasRenderingContext2D,
     mode: DrawMode,
     color: Color,
     points: Vector2[],
@@ -410,76 +394,74 @@ const drawImpl: DrawFunctions = {
   ): void {
     if (points.length < 3) return;
     const c = applyColor(color);
-    ctx.beginPath();
+    this.ctx.beginPath();
     const [[x0, y0], ...rest] = points;
-    ctx.moveTo(x0, y0);
-    rest.forEach(([x, y]) => ctx.lineTo(x, y));
-    ctx.closePath();
+    this.ctx.moveTo(x0, y0);
+    rest.forEach(([x, y]) => this.ctx.lineTo(x, y));
+    this.ctx.closePath();
     if (mode === "fill") {
-      ctx.fillStyle = c;
-      ctx.fill();
+      this.ctx.fillStyle = c;
+      this.ctx.fill();
     } else {
-      setStrokeProps(ctx, props);
-      ctx.strokeStyle = c;
-      ctx.stroke();
+      setStrokeProps(this.ctx, props);
+      this.ctx.strokeStyle = c;
+      this.ctx.stroke();
     }
-  },
+  }
 
   /**
    * Draws individual pixels.
-   * @param ctx Canvas context.
+   * @param this.ctx Canvas context.
    * @param color Fill color.
    * @param pts Array of [x, y] positions.
    */
-  points(ctx: CanvasRenderingContext2D, color: Color, pts: Vector2[]): void {
-    ctx.fillStyle = applyColor(color);
-    pts.forEach(([x, y]) => ctx.fillRect(x, y, 1, 1));
-  },
+  points(color: Color, pts: Vector2[]): void {
+    this.ctx.fillStyle = applyColor(color);
+    pts.forEach(([x, y]) => this.ctx.fillRect(x, y, 1, 1));
+  }
 
   /**
    * Saves canvas state.
-   * @param ctx Canvas context.
+   * @param this.ctx Canvas context.
    */
-  push(ctx: CanvasRenderingContext2D): void {
-    ctx.save();
-  },
+  push(): void {
+    this.ctx.save();
+  }
 
   /**
    * Restores canvas state.
-   * @param ctx Canvas context.
+   * @param this.ctx Canvas context.
    */
-  pop(ctx: CanvasRenderingContext2D): void {
-    ctx.restore();
-  },
+  pop(): void {
+    this.ctx.restore();
+  }
 
   /**
    * Applies a translation.
-   * @param ctx Canvas context.
+   * @param this.ctx Canvas context.
    * @param offset [x, y] offset.
    */
-  translate(ctx: CanvasRenderingContext2D, offset: Vector2): void {
+  translate(offset: Vector2): void {
     const [x, y] = offset;
-    ctx.translate(x, y);
-  },
+    this.ctx.translate(x, y);
+  }
 
   /**
    * Applies a rotation.
-   * @param ctx Canvas context.
+   * @param this.ctx Canvas context.
    * @param angle Rotation in radians.
    */
-  rotate(ctx: CanvasRenderingContext2D, angle: number): void {
-    ctx.rotate(angle);
-  },
+  rotate(angle: number): void {
+    this.ctx.rotate(angle);
+  }
 
   /**
    * Applies a scale.
-   * @param ctx Canvas context.
+   * @param this.ctx Canvas context.
    * @param factor Scale factor (number or [x, y]).
    */
-  scale(ctx: CanvasRenderingContext2D, factor: number | Vector2): void {
+  scale(factor: number | Vector2): void {
     const [sx, sy] = typeof factor === "number" ? [factor, factor] : factor;
-    ctx.scale(sx, sy);
-  },
+    this.ctx.scale(sx, sy);
+  }
 };
-
-export const draw: DrawFunctions = drawImpl;

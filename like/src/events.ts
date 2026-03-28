@@ -8,7 +8,7 @@ import type { LikeButton } from './input';
 
 export type MouseButton = 'left' | 'middle' | 'right';
 
-export type LikeCustomEventMap = {
+export type LikeCanvasEventMap = HTMLElementEventMap & {
   'like:mousemoved': CustomEvent<{pos: Vector2, delta: Vector2}>;
   'like:updateRenderTarget': CustomEvent<{target: HTMLCanvasElement}>;
   'like:resizeCanvas': CustomEvent<{size: Vector2}>;
@@ -17,54 +17,16 @@ export type LikeCustomEventMap = {
   'like:update': CustomEvent<{dt: number}>;
 };
 
-// Helper type to extract event type from event name
-export type LikeEventType<K extends keyof LikeCustomEventMap> = LikeCustomEventMap[K];
+export type LikeCanvasEvent = LikeCanvasEventMap
 
 // Custom canvas type that uses our event map as the single source of truth
 export interface LikeCanvasElement extends HTMLCanvasElement {
   // Overload for our custom events
-  addEventListener<K extends keyof LikeCustomEventMap>(
+  addEventListener<K extends keyof LikeCanvasEventMap>(
     type: K,
-    listener: (this: LikeCanvasElement, ev: LikeCustomEventMap[K]) => any,
+    listener: (this: LikeCanvasElement, ev: LikeCanvasEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions
   ): void;
-  
-  // Overload for standard DOM events
-  addEventListener<K extends keyof HTMLElementEventMap>(
-    type: K,
-    listener: (this: LikeCanvasElement, ev: HTMLElementEventMap[K]) => any,
-    options?: boolean | AddEventListenerOptions
-  ): void;
-  
-  // Fallback overload for any string
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions
-  ): void;
-  
-  // Overload for our custom events
-  removeEventListener<K extends keyof LikeCustomEventMap>(
-    type: K,
-    listener: (this: LikeCanvasElement, ev: LikeCustomEventMap[K]) => any,
-    options?: boolean | EventListenerOptions
-  ): void;
-  
-  // Overload for standard DOM events
-  removeEventListener<K extends keyof HTMLElementEventMap>(
-    type: K,
-    listener: (this: LikeCanvasElement, ev: HTMLElementEventMap[K]) => any,
-    options?: boolean | EventListenerOptions
-  ): void;
-  
-  // Fallback overload for any string
-  removeEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | EventListenerOptions
-  ): void;
-  
-  dispatchEvent<K extends keyof LikeCustomEventMap>(event: LikeCustomEventMap[K]): boolean;
 }
 
 /**

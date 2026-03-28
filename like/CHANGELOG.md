@@ -1,7 +1,15 @@
 # Changelog
 
-## [2.10.2] - 2026-03-28
-Fix JSR.
+## [2.11.0] - 2026-03-28
+
+### Breaking Changes
+ - Switch out pure graphics funcs + binding for a simple Graphics class.
+
+### Added
+ - `like.gfx.setTarget` to change what canvas it draws to.
+
+### Fixes
+ - Fix JSR.
 
 ## [2.10.1] - 2026-03-28
 
