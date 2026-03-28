@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.10.1] - Unreleased
+## [2.10.1] - 2026-03-28
 
 ### Fixes
  - Fix engine dispatching the wrong 'update' event and breaking everything.
