@@ -102,7 +102,6 @@ export class Input {
   }
 
   update() {
-    this.gamepad.update();
     [this.prevState, this.currState] = [this.currState, this.prevState];
     this.currState.clear();
 

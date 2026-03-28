@@ -1,4 +1,4 @@
-import { defaultMapping, fullButtonName, GamepadMapping, getSdlMapping, LikeButton, mapStick } from './gamepad-mapping';
+import { defaultMapping, fullButtonName, GamepadMapping, getSdlMapping, LikeButton, mapStick, standardButtonMapping } from './gamepad-mapping';
 import { type Dispatcher, type LikeGamepadEvent } from '../events';
 import { Vector2 } from '../math/vector2';
 import { EngineProps } from '../engine';
@@ -52,6 +52,9 @@ export class Gamepad {
       },
       { signal: abort },
     );
+    props.canvas.addEventListener("like:update", this.update.bind(this), {
+      signal: abort,
+    });
   }
 
   private onGamepadConnected(ev: globalThis.GamepadEvent) {
@@ -67,6 +70,7 @@ export class Gamepad {
       console.log(`[Gamepad] Applied presaved mapping.`);
     } else if (ev.gamepad.mapping == 'standard') {
       gps.mapping = defaultMapping(ev.gamepad.axes.length / 2);
+      gps.mapping.buttons = standardButtonMapping();
       console.log(`Loaded standard mapping.`);
     } else {
       const sdlMapping = getSdlMapping(ev.gamepad);
@@ -86,10 +90,9 @@ export class Gamepad {
   }
 
   /**
-   * @private
    * Called by the engine every frame.
    */
-  update(): void {
+  private update(): void {
     Object.values(this.gamepads).forEach((gp) => gp.update(this.dispatch));
   }
 

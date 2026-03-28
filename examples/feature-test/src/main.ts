@@ -26,7 +26,8 @@ let scaleIndex = 0;
 const container = document.getElementById('game-container')!;
 const like = createLike(container);
 
-const demoScene: Scene = {
+let demoScene: Scene;
+demoScene = {
   load(like: Like) {
     like.canvas.setMode(scales[0]);
     pepperImage = like.gfx.newImage('pepper.png');
@@ -88,6 +89,10 @@ const demoScene: Scene = {
 
   gamepadpressed: (_ignore, ...args) => console.log(args),
 
+  gamepadconnected: (like, index) => {
+    like.setScene(new MapGamepad({buttons: buttonSetPS1, stickCount: 2}, index, demoScene));
+  },
+
   draw(like: Like) {
     const { timer, mouse, gamepad, gfx } = like;
     gfx.clear([0.1, 0.1, 0.15, 1]);
@@ -146,5 +151,6 @@ document.getElementById('fullscreen-btn')?.addEventListener('click', () => {
   like.canvas.setFullscreen(true);
 });
 
-like.setScene(new MapGamepad({buttons: buttonSetPS1, stickCount: 2}, 0, demoScene));
+like.setScene(demoScene);
+
 await like.start();

@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.10.0] - Unreleased
+## [2.10.1] - Unreleased
+
+### Updates
+ - Now loads sdl controller db into a JSON file and pre-process deletes all ambiguous buttons from the mapping.
+
+## [2.10.0] - 2026-03-27
 
 ### Breaking Changes
  - Imports have been restructured for sanity, thus breaking all of your stuff. Sorry not sorry, this is how it was always supposed to be. Our modules:
@@ -30,7 +35,7 @@
   - `Vec.map` and `Vec.map2` helpers.
   - `like.gamepad.isDown` and `like.gamepad.isDown` now accept `'any'` as the first argument, to check all gamepads.
   - `like.gamepad.justPressed` now accepts a numeric argument for raw buttons.
-  - Gamepad mapping / remapping system
+  - Gamepad mapping / remapping system brought back with a fury
     - Gamepad now digitizes all axes and triggers automatically.
     - Brought back SDL auto mapping as a best-guess solution, plus:
     - `like.gamepad.setMapping`, `like.gamepad.getMapping`: Set / get active button mappings.

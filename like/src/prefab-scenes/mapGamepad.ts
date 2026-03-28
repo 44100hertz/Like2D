@@ -87,9 +87,9 @@ const buttonProps: Record<
   R1: { draw: drawShoulder(2, 3, true) },
   R2: { draw: drawShoulder(1, 2, true) },
   Right: { draw: drawDpadPart(0) },
-  Up: { draw: drawDpadPart(-Math.PI/2) },
+  Up: { draw: drawDpadPart(-Math.PI / 2) },
   Left: { draw: drawDpadPart(Math.PI) },
-  Down: { draw: drawDpadPart(Math.PI/2) },
+  Down: { draw: drawDpadPart(Math.PI / 2) },
 };
 
 export type MapMode = {
@@ -102,6 +102,7 @@ export class MapGamepad implements Scene {
   private mapping!: GamepadMapping;
   private held?: LikeButton;
   private alreadyMapped = new Set<Number>();
+  private frameWait = 0;
 
   constructor(
     private mapMode: MapMode,
@@ -110,13 +111,21 @@ export class MapGamepad implements Scene {
   ) { }
 
   load(like: Like): void {
+    this.frameWait = 10;
     this.mapping = like.gamepad.getMapping(this.targetPad) ?? defaultMapping(2);
+
+    const alreadyMapped = new Set(Object.values(this.mapping.buttons));
+
     for (const btn of mapOrder.reverse()) {
-      if (this.mapMode.buttons.has(btn)) {
+      if (this.mapMode.buttons.has(btn) && !alreadyMapped.has(btn)) {
         this.currentlyUnmapped.push(btn);
       }
     }
     like.canvas.setMode([320, 240]);
+  }
+
+  update(): void {
+    this.frameWait--;
   }
 
   draw(like: Like): void {
@@ -131,7 +140,7 @@ export class MapGamepad implements Scene {
     like.gfx.translate([0, 1]);
     like.gfx.print(
       "white",
-      "Map gamepad (click to close)",
+      `Map gamepad ${this.targetPad}`,
       [8, 0.0],
       centerText,
     );
@@ -162,7 +171,7 @@ export class MapGamepad implements Scene {
     _name: LikeButton,
     num: number,
   ): void {
-    if (source !== this.targetPad || this.held) return;
+    if (source !== this.targetPad || this.held || this.frameWait > 0) return;
     const active = this.currentlyUnmapped.pop();
     if (active && !this.alreadyMapped.has(num)) {
       this.alreadyMapped.add(num);
